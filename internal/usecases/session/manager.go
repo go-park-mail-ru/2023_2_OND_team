@@ -9,7 +9,7 @@ type SessionManager struct {
 	repo session.Repository
 }
 
-func New(repo *session.Repository) *SessionManager {
+func New(repo session.Repository) *SessionManager {
 	return &SessionManager{repo}
 }
 
