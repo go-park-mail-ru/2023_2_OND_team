@@ -10,11 +10,12 @@ import (
 )
 
 func main() {
-	log, err := logger.New()
+	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	defer log.Sync()
 
 	cfg, err := newConfig()
 	if err != nil {

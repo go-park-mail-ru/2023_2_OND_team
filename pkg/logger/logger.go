@@ -10,8 +10,12 @@ type Logger struct {
 	*zap.Logger
 }
 
-func New() (*Logger, error) {
-	log, err := zap.NewProduction()
+func New(options ...ConfigOption) (*Logger, error) {
+	cfg := zap.NewProductionConfig()
+	for _, opt := range options {
+		opt(&cfg)
+	}
+	log, err := cfg.Build()
 	if err != nil {
 		return nil, fmt.Errorf("new Logger: %w", err)
 	}
