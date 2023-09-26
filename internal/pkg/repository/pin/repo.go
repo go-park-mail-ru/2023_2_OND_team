@@ -2,11 +2,12 @@ package pin
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 )
 
 type Repository interface {
-	GetNPinsFromDate(ctx context.Context, count int, date time.Time) ([]pin.Pin, error)
+	GetNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]pin.Pin, error)
+	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 }
