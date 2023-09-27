@@ -5,7 +5,11 @@ import (
 	"os"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/session"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -22,7 +26,17 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	service := service.New(log, nil, nil, nil)
+	db, err := ramrepo.OpenDB()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer db.Close()
+
+	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
+	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
+	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
+
+	service := service.New(log, sm, userCase, pinCase)
 	server := server.New(log, *server.NewConfig(cfg))
 	server.InitRouter(service)
 	if err := server.Run(); err != nil {
