@@ -7,8 +7,8 @@ import (
 )
 
 type Repository interface {
-	CreateSessionForUser(ctx context.Context, userID int) (*session.Session, error)
-	GetUserIDBySessionKey(ctx context.Context, key string) (int, error)
+	AddSession(ctx context.Context, session *session.Session) error
+	GetSessionByKey(ctx context.Context, key string) (*session.Session, error)
 	DeleteSessionByKey(ctx context.Context, key string) error
 	DeleteAllSessionForUser(ctx context.Context, userID int) error
 }
