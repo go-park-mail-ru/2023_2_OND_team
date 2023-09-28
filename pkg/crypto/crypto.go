@@ -1,16 +1,14 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
-	"time"
 	"unsafe"
 
 	"golang.org/x/crypto/argon2"
 )
 
 func NewRandomStr(length int) (string, error) {
-	rand.Seed(time.Now().UTC().UnixNano())
 	b := make([]byte, hex.DecodedLen(length))
 	_, err := rand.Read(b)
 	if err != nil {
