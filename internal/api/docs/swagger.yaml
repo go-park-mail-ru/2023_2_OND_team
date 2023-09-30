@@ -1,0 +1,282 @@
+definitions:
+  Empty:
+    type: object
+  JsonErrResponse:
+    properties:
+      code:
+        example: "0"
+        type: string
+      message:
+        example: Error description
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  JsonResponse:
+    properties:
+      body: {}
+      message:
+        example: Response message
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  Pin:
+    properties:
+      authorId:
+        example: 23
+        type: integer
+      description:
+        example: about face
+        type: string
+      id:
+        example: 55
+        type: integer
+      picture:
+        example: pinspire/imgs/image.png
+        type: string
+      publicationTime:
+        type: string
+      title:
+        example: Nature's beauty
+        type: string
+    type: object
+  User:
+    properties:
+      avatar:
+        example: pinspire.online/avatars/avatar.jpg
+        type: string
+      birthday:
+        type: string
+      email:
+        example: digital@gmail.com
+        type: string
+      id:
+        example: 123
+        type: integer
+      name:
+        example: Peter
+        type: string
+      password:
+        example: pass123
+        type: string
+      surname:
+        example: Green
+        type: string
+      username:
+        example: Green
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API for Pinspire project
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Pinspire API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: User login, creating new session
+      parameters:
+      - description: Username
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: Password
+        in: body
+        name: password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Session-id:
+              description: Auth cookie with new valid session id
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/JsonResponse'
+            - properties:
+                body:
+                  $ref: '#/definitions/User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    delete:
+      description: User logout, session deletion
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Session-id:
+              description: Auth cookie with expired session id
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/JsonResponse'
+            - properties:
+                body:
+                  $ref: '#/definitions/Empty'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+      tags:
+      - Auth
+  /api/v1/auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: User registration
+      parameters:
+      - description: Username
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: Email
+        in: body
+        name: email
+        required: true
+        schema:
+          type: string
+      - description: Password
+        in: body
+        name: password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/JsonResponse'
+            - properties:
+                body:
+                  $ref: '#/definitions/Empty'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+      tags:
+      - Auth
+  /api/v1/pin:
+    get:
+      description: Get pin collection
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/JsonResponse'
+            - properties:
+                body:
+                  items:
+                    $ref: '#/definitions/Pin'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+      tags:
+      - Pin
+  /api/v1/pin/{pinId}:
+    get:
+      description: Get concrete pin by id
+      parameters:
+      - description: Id of the pin
+        in: path
+        name: pinId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/JsonResponse'
+            - properties:
+                body:
+                  $ref: '#/definitions/Pin'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+      tags:
+      - Pin
+swagger: "2.0"
