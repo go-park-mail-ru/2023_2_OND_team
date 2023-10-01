@@ -6,18 +6,18 @@ import (
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
-	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
-	s.log.Info("request on signup", logger.F{"method", r.Method}, logger.F{"path", r.URL.Path})
+	s.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
 	defer r.Body.Close()
 	params := repo.UserCredentials{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		s.log.Info("failed to parse parameters", logger.F{"error", err.Error()})
+		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
 		resBody, err := json.Marshal(map[string]any{
 			"status": "error",
 			"code":   "bad_params",
@@ -76,14 +76,14 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
-	s.log.Info("request on signup", logger.F{"method", r.Method}, logger.F{"path", r.URL.Path})
+	s.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
 	defer r.Body.Close()
 	user := &user.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
 	if err != nil {
-		s.log.Info("failed to parse parameters", logger.F{"error", err.Error()})
+		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
 		resBody, err := json.Marshal(map[string]string{
 			"status": "error",
 			"code":   "bad_params",
@@ -120,12 +120,12 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
-	s.log.Info("request on signup", logger.F{"method", r.Method}, logger.F{"path", r.URL.Path})
+	s.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
 	cookie, err := r.Cookie("session_key")
 	if err != nil {
-		s.log.Info("no cookie", logger.F{"error", err.Error()})
+		s.log.Info("no cookie", log.F{"error", err.Error()})
 		resBody, err := json.Marshal(map[string]string{
 			"status": "error",
 			"code":   "no_cookie",

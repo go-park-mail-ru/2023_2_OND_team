@@ -28,6 +28,11 @@ func OpenDB() (*sql.DB, error) {
 		return nil, err
 	}
 
+	err = fillPinTableRows(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 
@@ -65,6 +70,26 @@ func createSessionTable(db *sql.DB) error {
 	);`)
 	if err != nil {
 		return fmt.Errorf("create table session: %w", err)
+	}
+	return nil
+}
+
+func fillPinTableRows(db *sql.DB) error {
+	_, err := db.Exec(`INSERT INTO pin (picture) VALUES
+	('/1'),
+	('/2'),
+	('/3'),
+	('/4'),
+	('/5'),
+	('/6'),
+	('/7'),
+	('/8'),
+	('/9'),
+	('/10'),
+	('/11'),
+	('/12');`)
+	if err != nil {
+		return fmt.Errorf("fill pin table: %w", err)
 	}
 	return nil
 }
