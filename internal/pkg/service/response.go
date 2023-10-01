@@ -9,7 +9,7 @@ type Empty struct{} // @name Empty
 type JsonResponse struct {
 	Status  string      `json:"status" example:"ok"`
 	Message string      `json:"message" example:"Response message"`
-	Body    interface{} `json:"body"`
+	Body    interface{} `json:"body,omitempty"`
 } // @name JsonResponse
 
 type JsonErrResponse struct {

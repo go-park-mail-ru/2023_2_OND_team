@@ -45,25 +45,8 @@ definitions:
     type: object
   User:
     properties:
-      avatar:
-        example: pinspire.online/avatars/avatar.jpg
-        type: string
-      birthday:
-        type: string
-      email:
-        example: digital@gmail.com
-        type: string
-      id:
-        example: 123
-        type: integer
-      name:
-        example: Peter
-        type: string
       password:
         example: pass123
-        type: string
-      surname:
-        example: Green
         type: string
       username:
         example: Green
@@ -83,6 +66,34 @@ info:
   version: "1.0"
 paths:
   /api/v1/auth/login:
+    get:
+      description: User login, check authentication, get user info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/JsonResponse'
+            - properties:
+                body:
+                  $ref: '#/definitions/User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/JsonErrResponse'
+      tags:
+      - Auth
     post:
       consumes:
       - application/json
@@ -106,7 +117,7 @@ paths:
         "200":
           description: OK
           headers:
-            Session-id:
+            session_key:
               description: Auth cookie with new valid session id
               type: string
           schema:
@@ -114,7 +125,7 @@ paths:
             - $ref: '#/definitions/JsonResponse'
             - properties:
                 body:
-                  $ref: '#/definitions/User'
+                  $ref: '#/definitions/Empty'
               type: object
         "400":
           description: Bad Request

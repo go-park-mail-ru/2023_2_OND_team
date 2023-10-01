@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
 
-	_ "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/docs"
+	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -21,6 +21,7 @@ func (r Router) InitRoute(serv *service.Service) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
 
 		r.Route("/auth", func(r chi.Router) {
+			r.Get("/login", serv.CheckLogin)
 			r.Post("/login", serv.Login)
 			r.Post("/signup", serv.Signup)
 			r.Delete("/logout", serv.Logout)

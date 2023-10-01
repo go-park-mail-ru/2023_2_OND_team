@@ -1,5 +1,5 @@
 ENTRYPOINT=cmd/app/main.go
-DOC_DIR=internal/api/docs
+DOC_DIR=./docs
 
 build:
 	go build -o bin/app cmd/app/*.go
