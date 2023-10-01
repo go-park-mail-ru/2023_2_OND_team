@@ -29,7 +29,6 @@ func (r Router) InitRoute(serv *service.Service) {
 
 		r.Route("/pin", func(r chi.Router) {
 			r.Get("/", serv.GetPins)
-			r.Get("/{pinID:\\d+}", serv.GetPinByID)
 		})
 	})
 }
