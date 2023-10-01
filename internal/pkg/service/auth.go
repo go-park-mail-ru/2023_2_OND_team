@@ -2,11 +2,11 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
-	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
+	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -21,8 +21,38 @@ import (
 //	@Failure		500	{object}	JsonErrResponse
 //	@Router			/api/v1/auth/login [get]
 func (s *Service) CheckLogin(w http.ResponseWriter, r *http.Request) {
-	s.log.Info("it worked CheckLogin")
-	fmt.Fprintf(w, "{\"status\": \"ok\", \"path\": \"%s\", \"method\": \"%s\"}\n", r.URL.Path, r.Method)
+	s.log.Info("request on check login", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
+
+	cookie, err := r.Cookie("session_key")
+	if err != nil {
+		s.log.Info("no cookie", log.F{"error", err.Error()})
+		err = responseError(w, "no_auth", "the user is not logged in")
+		if err != nil {
+			s.log.Error(err.Error())
+		}
+		return
+	}
+
+	userID, err := s.sm.GetUserIDBySessionKey(r.Context(), cookie.Value)
+	if err != nil {
+		err = responseError(w, "no_auth", "no user session found")
+		if err != nil {
+			s.log.Error(err.Error())
+		}
+		return
+	}
+
+	username, err := s.userCase.FindOutUserName(r.Context(), userID)
+	if err != nil {
+		s.log.Error(err.Error())
+		err = responseError(w, "no_auth", "no user was found for this session")
+	} else {
+		err = responseOk(w, "user found", map[string]string{"username": username})
+	}
+	if err != nil {
+		s.log.Error(err.Error())
+	}
 }
 
 // Login godoc
@@ -44,46 +74,43 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 	SetContentTypeJSON(w)
 
 	defer r.Body.Close()
-	params := repo.UserCredentials{}
+	params := usecase.NewCredentials()
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
-		resBody, err := json.Marshal(map[string]any{
-			"status": "error",
-			"code":   "bad_params",
-		})
+		err = responseError(w, "parse_body", "the correct username and password are expected to be received in JSON format")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
-		w.Write(resBody)
+		return
+	}
+
+	if !isValidPassword(params.Password) || !isValidUsername(params.Username) {
+		s.log.Info(err.Error())
+		err = responseError(w, "bad_credentials", "invalid user credentials")
+		if err != nil {
+			s.log.Error(err.Error())
+		}
 		return
 	}
 
 	user, err := s.userCase.Authentication(r.Context(), params)
-	if err != nil {
+	if err != nil || !isValidPassword(params.Password) || !isValidUsername(params.Username) {
 		s.log.Warn(err.Error())
-		resBody, err := json.Marshal(map[string]string{
-			"status": "error",
-			"code":   "user_authentication",
-		})
+		err = responseError(w, "bad_credentials", "invalid user credentials")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
-		w.Write(resBody)
 		return
 	}
 
 	session, err := s.sm.CreateNewSessionForUser(r.Context(), user.ID)
 	if err != nil {
 		s.log.Error(err.Error())
-		resBody, err := json.Marshal(map[string]string{
-			"status": "error",
-			"code":   "create_session",
-		})
+		err = responseError(w, "session", "failed to create a session for the user")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
-		w.Write(resBody)
 		return
 	}
 
@@ -91,18 +118,17 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_key",
 		Value:    session.Key,
 		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+		Expires:  session.Expire,
+		SameSite: http.SameSiteStrictMode,
 	}
 	http.SetCookie(w, cookie)
 
-	resBody, err := json.Marshal(map[string]any{
-		"status":  "ok",
-		"comment": "set cookie",
-		"body":    map[string]any{"user": user},
-	})
+	err = responseOk(w, "a new session has been created for the user", nil)
 	if err != nil {
 		s.log.Error(err.Error())
 	}
-	w.Write(resBody)
 }
 
 // SignUp godoc
@@ -126,41 +152,25 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	user := &user.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
-	if err != nil {
+	if err != nil || !IsValidUserForRegistration(user) {
 		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
-		resBody, err := json.Marshal(map[string]string{
-			"status": "error",
-			"code":   "bad_params",
-		})
+		err = responseError(w, "parse_body", "the correct username, email and password are expected to be received in JSON format")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
-		w.Write(resBody)
 		return
 	}
 
 	err = s.userCase.Register(r.Context(), user)
 	if err != nil {
 		s.log.Warn(err.Error())
-		resBody, err := json.Marshal(map[string]string{
-			"status": "error",
-			"code":   "register",
-		})
-		if err != nil {
-			s.log.Error(err.Error())
-		}
-		w.Write(resBody)
-		return
+		err = responseError(w, "uniq_fields", "username")
+	} else {
+		err = responseOk(w, "the user has been successfully registered", nil)
 	}
-
-	resBody, err := json.Marshal(map[string]string{
-		"status":  "ok",
-		"comment": "the user is registered",
-	})
 	if err != nil {
 		s.log.Error(err.Error())
 	}
-	w.Write(resBody)
 }
 
 // Logout godoc
@@ -175,36 +185,30 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 //	@Header			200	{string}	Session-id	"Auth cookie with expired session id"
 //	@Router			/api/v1/auth/logout [delete]
 func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
-	s.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	s.log.Info("request on logout", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
 	cookie, err := r.Cookie("session_key")
 	if err != nil {
 		s.log.Info("no cookie", log.F{"error", err.Error()})
-		resBody, err := json.Marshal(map[string]string{
-			"status": "error",
-			"code":   "no_cookie",
-		})
+		err = responseError(w, "no_auth", "to log out, you must first log in")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
-		w.Write(resBody)
 		return
 	}
+
+	cookie.Expires = time.Now().UTC().AddDate(0, -1, 0)
+	http.SetCookie(w, cookie)
 
 	err = s.sm.DeleteUserSession(r.Context(), cookie.Value)
 	if err != nil {
 		s.log.Error(err.Error())
+		err = responseError(w, "session", "the user logged out, but his session did not end")
+	} else {
+		err = responseOk(w, "the user has successfully logged out", nil)
 	}
-
-	cookie.Expires.AddDate(0, -1, 0)
-	http.SetCookie(w, cookie)
-	resBody, err := json.Marshal(map[string]string{
-		"status":  "ok",
-		"comment": "cookie delete",
-	})
 	if err != nil {
 		s.log.Error(err.Error())
 	}
-	w.Write(resBody)
 }
