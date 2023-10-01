@@ -8,6 +8,6 @@ import (
 )
 
 type Repository interface {
-	GetNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]pin.Pin, error)
+	GetSortedNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]pin.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 }
