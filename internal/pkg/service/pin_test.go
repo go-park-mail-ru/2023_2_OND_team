@@ -22,7 +22,6 @@ func TestGetPins(t *testing.T) {
 	defer db.Close()
 
 	pinCase := pinCase.New(log, ramrepo.NewRamPinRepo(db))
-
 	service := New(log, nil, nil, pinCase)
 
 	rawUrl := "https://domain.test:8080/api/v1/pin"
@@ -146,7 +145,7 @@ func TestGetPins(t *testing.T) {
 	}
 
 	for _, tCase := range badCases {
-		t.Run("TestGetPins bad", func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestGetPins bad: %s", tCase.rawURL), func(t *testing.T) {
 			req := httptest.NewRequest("GET", tCase.rawURL, nil)
 			w := httptest.NewRecorder()
 			service.GetPins(w, req)
