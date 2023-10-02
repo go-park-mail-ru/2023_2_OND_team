@@ -54,6 +54,6 @@ func (u *Usecase) Authentication(ctx context.Context, credentials userCredential
 	return user, nil
 }
 
-func (u *Usecase) FindOutUserName(ctx context.Context, userID int) (string, error) {
-	return u.repo.GetUsernameByID(ctx, userID)
+func (u *Usecase) FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error) {
+	return u.repo.GetUsernameAndAvatarByID(ctx, userID)
 }
