@@ -41,7 +41,7 @@ func (u *Usecase) Register(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
-func (u *Usecase) Authentication(ctx context.Context, credentials repo.UserCredentials) (*entity.User, error) {
+func (u *Usecase) Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error) {
 	user, err := u.repo.GetUserByUsername(ctx, credentials.Username)
 	if err != nil {
 		return nil, fmt.Errorf("user authentication: %w", err)
@@ -52,4 +52,8 @@ func (u *Usecase) Authentication(ctx context.Context, credentials repo.UserCrede
 	}
 	user.Password = ""
 	return user, nil
+}
+
+func (u *Usecase) FindOutUserName(ctx context.Context, userID int) (string, error) {
+	return u.repo.GetUsernameByID(ctx, userID)
 }
