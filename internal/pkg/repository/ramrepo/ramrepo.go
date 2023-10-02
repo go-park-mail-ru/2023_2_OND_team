@@ -42,7 +42,7 @@ func createUsersTable(db *sql.DB) error {
 		username varchar(30) UNIQUE,
 		password varchar(50),
 		email varchar(50) UNIQUE,
-		avatar varchar(50) DEFAULT ''
+		avatar varchar(50) DEFAULT 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
 	);`)
 	if err != nil {
 		return fmt.Errorf("create table users: %w", err)
