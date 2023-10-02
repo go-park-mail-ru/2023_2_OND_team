@@ -49,7 +49,7 @@ func main() {
 	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
 
 	service := service.New(log, sm, userCase, pinCase)
-	server := server.New(log, *server.NewConfig(cfg))
+	server := server.New(log, server.NewConfig(cfg))
 	server.InitRouter(service)
 	if err := server.Run(); err != nil {
 		log.Fatal(err.Error())
