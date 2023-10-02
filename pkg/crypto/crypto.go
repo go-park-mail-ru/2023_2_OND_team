@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-func NewRandomStr(length int) (string, error) {
+func NewRandomString(length int) (string, error) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	b := make([]byte, hex.DecodedLen(length))
 	_, err := rand.Read(b)
