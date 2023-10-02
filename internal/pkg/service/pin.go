@@ -16,12 +16,16 @@ var ErrBadParams = errors.New("bad params")
 //
 //	@Description	Get pin collection
 //	@Tags			Pin
+//	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	JsonResponse{body=[]Pin}
-//	@Failure		400	{object}	JsonErrResponse
-//	@Failure		404	{object}	JsonErrResponse
-//	@Failure		500	{object}	JsonErrResponse
-//	@Router			/api/v1/pin [get]
+//	@Param			lastID	path		string	false	"ID of the pin that will be just before the first pin in the requested collection, 0 by default"	example(2)
+//
+// @Param			count	path		string	true	"Pins quantity after last pin specified in lastID"													example(5)
+// @Success		200		{object}	JsonResponse{body=[]Pin}
+// @Failure		400		{object}	JsonErrResponse
+// @Failure		404		{object}	JsonErrResponse
+// @Failure		500		{object}	JsonErrResponse
+// @Router			/api/v1/pin [get]
 func (s *Service) GetPins(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("request on get pins", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
