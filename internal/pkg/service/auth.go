@@ -43,12 +43,12 @@ func (s *Service) CheckLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := s.userCase.FindOutUserName(r.Context(), userID)
+	username, avatar, err := s.userCase.FindOutUsernameAndAvatar(r.Context(), userID)
 	if err != nil {
 		s.log.Error(err.Error())
 		err = responseError(w, "no_auth", "no user was found for this session")
 	} else {
-		err = responseOk(w, "user found", map[string]string{"username": username})
+		err = responseOk(w, "user found", map[string]string{"username": username, "avatar": avatar})
 	}
 	if err != nil {
 		s.log.Error(err.Error())
