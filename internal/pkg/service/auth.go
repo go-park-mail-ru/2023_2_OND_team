@@ -87,7 +87,7 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isValidPassword(params.Password) || !isValidUsername(params.Username) {
-		s.log.Info(err.Error())
+		s.log.Info("invalid credentials")
 		err = responseError(w, "bad_credentials", "invalid user credentials")
 		if err != nil {
 			s.log.Error(err.Error())
@@ -96,7 +96,7 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := s.userCase.Authentication(r.Context(), params)
-	if err != nil || !isValidPassword(params.Password) || !isValidUsername(params.Username) {
+	if err != nil {
 		s.log.Warn(err.Error())
 		err = responseError(w, "bad_credentials", "invalid user credentials")
 		if err != nil {
