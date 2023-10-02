@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -152,9 +153,19 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	user := &user.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
-	if err != nil || !IsValidUserForRegistration(user) {
+	if err != nil {
 		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
 		err = responseError(w, "parse_body", "the correct username, email and password are expected to be received in JSON format")
+		if err != nil {
+			s.log.Error(err.Error())
+		}
+		return
+	}
+
+	if !IsValidUserForRegistration(user) {
+		fmt.Println(isValidEmail(user.Email), isValidUsername(user.Username), isValidPassword(user.Password))
+		s.log.Info("invalid user registration data")
+		err = responseError(w, "invalid_params", "invalid data for registration is specified")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
