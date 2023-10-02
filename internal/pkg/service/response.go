@@ -6,12 +6,15 @@ import (
 	"net/http"
 )
 
-type Empty struct{} // @name Empty
+// type JsonResponseNoBody struct {
+// 	Status  string `json:"status" example:"ok"`
+// 	Message string `json:"message" example:"Response message"`
+// }
 
 type JsonResponse struct {
 	Status  string      `json:"status" example:"ok"`
 	Message string      `json:"message" example:"Response message"`
-	Body    interface{} `json:"body,omitempty"`
+	Body    interface{} `json:"body" extensions:"x-omitempty"`
 } // @name JsonResponse
 
 type JsonErrResponse struct {
