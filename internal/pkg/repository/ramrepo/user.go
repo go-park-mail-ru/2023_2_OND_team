@@ -33,3 +33,13 @@ func (r *ramUserRepo) GetUserByUsername(ctx context.Context, username string) (*
 	}
 	return user, nil
 }
+
+func (r *ramUserRepo) GetUsernameByID(ctx context.Context, userID int) (string, error) {
+	row := r.db.QueryRowContext(ctx, "SELECT username FROM users WHERE id = $1;", userID)
+	var username string
+	err := row.Scan(&username)
+	if err != nil {
+		return "", fmt.Errorf("getting a username from storage by id: %w", err)
+	}
+	return username, nil
+}
