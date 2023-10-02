@@ -4,11 +4,29 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"unicode"
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 )
+
+type errorFields []string
+
+func (b *errorFields) Error() string {
+	return strings.Join(*b, ",")
+}
+
+func (b *errorFields) addInvalidField(fieldName string) {
+	*b = append(*b, fieldName)
+}
+
+func (b *errorFields) Err() error {
+	if len(*b) == 0 {
+		return nil
+	}
+	return b
+}
 
 func FetchValidParamForLoadTape(u *url.URL) (count int, lastID int, err error) {
 	if param := u.Query().Get("count"); len(param) > 0 {
@@ -33,12 +51,20 @@ func FetchValidParamForLoadTape(u *url.URL) (count int, lastID int, err error) {
 	return
 }
 
-func IsValidUserForRegistration(user *user.User) bool {
-	return isValidPassword(user.Password) && isValidEmail(user.Email) && isValidUsername(user.Username)
-}
+func IsValidUserForRegistration(user *user.User) error {
+	invalidFields := new(errorFields)
 
-func IsValidUserForLogin(user *user.User) bool {
-	return isValidPassword(user.Password) && isValidUsername(user.Username)
+	if !isValidPassword(user.Password) {
+		invalidFields.addInvalidField("password")
+	}
+	if !isValidEmail(user.Email) {
+		invalidFields.addInvalidField("email")
+	}
+	if !isValidUsername(user.Username) {
+		invalidFields.addInvalidField("username")
+	}
+
+	return invalidFields.Err()
 }
 
 func isValidUsername(username string) bool {

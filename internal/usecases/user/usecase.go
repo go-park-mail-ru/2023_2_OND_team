@@ -28,7 +28,7 @@ func New(log *logger.Logger, repo repo.Repository) *Usecase {
 }
 
 func (u *Usecase) Register(ctx context.Context, user *entity.User) error {
-	salt, err := crypto.NewRandomStr(lenSalt)
+	salt, err := crypto.NewRandomString(lenSalt)
 	if err != nil {
 		return fmt.Errorf("generating salt for registration: %w", err)
 	}

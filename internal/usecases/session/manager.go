@@ -28,7 +28,7 @@ func New(log *logger.Logger, repo repo.Repository) *SessionManager {
 }
 
 func (sm *SessionManager) CreateNewSessionForUser(ctx context.Context, userID int) (*session.Session, error) {
-	sessionKey, err := crypto.NewRandomStr(lenSessionKey)
+	sessionKey, err := crypto.NewRandomString(lenSessionKey)
 	if err != nil {
 		return nil, fmt.Errorf("session key generation for new session: %w", err)
 	}
