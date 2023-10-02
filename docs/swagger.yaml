@@ -1,10 +1,7 @@
 definitions:
-  Empty:
-    type: object
   JsonErrResponse:
     properties:
       code:
-        example: "0"
         type: string
       message:
         example: Error description
@@ -15,7 +12,8 @@ definitions:
     type: object
   JsonResponse:
     properties:
-      body: {}
+      body:
+        x-omitempty: true
       message:
         example: Response message
         type: string
@@ -25,26 +23,18 @@ definitions:
     type: object
   Pin:
     properties:
-      authorId:
-        example: 23
-        type: integer
-      description:
-        example: about face
-        type: string
       id:
         example: 55
         type: integer
       picture:
         example: pinspire/imgs/image.png
         type: string
-      publicationTime:
-        type: string
-      title:
-        example: Nature's beauty
-        type: string
     type: object
   User:
     properties:
+      email:
+        example: digital@gmail.com
+        type: string
       password:
         example: pass123
         type: string
@@ -68,6 +58,12 @@ paths:
   /api/v1/auth/login:
     get:
       description: User login, check authentication, get user info
+      parameters:
+      - description: Auth session id
+        example: senjs7rvdnrgkjdr
+        in: header
+        name: session_key
+        type: string
       produces:
       - application/json
       responses:
@@ -100,12 +96,14 @@ paths:
       description: User login, creating new session
       parameters:
       - description: Username
+        example: clicker123
         in: body
         name: username
         required: true
         schema:
           type: string
       - description: Password
+        example: safe_pass
         in: body
         name: password
         required: true
@@ -121,12 +119,7 @@ paths:
               description: Auth cookie with new valid session id
               type: string
           schema:
-            allOf:
-            - $ref: '#/definitions/JsonResponse'
-            - properties:
-                body:
-                  $ref: '#/definitions/Empty'
-              type: object
+            $ref: '#/definitions/JsonResponse'
         "400":
           description: Bad Request
           schema:
@@ -144,6 +137,12 @@ paths:
   /api/v1/auth/logout:
     delete:
       description: User logout, session deletion
+      parameters:
+      - description: Auth session id
+        example: senjs7rvdnrgkjdr
+        in: header
+        name: session_key
+        type: string
       produces:
       - application/json
       responses:
@@ -154,12 +153,7 @@ paths:
               description: Auth cookie with expired session id
               type: string
           schema:
-            allOf:
-            - $ref: '#/definitions/JsonResponse'
-            - properties:
-                body:
-                  $ref: '#/definitions/Empty'
-              type: object
+            $ref: '#/definitions/JsonResponse'
         "400":
           description: Bad Request
           schema:
@@ -181,18 +175,21 @@ paths:
       description: User registration
       parameters:
       - description: Username
+        example: clicker123
         in: body
         name: username
         required: true
         schema:
           type: string
       - description: Email
+        example: clickkk@gmail.com
         in: body
         name: email
         required: true
         schema:
           type: string
       - description: Password
+        example: safe_pass
         in: body
         name: password
         required: true
@@ -204,12 +201,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/JsonResponse'
-            - properties:
-                body:
-                  $ref: '#/definitions/Empty'
-              type: object
+            $ref: '#/definitions/JsonResponse'
         "400":
           description: Bad Request
           schema:
@@ -226,7 +218,22 @@ paths:
       - Auth
   /api/v1/pin:
     get:
+      consumes:
+      - application/json
       description: Get pin collection
+      parameters:
+      - description: ID of the pin that will be just before the first pin in the requested
+          collection, 0 by default
+        example: "2"
+        in: path
+        name: lastID
+        type: string
+      - description: Pins quantity after last pin specified in lastID
+        example: "5"
+        in: path
+        name: count
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -240,41 +247,6 @@ paths:
                   items:
                     $ref: '#/definitions/Pin'
                   type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/JsonErrResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/JsonErrResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/JsonErrResponse'
-      tags:
-      - Pin
-  /api/v1/pin/{pinId}:
-    get:
-      description: Get concrete pin by id
-      parameters:
-      - description: Id of the pin
-        in: path
-        name: pinId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/JsonResponse'
-            - properties:
-                body:
-                  $ref: '#/definitions/Pin'
               type: object
         "400":
           description: Bad Request
