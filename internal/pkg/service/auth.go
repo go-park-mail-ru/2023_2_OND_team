@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -89,7 +88,7 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 
 	if !isValidPassword(params.Password) || !isValidUsername(params.Username) {
 		s.log.Info("invalid credentials")
-		err = responseError(w, "bad_credentials", "invalid user credentials")
+		err = responseError(w, "invalid_credentials", "invalid user credentials")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
@@ -99,7 +98,7 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := s.userCase.Authentication(r.Context(), params)
 	if err != nil {
 		s.log.Warn(err.Error())
-		err = responseError(w, "bad_credentials", "invalid user credentials")
+		err = responseError(w, "bad_credentials", "incorrect user credentials")
 		if err != nil {
 			s.log.Error(err.Error())
 		}
@@ -163,10 +162,9 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsValidUserForRegistration(user) {
-		fmt.Println(isValidEmail(user.Email), isValidUsername(user.Username), isValidPassword(user.Password))
+	if err := IsValidUserForRegistration(user); err != nil {
 		s.log.Info("invalid user registration data")
-		err = responseError(w, "invalid_params", "invalid data for registration is specified")
+		err = responseError(w, "invalid_params", err.Error())
 		if err != nil {
 			s.log.Error(err.Error())
 		}
@@ -176,7 +174,7 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 	err = s.userCase.Register(r.Context(), user)
 	if err != nil {
 		s.log.Warn(err.Error())
-		err = responseError(w, "uniq_fields", "username")
+		err = responseError(w, "uniq_fields", "there is already an account with this username or password")
 	} else {
 		err = responseOk(w, "the user has been successfully registered", nil)
 	}
