@@ -35,7 +35,11 @@ func (s *Server) Run() error {
 	}
 	s.Handler = s.router.Mux
 	s.log.Info("server start")
-	return s.ListenAndServeTLS(s.cfg.CertFile, s.cfg.KeyFile)
+	if s.cfg.https {
+		return s.ListenAndServeTLS(s.cfg.CertFile, s.cfg.KeyFile)
+	} else {
+		return s.ListenAndServe()
+	}
 }
 
 func (s *Server) InitRouter(serv *service.Service) {

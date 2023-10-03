@@ -2,5 +2,6 @@ app:
   server:
     host: 0.0.0.0
     port: 8080
-    certFile: cert/
-    keyFile: cert/
+    https: false
+    certFile: /home/ond_team/cert/fullchain.pem
+    keyFile: /home/ond_team/cert/privkey.pem
