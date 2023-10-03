@@ -33,6 +33,16 @@ func OpenDB() (*sql.DB, error) {
 		return nil, err
 	}
 
+	err = fillUsersTableRows(db)
+	if err != nil {
+		return nil, err
+	}
+
+	err = fillSessionTableRows(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 
@@ -70,6 +80,27 @@ func createSessionTable(db *sql.DB) error {
 	);`)
 	if err != nil {
 		return fmt.Errorf("create table session: %w", err)
+	}
+	return nil
+}
+
+func fillUsersTableRows(db *sql.DB) error {
+	_, err := db.Exec(`INSERT INTO users (username, password, email) VALUES 
+	("dogsLover", "bf62b19f2f755d892f0ee1efb591795c198bcd0eecb69e58b153064e7ca11f384bf2e2746d91bf36", "dogslove@gmail.com"),
+	("professional_player", "2f45a4f97b2d849448ac28cf95d4a55ddbc146f607e158e78b25a1906b469fe9ebde41b8127dd50e", "fortheplayers@yandex.ru"),
+	("goodJobBer", "ade1af872d23126858c289e0c1bfc8b57502f7f0237e35fc64d08fab2d6b667358f04ac4174b736b", "jobjobjob@mail.ru");`)
+	if err != nil {
+		return fmt.Errorf("fill users table: %w", err)
+	}
+	return nil
+}
+
+func fillSessionTableRows(db *sql.DB) error {
+	_, err := db.Exec(`INSERT INTO session (session_key, user_id, expire) VALUES
+	("461afabf38b3147c", 1, 2024-10-03 10:52:09.243860007 +0000 UTC),
+	("f4280a941b664d02", 3434, 2024-10-03 10:52:09.243860007 +0000 UTC);`)
+	if err != nil {
+		return fmt.Errorf("fill session table: %w", err)
 	}
 	return nil
 }
