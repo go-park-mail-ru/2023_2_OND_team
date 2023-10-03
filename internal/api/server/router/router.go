@@ -1,10 +1,13 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
 
 	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
+	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -17,6 +20,13 @@ func New() Router {
 }
 
 func (r Router) InitRoute(serv *service.Service) {
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"https://pinspire.online", "https://pinspire.online:1443"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"content-type"},
+	})
+	r.Mux.Use(c.Handler)
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
 
