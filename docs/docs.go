@@ -33,6 +33,15 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "senjs7rvdnrgkjdr",
+                        "description": "Auth session id",
+                        "name": "session_key",
+                        "in": "header"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -85,6 +94,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
+                        "example": "clicker123",
                         "description": "Username",
                         "name": "username",
                         "in": "body",
@@ -94,6 +104,7 @@ const docTemplate = `{
                         }
                     },
                     {
+                        "example": "safe_pass",
                         "description": "Password",
                         "name": "password",
                         "in": "body",
@@ -107,19 +118,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/JsonResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "body": {
-                                            "$ref": "#/definitions/Empty"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/JsonResponse"
                         },
                         "headers": {
                             "session_key": {
@@ -158,23 +157,20 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "senjs7rvdnrgkjdr",
+                        "description": "Auth session id",
+                        "name": "session_key",
+                        "in": "header"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/JsonResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "body": {
-                                            "$ref": "#/definitions/Empty"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/JsonResponse"
                         },
                         "headers": {
                             "Session-id": {
@@ -218,6 +214,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
+                        "example": "clicker123",
                         "description": "Username",
                         "name": "username",
                         "in": "body",
@@ -227,6 +224,7 @@ const docTemplate = `{
                         }
                     },
                     {
+                        "example": "clickkk@gmail.com",
                         "description": "Email",
                         "name": "email",
                         "in": "body",
@@ -236,6 +234,7 @@ const docTemplate = `{
                         }
                     },
                     {
+                        "example": "safe_pass",
                         "description": "Password",
                         "name": "password",
                         "in": "body",
@@ -249,19 +248,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/JsonResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "body": {
-                                            "$ref": "#/definitions/Empty"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/JsonResponse"
                         }
                     },
                     "400": {
@@ -288,11 +275,31 @@ const docTemplate = `{
         "/api/v1/pin": {
             "get": {
                 "description": "Get pin collection",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Pin"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "2",
+                        "description": "ID of the pin that will be just before the first pin in the requested collection, 0 by default",
+                        "name": "lastID",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "example": "5",
+                        "description": "Pins quantity after last pin specified in lastID",
+                        "name": "count",
+                        "in": "path",
+                        "required": true
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -336,76 +343,14 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/api/v1/pin/{pinId}": {
-            "get": {
-                "description": "Get concrete pin by id",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Pin"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Id of the pin",
-                        "name": "pinId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/JsonResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "body": {
-                                            "$ref": "#/definitions/Pin"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/JsonErrResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/JsonErrResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/JsonErrResponse"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
-        "Empty": {
-            "type": "object"
-        },
         "JsonErrResponse": {
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string",
-                    "example": "0"
+                    "type": "string"
                 },
                 "message": {
                     "type": "string",
@@ -420,7 +365,9 @@ const docTemplate = `{
         "JsonResponse": {
             "type": "object",
             "properties": {
-                "body": {},
+                "body": {
+                    "x-omitempty": true
+                },
                 "message": {
                     "type": "string",
                     "example": "Response message"
@@ -434,14 +381,6 @@ const docTemplate = `{
         "Pin": {
             "type": "object",
             "properties": {
-                "authorId": {
-                    "type": "integer",
-                    "example": 23
-                },
-                "description": {
-                    "type": "string",
-                    "example": "about face"
-                },
                 "id": {
                     "type": "integer",
                     "example": 55
@@ -449,19 +388,16 @@ const docTemplate = `{
                 "picture": {
                     "type": "string",
                     "example": "pinspire/imgs/image.png"
-                },
-                "publicationTime": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Nature's beauty"
                 }
             }
         },
         "User": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "digital@gmail.com"
+                },
                 "password": {
                     "type": "string",
                     "example": "pass123"

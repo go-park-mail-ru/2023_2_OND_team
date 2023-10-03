@@ -15,10 +15,11 @@ import (
 //	@Description	User login, check authentication, get user info
 //	@Tags			Auth
 //	@Produce		json
-//	@Success		200	{object}	JsonResponse{body=user.User}
-//	@Failure		400	{object}	JsonErrResponse
-//	@Failure		404	{object}	JsonErrResponse
-//	@Failure		500	{object}	JsonErrResponse
+//	@Param			session_key	header		string	false	"Auth session id"	example(senjs7rvdnrgkjdr)
+//	@Success		200			{object}	JsonResponse{body=user.User}
+//	@Failure		400			{object}	JsonErrResponse
+//	@Failure		404			{object}	JsonErrResponse
+//	@Failure		500			{object}	JsonErrResponse
 //	@Router			/api/v1/auth/login [get]
 func (s *Service) CheckLogin(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("request on check login", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
@@ -61,9 +62,9 @@ func (s *Service) CheckLogin(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			username	body		string	true	"Username"
-//	@Param			password	body		string	true	"Password"
-//	@Success		200			{object}	JsonResponse{body=Empty}
+//	@Param			username	body		string	true	"Username"	example(clicker123)
+//	@Param			password	body		string	true	"Password"	example(safe_pass)
+//	@Success		200			{object}	JsonResponse
 //	@Failure		400			{object}	JsonErrResponse
 //	@Failure		404			{object}	JsonErrResponse
 //	@Failure		500			{object}	JsonErrResponse
@@ -137,10 +138,10 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			username	body		string	true	"Username"
-//	@Param			email		body		string	true	"Email"
-//	@Param			password	body		string	true	"Password"
-//	@Success		200			{object}	JsonResponse{body=Empty}
+//	@Param			username	body		string	true	"Username"	example(clicker123)
+//	@Param			email		body		string	true	"Email"		example(clickkk@gmail.com)
+//	@Param			password	body		string	true	"Password"	example(safe_pass)
+//	@Success		200			{object}	JsonResponse
 //	@Failure		400			{object}	JsonErrResponse
 //	@Failure		404			{object}	JsonErrResponse
 //	@Failure		500			{object}	JsonErrResponse
@@ -187,11 +188,13 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 //	@Description	User logout, session deletion
 //	@Tags			Auth
 //	@Produce		json
-//	@Success		200	{object}	JsonResponse{body=Empty}
-//	@Failure		400	{object}	JsonErrResponse
-//	@Failure		404	{object}	JsonErrResponse
-//	@Failure		500	{object}	JsonErrResponse
-//	@Header			200	{string}	Session-id	"Auth cookie with expired session id"
+//	@Param			session_key	header		string	false	"Auth session id"	example(senjs7rvdnrgkjdr)
+//
+//	@Success		200			{object}	JsonResponse
+//	@Failure		400			{object}	JsonErrResponse
+//	@Failure		404			{object}	JsonErrResponse
+//	@Failure		500			{object}	JsonErrResponse
+//	@Header			200			{string}	Session-id	"Auth cookie with expired session id"
 //	@Router			/api/v1/auth/logout [delete]
 func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("request on logout", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
