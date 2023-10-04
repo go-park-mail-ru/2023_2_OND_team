@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
@@ -18,7 +20,7 @@ func TestGetPins(t *testing.T) {
 	log, _ := logger.New(logger.RFC3339FormatTime())
 	defer log.Sync()
 
-	db, _ := ramrepo.OpenDB()
+	db, _ := ramrepo.OpenDB(strconv.FormatInt(int64(rand.Int()), 10))
 	defer db.Close()
 
 	pinCase := pinCase.New(log, ramrepo.NewRamPinRepo(db))
@@ -64,16 +66,11 @@ func TestGetPins(t *testing.T) {
 			w := httptest.NewRecorder()
 			service.GetPins(w, req)
 
-			resp := w.Result()
-			body, _ := io.ReadAll(resp.Body)
 			var actualResp JsonResponse
+			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 
-			json.Unmarshal(body, &actualResp) // после Unmarshall числа приводятся к float64
-			fmt.Println(tCase.expResp)
-			fmt.Println(actualResp)
 			require.Equal(t, tCase.expResp.Status, actualResp.Status)
 			require.Equal(t, tCase.expResp.Message, actualResp.Message)
-			// fmt.Println(reflect.TypeOf(actualResp.Body.(map[string]interface{})["lastID"]))
 			expLastID := tCase.expResp.Body.(map[string]interface{})["lastID"].(int)
 			actualLastID := actualResp.Body.(map[string]interface{})["lastID"].(float64)
 
