@@ -7,6 +7,8 @@ import (
 	"go.uber.org/config"
 )
 
+const ConfigName = "app.server"
+
 type Config struct {
 	Host     string
 	Port     string
@@ -14,8 +16,6 @@ type Config struct {
 	KeyFile  string
 	https    bool
 }
-
-const ConfigName = "app.server"
 
 func NewConfig(cfg *config.YAML) (*Config, error) {
 	value := cfg.Get(ConfigName)
