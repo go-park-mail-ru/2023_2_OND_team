@@ -9,7 +9,6 @@ import (
 
 func TestFetchValidParams(t *testing.T) {
 	rawUrl := "https://domain.test:8080/api/v1/pin"
-	// testCases := make([]TestCaseFetch, 0)
 
 	tests := []struct {
 		name                  string
@@ -24,45 +23,6 @@ func TestFetchValidParams(t *testing.T) {
 		{"the parameter lastID is registered but not specified", "?lastID=&count=17", 17, 0},
 	}
 
-	// testCases = append(testCases, []TestCaseFetch{
-	// 	{
-	// 		rawURL:    fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, 0, 1),
-	// 		expCount:  0,
-	// 		expLastID: 0,
-	// 		expErr:    ErrBadParams,
-	// 	},
-	// 	{
-	// 		rawURL:    fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, 12312, 1),
-	// 		expCount:  0,
-	// 		expLastID: 0,
-	// 		expErr:    ErrBadParams,
-	// 	},
-	// 	{
-	// 		rawURL:    fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, -2, 1),
-	// 		expCount:  0,
-	// 		expLastID: 0,
-	// 		expErr:    ErrBadParams,
-	// 	},
-	// 	{
-	// 		rawURL:    fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, 2, -1),
-	// 		expCount:  0,
-	// 		expLastID: 0,
-	// 		expErr:    ErrBadParams,
-	// 	},
-	// 	{
-	// 		rawURL:    fmt.Sprintf("%s?count=&lastID=%d", rawUrl, 1),
-	// 		expCount:  0,
-	// 		expLastID: 0,
-	// 		expErr:    ErrCountParameterMissing,
-	// 	},
-	// 	{
-	// 		rawURL:    fmt.Sprintf("%s?&lastID=%d", rawUrl, 4),
-	// 		expCount:  0,
-	// 		expLastID: 0,
-	// 		expErr:    ErrCountParameterMissing,
-	// 	},
-	// }...)
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			URL, err := url.Parse(rawUrl + test.queryRow)
@@ -73,6 +33,36 @@ func TestFetchValidParams(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, test.wantCount, actualCount)
 			require.Equal(t, test.wantLastID, actualLastID)
+		})
+	}
+}
+
+func TestErrorFetchValidParams(t *testing.T) {
+	rawUrl := "https://domain.test:8080/api/v1/pin"
+
+	tests := []struct {
+		name     string
+		queryRow string
+		wantErr  error
+	}{
+		{"empty query row", "", ErrCountParameterMissing},
+		{"count equal zero", "?count=0", ErrBadParams},
+		{"negative count", "?count=-5&lastID=12", ErrBadParams},
+		{"negative lastID", "?count=5&lastID=-6", ErrBadParams},
+		{"requested count is more than a thousand", "?count=1001", ErrBadParams},
+		{"count param empty", "?count=&lastID=6", ErrCountParameterMissing},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			URL, err := url.Parse(rawUrl + test.queryRow)
+			if err != nil {
+				t.Fatalf("error when parsing into the url.URL structure: %v", err)
+			}
+			actualCount, actualLastID, err := FetchValidParamForLoadTape(URL)
+			require.ErrorIs(t, err, test.wantErr)
+			require.Equal(t, 0, actualCount)
+			require.Equal(t, 0, actualLastID)
 		})
 	}
 }
