@@ -24,7 +24,7 @@ func (r *ramPinRepo) GetSortedNPinsAfterID(ctx context.Context, count int, after
 		return nil, fmt.Errorf("select to receive %d pins after %d: %w", count, afterPinID, err)
 	}
 
-	pins := []pin.Pin{}
+	pins := make([]pin.Pin, 0, count)
 	pin := pin.Pin{}
 	for rows.Next() {
 		err := rows.Scan(&pin.ID, &pin.Picture)

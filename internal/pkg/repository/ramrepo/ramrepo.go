@@ -10,37 +10,37 @@ import (
 func OpenDB(dataSourceName string) (*sql.DB, error) {
 	db, err := sql.Open("ramsql", dataSourceName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sql.Open returned error: %w", err)
 	}
 
 	err = createUsersTable(db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("createUsersTable: %w", err)
 	}
 
 	err = createPinTable(db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("createPinTable: %w", err)
 	}
 
 	err = createSessionTable(db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("createSessionTable: %w", err)
 	}
 
 	err = fillPinTableRows(db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fillPinTableRows: %w", err)
 	}
 
 	err = fillUsersTableRows(db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fillUsersTableRows: %w", err)
 	}
 
 	err = fillSessionTableRows(db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fillSessionTableRows: %w", err)
 	}
 
 	return db, nil
