@@ -37,9 +37,8 @@ func (s *Server) Run() error {
 	s.log.Info("server start")
 	if s.cfg.https {
 		return s.ListenAndServeTLS(s.cfg.CertFile, s.cfg.KeyFile)
-	} else {
-		return s.ListenAndServe()
 	}
+	return s.ListenAndServe()
 }
 
 func (s *Server) InitRouter(serv *service.Service) {
