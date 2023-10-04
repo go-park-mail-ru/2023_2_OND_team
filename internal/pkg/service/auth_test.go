@@ -55,7 +55,7 @@ func TestCheckLogin(t *testing.T) {
 			JsonResponse{
 				Status:  "ok",
 				Message: "user found",
-				Body:    map[string]interface{}{"username": "dogsLover", "avatar": "https://cdn-icons-png.flaticon.com/512/149/149071.png"},
+				Body:    map[string]interface{}{"username": "dogsLover", "avatar": "https://pinspire.online:8081/upload/avatars/default-avatar.png"},
 			},
 		},
 	}
