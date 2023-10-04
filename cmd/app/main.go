@@ -38,7 +38,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	db, err := ramrepo.OpenDB()
+	db, err := ramrepo.OpenDB("RamRepository")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
