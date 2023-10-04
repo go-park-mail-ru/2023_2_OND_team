@@ -38,7 +38,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	db, err := ramrepo.OpenDB()
+	db, err := ramrepo.OpenDB("RamRepository")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -49,7 +49,11 @@ func main() {
 	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
 
 	service := service.New(log, sm, userCase, pinCase)
-	server := server.New(log, *server.NewConfig(cfg))
+	cfgServ, err := server.NewConfig(cfg)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	server := server.New(log, cfgServ)
 	server.InitRouter(service)
 	if err := server.Run(); err != nil {
 		log.Fatal(err.Error())

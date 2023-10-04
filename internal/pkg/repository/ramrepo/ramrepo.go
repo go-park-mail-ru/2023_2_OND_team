@@ -7,8 +7,8 @@ import (
 	_ "github.com/proullon/ramsql/driver"
 )
 
-func OpenDB() (*sql.DB, error) {
-	db, err := sql.Open("ramsql", "RamRepository")
+func OpenDB(dataSourceName string) (*sql.DB, error) {
+	db, err := sql.Open("ramsql", dataSourceName)
 	if err != nil {
 		return nil, err
 	}

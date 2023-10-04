@@ -15,15 +15,17 @@ type Server struct {
 	http.Server
 	router router.Router
 	log    *logger.Logger
+	cfg    *Config
 }
 
-func New(log *logger.Logger, cfg Config) *Server {
+func New(log *logger.Logger, cfg *Config) *Server {
 	return &Server{
 		Server: http.Server{
 			Addr: cfg.Host + ":" + cfg.Port,
 		},
 		router: router.New(),
 		log:    log,
+		cfg:    cfg,
 	}
 }
 
@@ -33,6 +35,9 @@ func (s *Server) Run() error {
 	}
 	s.Handler = s.router.Mux
 	s.log.Info("server start")
+	if s.cfg.https {
+		return s.ListenAndServeTLS(s.cfg.CertFile, s.cfg.KeyFile)
+	}
 	return s.ListenAndServe()
 }
 
