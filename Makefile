@@ -1,3 +1,4 @@
+.PHONY: build run test test_with_coverage cleantest retest doc
 ENTRYPOINT=cmd/app/main.go
 DOC_DIR=./docs
 COV_OUT=coverage.out

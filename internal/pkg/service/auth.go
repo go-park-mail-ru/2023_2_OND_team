@@ -74,9 +74,9 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
-	defer r.Body.Close()
 	params := usecase.NewCredentials()
 	err := json.NewDecoder(r.Body).Decode(&params)
+	defer r.Body.Close()
 	if err != nil {
 		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
 		err = responseError(w, "parse_body", "the correct username and password are expected to be received in JSON format")
@@ -150,9 +150,9 @@ func (s *Service) Signup(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
-	defer r.Body.Close()
 	user := &user.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
+	defer r.Body.Close()
 	if err != nil {
 		s.log.Info("failed to parse parameters", log.F{"error", err.Error()})
 		err = responseError(w, "parse_body", "the correct username, email and password are expected to be received in JSON format")

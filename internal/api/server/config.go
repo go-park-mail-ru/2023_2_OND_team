@@ -17,7 +17,12 @@ type Config struct {
 	https    bool
 }
 
-func NewConfig(cfg *config.YAML) (*Config, error) {
+func NewConfig(filename string) (*Config, error) {
+	cfg, err := config.NewYAML(config.File(filename))
+	if err != nil {
+		return nil, fmt.Errorf("new YAML provider: %w", err)
+	}
+
 	value := cfg.Get(ConfigName)
 	c := &Config{
 		Host:     value.Get("host").String(),
@@ -25,10 +30,11 @@ func NewConfig(cfg *config.YAML) (*Config, error) {
 		CertFile: value.Get("certFile").String(),
 		KeyFile:  value.Get("keyFile").String(),
 	}
-	b, err := strconv.ParseBool(value.Get("https").String())
+
+	https, err := strconv.ParseBool(value.Get("https").String())
 	if err != nil {
 		return nil, fmt.Errorf("parse param https in server.Config: %w", err)
 	}
-	c.https = b
+	c.https = https
 	return c, nil
 }

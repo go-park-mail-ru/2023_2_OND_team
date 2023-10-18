@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
-
-	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
 	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
 )
 
 type Router struct {
@@ -26,7 +26,9 @@ func (r Router) InitRoute(serv *service.Service) {
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"content-type"},
 	})
+
 	r.Mux.Use(c.Handler)
+
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
 

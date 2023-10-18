@@ -13,6 +13,6 @@ func main() {
 		Handler: http.StripPrefix("/upload/", fs),
 	}
 	log.Println("fileserver start")
-	defer log.Panicln("fileserver finish")
+	defer log.Println("fileserver finish")
 	s.ListenAndServeTLS("/home/ond_team/cert/fullchain.pem", "/home/ond_team/cert/privkey.pem")
 }

@@ -12,6 +12,8 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
+const configFile = "configs/config.yml"
+
 //	@title			Pinspire API
 //	@version		1.0
 //	@description	API for Pinspire project
@@ -32,12 +34,6 @@ func main() {
 	}
 	defer log.Sync()
 
-	cfg, err := newConfig("configs/config.yml")
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-
 	db, err := ramrepo.OpenDB("RamRepository")
 	if err != nil {
 		log.Error(err.Error())
@@ -50,7 +46,7 @@ func main() {
 	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
 
 	service := service.New(log, sm, userCase, pinCase)
-	cfgServ, err := server.NewConfig(cfg)
+	cfgServ, err := server.NewConfig(configFile)
 	if err != nil {
 		log.Error(err.Error())
 		return
