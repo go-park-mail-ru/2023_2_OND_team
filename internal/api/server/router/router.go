@@ -21,7 +21,7 @@ func New() Router {
 
 func (r Router) InitRoute(serv *service.Service) {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://pinspire.online", "https://pinspire.online:1443"},
+		AllowedOrigins:   []string{"https://pinspire.online", "https://pinspire.online:1443", "https://pinspire.online:8443"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"content-type"},
