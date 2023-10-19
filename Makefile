@@ -11,10 +11,11 @@ run: build
 	./bin/app
 
 test:
-	go test ./... -race -covermode=atomic -coverpkg ./... -coverprofile=$(COV_OUT)
+	go test -v ./... -race -covermode=atomic -coverpkg ./... -coverprofile=$(COV_OUT)
 
 test_with_coverage: test
 	go tool cover -html $(COV_OUT) -o $(COV_HTML)
+	go tool cover -func profile.cov
 
 cleantest:
 	rm coverage*
