@@ -16,13 +16,13 @@ CREATE TABLE IF NOT EXISTS profile (
 
 ALTER TABLE profile ALTER COLUMN avatar SET DEFAULT 'avatar.jpg'; 
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS auth (
 	id serial PRIMARY KEY,
 	username TEXT NOT NULL,
 	PASSWORD TEXT NOT NULL,
 	profile_id int NOT NULL,
-	CONSTRAINT users_username_uniq UNIQUE (username),
-	CONSTRAINT users_profile_id_uniq UNIQUE (profile_id),
+	CONSTRAINT auth_username_uniq UNIQUE (username),
+	CONSTRAINT auth_profile_id_uniq UNIQUE (profile_id),
 	FOREIGN KEY (profile_id) REFERENCES profile (id) ON DELETE CASCADE
 );
 
