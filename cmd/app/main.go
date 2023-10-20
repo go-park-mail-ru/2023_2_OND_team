@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/pin"
@@ -52,8 +53,10 @@ func main() {
 		return
 	}
 	server := server.New(log, cfgServ)
-	server.InitRouter(service)
-	if err := server.Run(); err != nil {
+	router := router.New()
+	router.RegisterRoute(service)
+
+	if err := server.Run(router.Mux); err != nil {
 		log.Error(err.Error())
 		return
 	}

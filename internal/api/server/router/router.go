@@ -19,7 +19,7 @@ func New() Router {
 	return Router{chi.NewMux()}
 }
 
-func (r Router) InitRoute(serv *service.Service) {
+func (r Router) RegisterRoute(serv *service.Service) {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://pinspire.online", "https://pinspire.online:1443"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
