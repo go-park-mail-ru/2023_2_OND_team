@@ -23,7 +23,7 @@ func Run(log *log.Logger, configFile string) {
 	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
 	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
 
-	service := deliveryHTTP.New(log, sm, userCase, pinCase)
+	handler := deliveryHTTP.New(log, sm, userCase, pinCase)
 	cfgServ, err := server.NewConfig(configFile)
 	if err != nil {
 		log.Error(err.Error())
@@ -31,7 +31,7 @@ func Run(log *log.Logger, configFile string) {
 	}
 	server := server.New(log, cfgServ)
 	router := router.New()
-	router.RegisterRoute(service)
+	router.RegisterRoute(handler, sm, log)
 
 	if err := server.Run(router.Mux); err != nil {
 		log.Error(err.Error())

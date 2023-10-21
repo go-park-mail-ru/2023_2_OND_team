@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
@@ -25,24 +26,7 @@ func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("request on check login", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
-	cookie, err := r.Cookie("session_key")
-	if err != nil {
-		h.log.Info("no cookie", log.F{"error", err.Error()})
-		err = responseError(w, "no_auth", "the user is not logged in")
-		if err != nil {
-			h.log.Error(err.Error())
-		}
-		return
-	}
-
-	userID, err := h.sm.GetUserIDBySessionKey(r.Context(), cookie.Value)
-	if err != nil {
-		err = responseError(w, "no_auth", "no user session found")
-		if err != nil {
-			h.log.Error(err.Error())
-		}
-		return
-	}
+	userID, _ := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	username, avatar, err := h.userCase.FindOutUsernameAndAvatar(r.Context(), userID)
 	if err != nil {
@@ -211,6 +195,7 @@ func (h *HandlerHTTP) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie.Expires = time.Now().UTC().AddDate(0, -1, 0)
+	cookie.Path = "/"
 	http.SetCookie(w, cookie)
 
 	err = h.sm.DeleteUserSession(r.Context(), cookie.Value)
