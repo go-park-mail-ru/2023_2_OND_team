@@ -1,27 +1,45 @@
 package app
 
 import (
+	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
+	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-func Run(log *log.Logger, configFile string) {
+func Run(ctx context.Context, log *log.Logger, configFile string) {
+	pool, err := pgxpool.New(ctx, "postgres://ond_team:love@localhost:5432/pinspire?search_path=pinspire")
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer pool.Close()
+
+	err = pool.Ping(ctx)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
 	db, err := ramrepo.OpenDB("RamRepository")
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
-	defer db.Close()
 
 	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
-	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
-	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
+	userCase := user.New(log, userRepo.NewUserRepoPG(pool))
+	pinCase := pin.New(log, pinRepo.NewPinRepoPG(pool))
 
 	handler := deliveryHTTP.New(log, sm, userCase, pinCase)
 	cfgServ, err := server.NewConfig(configFile)

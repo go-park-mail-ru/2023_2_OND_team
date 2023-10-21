@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/app"
@@ -22,6 +23,9 @@ const configFile = "configs/config.yml"
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
 func main() {
+	ctxBase, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
 		fmt.Println(err)
@@ -29,5 +33,5 @@ func main() {
 	}
 	defer log.Sync()
 
-	app.Run(log, configFile)
+	app.Run(ctxBase, log, configFile)
 }
