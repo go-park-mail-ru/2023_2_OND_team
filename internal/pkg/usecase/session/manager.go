@@ -18,16 +18,22 @@ const lenSessionKey = 16
 
 var ErrExpiredSession = errors.New("session lifetime expired")
 
-type SessionManager struct {
+type SessionManager interface {
+	CreateNewSessionForUser(ctx context.Context, userID int) (*session.Session, error)
+	GetUserIDBySessionKey(ctx context.Context, sessionKey string) (int, error)
+	DeleteUserSession(ctx context.Context, key string) error
+}
+
+type SessManager struct {
 	log  *logger.Logger
 	repo repo.Repository
 }
 
-func New(log *logger.Logger, repo repo.Repository) *SessionManager {
-	return &SessionManager{log, repo}
+func New(log *logger.Logger, repo repo.Repository) *SessManager {
+	return &SessManager{log, repo}
 }
 
-func (sm *SessionManager) CreateNewSessionForUser(ctx context.Context, userID int) (*session.Session, error) {
+func (sm *SessManager) CreateNewSessionForUser(ctx context.Context, userID int) (*session.Session, error) {
 	sessionKey, err := crypto.NewRandomString(lenSessionKey)
 	if err != nil {
 		return nil, fmt.Errorf("session key generation for new session: %w", err)
@@ -45,7 +51,7 @@ func (sm *SessionManager) CreateNewSessionForUser(ctx context.Context, userID in
 	return session, nil
 }
 
-func (sm *SessionManager) GetUserIDBySessionKey(ctx context.Context, sessionKey string) (int, error) {
+func (sm *SessManager) GetUserIDBySessionKey(ctx context.Context, sessionKey string) (int, error) {
 	session, err := sm.repo.GetSessionByKey(ctx, sessionKey)
 	if err != nil {
 		return 0, fmt.Errorf("getting a session by a manager: %w", err)
@@ -56,6 +62,6 @@ func (sm *SessionManager) GetUserIDBySessionKey(ctx context.Context, sessionKey 
 	return session.UserID, nil
 }
 
-func (sm *SessionManager) DeleteUserSession(ctx context.Context, key string) error {
+func (sm *SessManager) DeleteUserSession(ctx context.Context, key string) error {
 	return sm.repo.DeleteSessionByKey(ctx, key)
 }

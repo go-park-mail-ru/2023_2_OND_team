@@ -1,4 +1,4 @@
-package service
+package v1
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
-	pinCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/pin"
+	pinCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 	"github.com/stretchr/testify/require"
 )

@@ -18,16 +18,22 @@ const (
 	lenPasswordHash = 64
 )
 
-type Usecase struct {
+type Usecase interface {
+	Register(ctx context.Context, user *entity.User) error
+	Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error)
+	FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error)
+}
+
+type userCase struct {
 	log  *logger.Logger
 	repo repo.Repository
 }
 
-func New(log *logger.Logger, repo repo.Repository) *Usecase {
-	return &Usecase{log, repo}
+func New(log *logger.Logger, repo repo.Repository) *userCase {
+	return &userCase{log, repo}
 }
 
-func (u *Usecase) Register(ctx context.Context, user *entity.User) error {
+func (u *userCase) Register(ctx context.Context, user *entity.User) error {
 	salt, err := crypto.NewRandomString(lenSalt)
 	if err != nil {
 		return fmt.Errorf("generating salt for registration: %w", err)
@@ -41,7 +47,7 @@ func (u *Usecase) Register(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
-func (u *Usecase) Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error) {
+func (u *userCase) Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error) {
 	user, err := u.repo.GetUserByUsername(ctx, credentials.Username)
 	if err != nil {
 		return nil, fmt.Errorf("user authentication: %w", err)
@@ -54,6 +60,6 @@ func (u *Usecase) Authentication(ctx context.Context, credentials userCredential
 	return user, nil
 }
 
-func (u *Usecase) FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error) {
+func (u *userCase) FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error) {
 	return u.repo.GetUsernameAndAvatarByID(ctx, userID)
 }

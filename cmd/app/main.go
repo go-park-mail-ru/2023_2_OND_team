@@ -3,13 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/service"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/pin"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/session"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/usecases/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/app"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -35,29 +29,5 @@ func main() {
 	}
 	defer log.Sync()
 
-	db, err := ramrepo.OpenDB("RamRepository")
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-	defer db.Close()
-
-	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
-	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
-	pinCase := pin.New(log, ramrepo.NewRamPinRepo(db))
-
-	service := service.New(log, sm, userCase, pinCase)
-	cfgServ, err := server.NewConfig(configFile)
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-	server := server.New(log, cfgServ)
-	router := router.New()
-	router.RegisterRoute(service)
-
-	if err := server.Run(router.Mux); err != nil {
-		log.Error(err.Error())
-		return
-	}
+	app.Run(log, configFile)
 }
