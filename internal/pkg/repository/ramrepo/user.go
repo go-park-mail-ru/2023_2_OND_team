@@ -3,6 +3,7 @@ package ramrepo
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
@@ -41,4 +42,8 @@ func (r *ramUserRepo) GetUsernameAndAvatarByID(ctx context.Context, userID int) 
 		return "", "", fmt.Errorf("getting a username from storage by id: %w", err)
 	}
 	return
+}
+
+func (r *ramUserRepo) EditUserAvatar(ctx context.Context, userID int, avatar string) error {
+	return errors.New("unimplemented")
 }

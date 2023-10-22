@@ -13,6 +13,7 @@ type Repository interface {
 	AddNewUser(ctx context.Context, user *user.User) error
 	GetUserByUsername(ctx context.Context, username string) (*user.User, error)
 	GetUsernameAndAvatarByID(ctx context.Context, userID int) (username string, avatar string, err error)
+	EditUserAvatar(ctx context.Context, userID int, avatar string) error
 }
 
 type userRepoPG struct {
@@ -67,4 +68,12 @@ func (r *userRepoPG) GetUsernameAndAvatarByID(ctx context.Context, userID int) (
 		return "", "", fmt.Errorf("getting a username from storage by id: %w", err)
 	}
 	return
+}
+
+func (r *userRepoPG) EditUserAvatar(ctx context.Context, userID int, avatar string) error {
+	_, err := r.db.Exec(ctx, "UPDATE profile SET avatar = $1 WHERE id = $2;", avatar, userID)
+	if err != nil {
+		return fmt.Errorf("edit user avatar: %w", err)
+	}
+	return nil
 }
