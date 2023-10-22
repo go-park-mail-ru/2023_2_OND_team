@@ -17,7 +17,7 @@ var ErrBadMIMEType = errors.New("bad mime type")
 
 func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, avatar io.Reader, mimeType string) error {
 	filename := uuid.New().String()
-	dir := "upload/pins/" + time.Now().UTC().Format("2006/02/01/")
+	dir := "upload/avatars/" + time.Now().UTC().Format("2006/02/01/")
 	err := os.MkdirAll(dir, 0750)
 	if err != nil {
 		return fmt.Errorf("create dir for upload file: %w", err)
