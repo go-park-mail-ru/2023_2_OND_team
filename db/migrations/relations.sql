@@ -4,10 +4,10 @@ SET search_path TO pinspire;
 
 CREATE TABLE IF NOT EXISTS profile (
 	id serial PRIMARY KEY,
-	email TEXT NOT NULL,
-	avatar TEXT NOT NULL DEFAULT 'default-avatar.png',
+	email text NOT NULL,
+	avatar text NOT NULL DEFAULT 'default-avatar.png',
 	name text,
-	surname TEXT,
+	surname text,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	deleted_at timestamptz,
@@ -18,8 +18,8 @@ ALTER TABLE profile ALTER COLUMN avatar SET DEFAULT 'avatar.jpg';
 
 CREATE TABLE IF NOT EXISTS auth (
 	id serial PRIMARY KEY,
-	username TEXT NOT NULL,
-	PASSWORD TEXT NOT NULL,
+	username text NOT NULL,
+	password text NOT NULL,
 	profile_id int NOT NULL,
 	CONSTRAINT auth_username_uniq UNIQUE (username),
 	CONSTRAINT auth_profile_id_uniq UNIQUE (profile_id),
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS auth (
 
 CREATE TABLE IF NOT EXISTS tag (
 	id serial PRIMARY KEY,
-	title TEXT NOT NULL,
+	title text NOT NULL,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	CONSTRAINT tag_title_uniq UNIQUE (title)
 );
@@ -36,9 +36,9 @@ CREATE TABLE IF NOT EXISTS tag (
 CREATE TABLE IF NOT EXISTS pin (
 	id serial PRIMARY KEY,
 	author int NOT NULL,
-	title TEXT,
-	description TEXT,
-	picture TEXT NOT NULL,
+	title text,
+	description text,
+	picture text NOT NULL,
 	public bool NOT NULL DEFAULT TRUE,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
@@ -67,9 +67,8 @@ CREATE TABLE IF NOT EXISTS like_pin (
 CREATE TABLE IF NOT EXISTS board (
 	id serial PRIMARY KEY,
 	author int NOT NULL,
-	title TEXT,
-	description TEXT,
-	picture TEXT NOT NULL,
+	title text,
+	description text,
 	public bool NOT NULL DEFAULT TRUE,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
@@ -125,7 +124,7 @@ CREATE TABLE IF NOT EXISTS contributor (
 CREATE TABLE IF NOT EXISTS subscription_user (
 	who int NOT NULL,
 	whom int NOT NULL,
-	create_at timestamptz NOT NULL DEFAULT now(),
+	created_at timestamptz NOT NULL DEFAULT now(),
 	PRIMARY KEY (whom, who),
 	FOREIGN KEY (who) REFERENCES profile (id) ON DELETE CASCADE,
 	FOREIGN KEY (whom) REFERENCES profile (id) ON DELETE CASCADE
@@ -135,7 +134,7 @@ CREATE TABLE IF NOT EXISTS comment (
 	id serial PRIMARY KEY,
 	author int NOT NULL,
 	pin_id int NOT NULL,
-	content TEXT,
+	content text,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	deleted_at timestamptz,
