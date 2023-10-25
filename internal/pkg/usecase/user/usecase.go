@@ -22,6 +22,7 @@ type Usecase interface {
 	Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error)
 	FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error)
 	UpdateUserAvatar(ctx context.Context, userID int, avatar io.Reader, mimeType string) error
+	GetAllProfileInfo(ctx context.Context, userID int) (*entity.User, error)
 }
 
 type userCase struct {

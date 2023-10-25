@@ -158,7 +158,7 @@ func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
 	err = h.userCase.Register(r.Context(), user)
 	if err != nil {
 		h.log.Warn(err.Error())
-		err = responseError(w, "uniq_fields", "there is already an account with this username or password")
+		err = responseError(w, "uniq_fields", "there is already an account with this username or email")
 	} else {
 		err = responseOk(w, "the user has been successfully registered", nil)
 	}

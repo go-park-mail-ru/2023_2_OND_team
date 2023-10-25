@@ -7,5 +7,5 @@ type User struct {
 	Surname  string `json:"-" example:"Green"`
 	Email    string `json:"email" example:"digital@gmail.com"`
 	Avatar   string `json:"-" example:"pinspire.online/avatars/avatar.jpg"`
-	Password string `json:"-" example:"pass123"`
+	Password string `json:"password,omitempty" example:"pass123"`
 } // @name User
