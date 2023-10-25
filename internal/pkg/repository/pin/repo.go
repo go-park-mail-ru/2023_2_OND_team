@@ -25,7 +25,7 @@ func NewPinRepoPG(db *pgxpool.Pool) *pinRepoPG {
 }
 
 func (p *pinRepoPG) GetSortedNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]pin.Pin, error) {
-	rows, err := p.db.Query(ctx, "SELECT id, picture FROM pin WHERE id > $1 ORDER BY id LIMIT $2;", afterPinID, count)
+	rows, err := p.db.Query(ctx, SelectAfterIdWithLimit, afterPinID, count)
 	if err != nil {
 		return nil, fmt.Errorf("select to receive %d pins after %d: %w", count, afterPinID, err)
 	}
