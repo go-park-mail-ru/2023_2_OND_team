@@ -4,6 +4,8 @@ SET search_path TO pinspire;
 
 CREATE TABLE IF NOT EXISTS profile (
 	id serial PRIMARY KEY,
+	username text NOT NULL,
+	password text NOT NULL,
 	email text NOT NULL,
 	avatar text NOT NULL DEFAULT 'default-avatar.png',
 	name text,
@@ -11,20 +13,11 @@ CREATE TABLE IF NOT EXISTS profile (
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	deleted_at timestamptz,
+	CONSTRAINT profile_username_uniq UNIQUE (username),
 	CONSTRAINT profile_email_uniq UNIQUE (email)
 );
 
 ALTER TABLE profile ALTER COLUMN avatar SET DEFAULT 'avatar.jpg'; 
-
-CREATE TABLE IF NOT EXISTS auth (
-	id serial PRIMARY KEY,
-	username text NOT NULL,
-	password text NOT NULL,
-	profile_id int NOT NULL,
-	CONSTRAINT auth_username_uniq UNIQUE (username),
-	CONSTRAINT auth_profile_id_uniq UNIQUE (profile_id),
-	FOREIGN KEY (profile_id) REFERENCES profile (id) ON DELETE CASCADE
-);
 
 CREATE TABLE IF NOT EXISTS tag (
 	id serial PRIMARY KEY,

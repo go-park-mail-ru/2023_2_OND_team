@@ -1,6 +1,3 @@
-CREATE INDEX IF NOT EXISTS auth_profile_index
-ON auth USING btree (profile_id);
-
 CREATE INDEX IF NOT EXISTS pin_author_index
 ON pin USING btree (author);
 

@@ -2,9 +2,6 @@
 * ### profile
   Персональные данные пользователя.
 
-* ### auth
-  Авторизационные данные пользователя.
-
 * ### tag
   Множество всех возможных тегов, уникальных по title. Предполагается только пополнение данного множества.
 
@@ -39,13 +36,13 @@
 
 ## Описание функциональных зависимостей
 #### Relation [profile](#profile):
-{id, email} -> {avatar, name, surname, created_at, updated_at, deleted_at}
-
-#### Relation [auth](#auth):
-{id, profile_id} -> {username, password}
+{id} -> {username, email, password, avatar, name, surname, created_at, updated_at, deleted_at}
+{username} -> {id, email, password, avatar, name, surname, created_at, updated_at, deleted_at}
+{email} -> {id, username, password, avatar, name, surname, created_at, updated_at, deleted_at}
 
 #### Relation [tag](#tag):
-{id, title} -> {created_at}
+{id} -> {title, created_at}
+{title} -> {id, created_at}
 
 #### Relation [pin](#pin):
 {id} -> {author, title, description, picture, public, created_at, updated_at, deleted_at}
@@ -69,7 +66,8 @@
 {board_id, pin_id} -> {added_at}
 
 #### Relation [role](#role):
-{id, name} -> {}
+{id} -> {name}
+{name} -> {id}
 
 #### Relation [contributor](#contributor):
 {user_id, board_id} -> {role_id, added_at, updated_at}
