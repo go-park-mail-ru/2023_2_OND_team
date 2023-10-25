@@ -9,8 +9,10 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 	"github.com/google/uuid"
+
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 var ErrBadMIMEType = errors.New("bad mime type")
@@ -46,4 +48,8 @@ func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, avatar io.R
 	}
 
 	return nil
+}
+
+func (u *userCase) GetAllProfileInfo(ctx context.Context, userID int) (*user.User, error) {
+	return u.repo.GetAllUserData(ctx, userID)
 }

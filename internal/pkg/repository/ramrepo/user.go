@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 )
 
@@ -46,4 +47,8 @@ func (r *ramUserRepo) GetUsernameAndAvatarByID(ctx context.Context, userID int) 
 
 func (r *ramUserRepo) EditUserAvatar(ctx context.Context, userID int, avatar string) error {
 	return errors.New("unimplemented")
+}
+
+func (r *ramUserRepo) GetAllUserData(ctx context.Context, userID int) (*user.User, error) {
+	return nil, errors.New("unimplemented")
 }
