@@ -46,7 +46,7 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 		invalidFields.addInvalidField("password")
 	}
 	if invalidFields.Err() != nil {
-		err = responseError(w, "invalid_params", err.Error())
+		err = responseError(w, "invalid_params", invalidFields.Error())
 		if err != nil {
 			h.log.Error(err.Error())
 		}

@@ -53,6 +53,10 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 
 		r.Route("/pin", func(r chi.Router) {
 			r.Get("/", handler.GetPins)
+			r.Group(func(r chi.Router) {
+				r.Use(auth.RequireAuth)
+				r.Post("/create", handler.CreateNewPin)
+			})
 		})
 	})
 }

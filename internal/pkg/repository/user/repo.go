@@ -77,7 +77,7 @@ func (u *userRepoPG) GetAllUserData(ctx context.Context, userID int) (*user.User
 func (u *userRepoPG) EditUserInfo(ctx context.Context, userID int, updateFields S) error {
 	sqlRow, args, err := sq.Update("profile").
 		SetMap(updateFields).
-		Where("id = ?", userID).
+		Where(sq.Eq{"id": userID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 

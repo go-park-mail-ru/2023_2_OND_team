@@ -3,7 +3,6 @@ package ramrepo
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
@@ -38,5 +37,9 @@ func (r *ramPinRepo) GetSortedNPinsAfterID(ctx context.Context, count int, after
 }
 
 func (r *ramPinRepo) GetAuthorPin(ctx context.Context, pinID int) (*user.User, error) {
-	return nil, errors.New("unimplemented")
+	return nil, ErrMethodUnimplemented
+}
+
+func (r *ramPinRepo) AddNewPin(ctx context.Context, pin *pin.Pin) error {
+	return ErrMethodUnimplemented
 }

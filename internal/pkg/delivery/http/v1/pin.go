@@ -1,16 +1,16 @@
 package v1
 
 import (
-	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
-	_ "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
-
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-var ErrCountParameterMissing = errors.New("the count parameter is missing")
-var ErrBadParams = errors.New("bad params")
+const MaxMemoryParseFormData = 10 * 1 << 20
 
 // GetPins godoc
 //
@@ -42,6 +42,67 @@ func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
 			"pins":   pins,
 			"lastID": last,
 		})
+	}
+	if err != nil {
+		h.log.Error(err.Error())
+	}
+}
+
+func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("request on create new pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
+
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		err := responseError(w, "bad_request", "the request body should be multipart/form-data")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+		return
+	}
+
+	err := r.ParseMultipartForm(MaxMemoryParseFormData)
+	if err != nil {
+		err = responseError(w, "bad_body", "failed to read request body")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+		return
+	}
+	defer r.Body.Close()
+
+	newPin := &pin.Pin{}
+	newPin.AuthorID = r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	tags := r.FormValue("tags")
+	_ = tags
+	newPin.Tags = []pin.Tag{pin.Tag{Title: "good"}, pin.Tag{Title: "aaa"}, pin.Tag{Title: "bbb"}}
+
+	newPin.Title = r.FormValue("title")
+
+	newPin.Description = r.FormValue("description")
+
+	public := r.FormValue("public")
+
+	isPublic, err := strconv.ParseBool(public)
+	if err != nil {
+		responseError(w, "bad_body", "parameter public should have boolean value")
+		return
+	}
+	newPin.Public = isPublic
+
+	picture, mime, err := r.FormFile("picture")
+	if err != nil {
+		responseError(w, "bad_body", "unable to get an image from the request body")
+		return
+	}
+	defer picture.Close()
+
+	err = h.pinCase.CreateNewPin(r.Context(), newPin, picture, mime.Header.Get("Content-Type"))
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "add_pin", "failed to create pin")
+	} else {
+		err = responseOk(w, "pin successfully created", nil)
 	}
 	if err != nil {
 		h.log.Error(err.Error())
