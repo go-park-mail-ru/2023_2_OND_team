@@ -46,6 +46,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		})
 
 		r.With(auth.RequireAuth).Route("/profile", func(r chi.Router) {
+			r.Get("/info", handler.GetProfileInfo)
 			r.Put("/edit", handler.ProfileEditInfo)
 			r.Put("/avatar", handler.ProfileEditAvatar)
 		})
