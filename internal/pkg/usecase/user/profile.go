@@ -43,7 +43,7 @@ func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, avatar io.R
 	}
 	u.log.Info("upload file", log.F{"file", filePath})
 
-	err = u.repo.EditUserAvatar(ctx, userID, "https://pinspire.online/"+filePath)
+	err = u.repo.EditUserAvatar(ctx, userID, "https://pinspire.online:8081/"+filePath)
 	if err != nil {
 		return fmt.Errorf("edit user avatar: %w", err)
 	}

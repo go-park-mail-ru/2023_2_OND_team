@@ -72,7 +72,7 @@ func isValidUsername(username string) bool {
 		return false
 	}
 	for _, r := range username {
-		if !(unicode.IsNumber(r) || unicode.IsSymbol(r) || unicode.IsPunct(r) || unicode.IsLetter(r)) {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
 			return false
 		}
 	}
@@ -89,6 +89,30 @@ func isValidPassword(password string) bool {
 	}
 	for _, r := range password {
 		if !(unicode.IsNumber(r) || unicode.IsSymbol(r) || unicode.IsPunct(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidName(name string) bool {
+	if len(name) > 50 {
+		return false
+	}
+	for _, r := range name {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidSurname(surname string) bool {
+	if len(surname) > 50 {
+		return false
+	}
+	for _, r := range surname {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
 			return false
 		}
 	}
