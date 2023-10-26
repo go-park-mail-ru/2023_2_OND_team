@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
@@ -15,7 +16,10 @@ type Repository interface {
 	GetUsernameAndAvatarByID(ctx context.Context, userID int) (username string, avatar string, err error)
 	EditUserAvatar(ctx context.Context, userID int, avatar string) error
 	GetAllUserData(ctx context.Context, userID int) (*user.User, error)
+	EditUserInfo(ctx context.Context, userID int, updateFields S) error
 }
+
+type S map[string]any
 
 type userRepoPG struct {
 	db *pgxpool.Pool
@@ -68,4 +72,22 @@ func (u *userRepoPG) GetAllUserData(ctx context.Context, userID int) (*user.User
 		return nil, fmt.Errorf("get user info by id in storage: %w", err)
 	}
 	return user, nil
+}
+
+func (u *userRepoPG) EditUserInfo(ctx context.Context, userID int, updateFields S) error {
+	sqlRow, args, err := sq.Update("profile").
+		SetMap(updateFields).
+		Where("id = ?", userID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return fmt.Errorf("build sql query row: %w", err)
+	}
+
+	_, err = u.db.Exec(ctx, sqlRow, args...)
+	if err != nil {
+		return fmt.Errorf("update user info in the storage: %w", err)
+	}
+	return nil
 }

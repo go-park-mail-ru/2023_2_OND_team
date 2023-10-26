@@ -1,15 +1,37 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
+
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	data := user.NewProfileUpdateData()
+	err := json.NewDecoder(r.Body).Decode(data)
+	defer r.Body.Close()
+	if err != nil {
+		h.log.Info("json decode: " + err.Error())
+		responseError(w, "parse_body",
+			"the request body must contain json with any of the fields: username, email, name, surname, password")
+	}
+
+	err = h.userCase.EditProfileInfo(r.Context(), userID, data)
+	if err != nil {
+		h.log.Error(err.Error())
+		responseError(w, "uniq_fields", "there is already an account with this username or email")
+	} else {
+		responseOk(w, "user data has been successfully changed", nil)
+	}
 }
 
 func (h *HandlerHTTP) ProfileEditAvatar(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	rp "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 )
 
 type ramUserRepo struct {
@@ -51,4 +52,8 @@ func (r *ramUserRepo) EditUserAvatar(ctx context.Context, userID int, avatar str
 
 func (r *ramUserRepo) GetAllUserData(ctx context.Context, userID int) (*user.User, error) {
 	return nil, errors.New("unimplemented")
+}
+
+func (r *ramUserRepo) EditUserInfo(ctx context.Context, userID int, s rp.S) error {
+	return errors.New("unimplemented")
 }
