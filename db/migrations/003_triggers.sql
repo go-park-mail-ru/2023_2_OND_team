@@ -1,3 +1,5 @@
+SET search_path TO pinspire;
+
 CREATE EXTENSION IF NOT EXISTS moddatetime;
 
 CREATE OR REPLACE TRIGGER modify_profile_updated_at

@@ -1,3 +1,5 @@
+SET search_path TO pinspire;
+
 CREATE INDEX IF NOT EXISTS pin_author_index
 ON pin USING btree (author);
 
