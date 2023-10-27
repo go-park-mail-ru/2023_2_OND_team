@@ -20,6 +20,9 @@ var ErrBadMIMEType = errors.New("bad mime type")
 type Usecase interface {
 	SelectNewPins(ctx context.Context, count, lastID int) ([]entity.Pin, int)
 	CreateNewPin(ctx context.Context, pin *entity.Pin, picture io.Reader, mimeType string) error
+	DeletePinFromUser(ctx context.Context, pinID, userID int) error
+	SetLikeFromUser(ctx context.Context, pinID, userID int) error
+	DeleteLikeFromUser(ctx context.Context, pinID, userID int) error
 }
 
 type pinCase struct {
@@ -75,4 +78,8 @@ func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, picture io.
 	}
 
 	return nil
+}
+
+func (p *pinCase) DeletePinFromUser(ctx context.Context, pinID, userID int) error {
+	return p.repo.DeletePin(ctx, pinID, userID)
 }

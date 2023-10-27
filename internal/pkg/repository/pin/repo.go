@@ -17,6 +17,9 @@ type Repository interface {
 	GetSortedNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
+	DeletePin(ctx context.Context, pinID, userID int) error
+	SetLike(ctx context.Context, pinID, userID int) error
+	DelLike(ctx context.Context, pinID, userID int) error
 }
 
 type pinRepoPG struct {
@@ -85,6 +88,14 @@ func (p *pinRepoPG) AddNewPin(ctx context.Context, pin *entity.Pin) error {
 
 func (p *pinRepoPG) GetAuthorPin(ctx context.Context, pinID int) (*user.User, error) {
 	return nil, errors.New("unimplemented")
+}
+
+func (p *pinRepoPG) DeletePin(ctx context.Context, pinID, userID int) error {
+	_, err := p.db.Exec(ctx, UpdatePinSetStatusDelete, pinID, userID)
+	if err != nil {
+		return fmt.Errorf("set pin deleted at now: %w", err)
+	}
+	return nil
 }
 
 func (p *pinRepoPG) addPin(ctx context.Context, tx pgx.Tx, pin *entity.Pin) (int, error) {

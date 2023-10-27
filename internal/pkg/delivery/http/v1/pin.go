@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	chi "github.com/go-chi/chi/v5"
+
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -74,8 +76,11 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	newPin.AuthorID = r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	tags := r.FormValue("tags")
-	_ = tags
-	newPin.Tags = []pin.Tag{pin.Tag{Title: "good"}, pin.Tag{Title: "aaa"}, pin.Tag{Title: "bbb"}}
+	titles := strings.Split(tags, ",")
+	newPin.Tags = make([]pin.Tag, 0, len(titles))
+	for _, title := range titles {
+		newPin.Tags = append(newPin.Tags, pin.Tag{Title: title})
+	}
 
 	newPin.Title = r.FormValue("title")
 
@@ -103,6 +108,34 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 		err = responseError(w, "add_pin", "failed to create pin")
 	} else {
 		err = responseOk(w, "pin successfully created", nil)
+	}
+	if err != nil {
+		h.log.Error(err.Error())
+	}
+}
+
+func (h *HandlerHTTP) DeletePin(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("request on delete new pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	pinIdStr := chi.URLParam(r, "pinID")
+	pinID, err := strconv.ParseInt(pinIdStr, 10, 64)
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "parse_url", "internal error")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+		return
+	}
+
+	err = h.pinCase.DeletePinFromUser(r.Context(), int(pinID), userID)
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "pin_del", "internal error")
+	} else {
+		err = responseOk(w, "ok", nil)
 	}
 	if err != nil {
 		h.log.Error(err.Error())
