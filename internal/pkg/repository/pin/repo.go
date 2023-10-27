@@ -64,19 +64,13 @@ func (p *pinRepoPG) AddNewPin(ctx context.Context, pin *entity.Pin) error {
 		return fmt.Errorf("add tags: %w", err)
 	}
 
-	tagIds, err := p.getTagIdsByTitles(ctx, tx, titles)
-	if err != nil {
-		tx.Rollback(ctx)
-		return fmt.Errorf("get tag ids by titles: %w", err)
-	}
-
 	pinID, err := p.addPin(ctx, tx, pin)
 	if err != nil {
 		tx.Rollback(ctx)
 		return fmt.Errorf("add pin: %w", err)
 	}
 
-	err = p.addTagsOnPin(ctx, tx, tagIds, pinID)
+	err = p.addTagsByTitleOnPin(ctx, tx, titles, pinID)
 	if err != nil {
 		tx.Rollback(ctx)
 		return fmt.Errorf("link of the tag to the picture: %w", err)
