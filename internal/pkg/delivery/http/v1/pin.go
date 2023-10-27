@@ -1,14 +1,16 @@
 package v1
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
 
 	chi "github.com/go-chi/chi/v5"
 
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -72,14 +74,14 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	newPin := &pin.Pin{}
+	newPin := &entity.Pin{}
 	newPin.AuthorID = r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	tags := r.FormValue("tags")
 	titles := strings.Split(tags, ",")
-	newPin.Tags = make([]pin.Tag, 0, len(titles))
+	newPin.Tags = make([]entity.Tag, 0, len(titles))
 	for _, title := range titles {
-		newPin.Tags = append(newPin.Tags, pin.Tag{Title: title})
+		newPin.Tags = append(newPin.Tags, entity.Tag{Title: title})
 	}
 
 	newPin.Title = r.FormValue("title")
@@ -116,6 +118,7 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 
 func (h *HandlerHTTP) DeletePin(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("request on delete new pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
@@ -137,6 +140,49 @@ func (h *HandlerHTTP) DeletePin(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err = responseOk(w, "ok", nil)
 	}
+	if err != nil {
+		h.log.Error(err.Error())
+	}
+}
+
+func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("request on edit pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
+
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	pinIdStr := chi.URLParam(r, "pinID")
+	pinID, err := strconv.ParseInt(pinIdStr, 10, 64)
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "parse_url", "internal error")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+		return
+	}
+
+	_, _ = userID, pinID
+
+	pinUpdate := usecase.NewPinUpdateData()
+
+	err = json.NewDecoder(r.Body).Decode(pinUpdate)
+	defer r.Body.Close()
+	if err != nil {
+		h.log.Info(err.Error())
+		err = responseError(w, "parse_body", "could not read the data to change")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+	}
+	err = h.pinCase.EditPinByID(r.Context(), int(pinID), userID, pinUpdate)
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "edit_pin", "internal error")
+	} else {
+		err = responseOk(w, "pin data has been successfully changed", nil)
+	}
+
 	if err != nil {
 		h.log.Error(err.Error())
 	}

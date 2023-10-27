@@ -13,6 +13,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 )
 
+type S map[string]any
 type Repository interface {
 	GetSortedNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
@@ -20,6 +21,7 @@ type Repository interface {
 	DeletePin(ctx context.Context, pinID, userID int) error
 	SetLike(ctx context.Context, pinID, userID int) error
 	DelLike(ctx context.Context, pinID, userID int) error
+	EditPin(ctx context.Context, pinID int, updateData S, titleTags []string) error
 }
 
 type pinRepoPG struct {
@@ -73,7 +75,7 @@ func (p *pinRepoPG) AddNewPin(ctx context.Context, pin *entity.Pin) error {
 		return fmt.Errorf("add pin: %w", err)
 	}
 
-	err = p.addTagsByTitleOnPin(ctx, tx, titles, pinID)
+	err = p.addTagsByTitleOnPin(ctx, tx, titles, pinID, true)
 	if err != nil {
 		tx.Rollback(ctx)
 		return fmt.Errorf("link of the tag to the picture: %w", err)
@@ -94,6 +96,55 @@ func (p *pinRepoPG) DeletePin(ctx context.Context, pinID, userID int) error {
 	_, err := p.db.Exec(ctx, UpdatePinSetStatusDelete, pinID, userID)
 	if err != nil {
 		return fmt.Errorf("set pin deleted at now: %w", err)
+	}
+	return nil
+}
+
+func (p *pinRepoPG) EditPin(ctx context.Context, pinID int, updateData S, titleTags []string) error {
+	if len(updateData) == 0 && titleTags == nil {
+		return nil
+	}
+
+	tx, err := p.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction for edit pin: %w", err)
+	}
+
+	if len(updateData) != 0 {
+		err = p.updateHeaderPin(ctx, tx, pinID, updateData)
+	}
+	if err != nil {
+		tx.Rollback(ctx)
+		return fmt.Errorf("edit pin header: %w", err)
+	}
+
+	if titleTags != nil {
+		err = p.updateSetOfTagsInPin(ctx, tx, pinID, titleTags)
+	}
+	if err != nil {
+		tx.Rollback(ctx)
+		return fmt.Errorf("edit tags on pin: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("commit transaction for edit pin: %w", err)
+	}
+	return nil
+}
+
+func (p *pinRepoPG) updateHeaderPin(ctx context.Context, tx pgx.Tx, pinID int, newHeader S) error {
+	sqlRow, args, err := p.sqlBuilder.Update("pin").
+		SetMap(newHeader).
+		Where(sq.Eq{"id": pinID}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("build sql row for update header pin: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, sqlRow, args...)
+	if err != nil {
+		return fmt.Errorf("update header pin in storage: %w", err)
 	}
 	return nil
 }

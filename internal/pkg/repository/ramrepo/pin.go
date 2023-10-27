@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	repository "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 )
 
 type ramPinRepo struct {
@@ -53,5 +54,13 @@ func (r *ramPinRepo) SetLike(ctx context.Context, pinID, userID int) error {
 }
 
 func (r *ramPinRepo) DelLike(ctx context.Context, pinID, userID int) error {
+	return ErrMethodUnimplemented
+}
+
+func (r *ramPinRepo) EditPinTags(ctx context.Context, pinID, userID int, titlePins []string) error {
+	return ErrMethodUnimplemented
+}
+
+func (r *ramPinRepo) EditPin(ctx context.Context, pinID int, updateData repository.S, titleTags []string) error {
 	return ErrMethodUnimplemented
 }

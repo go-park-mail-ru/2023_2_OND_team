@@ -33,15 +33,18 @@ func (p *pinRepoPG) addTags(ctx context.Context, tx pgx.Tx, titles []string) err
 	return nil
 }
 
-func (p *pinRepoPG) addTagsByTitleOnPin(ctx context.Context, tx pgx.Tx, titles []string, pinID int) error {
-	sqlRow, args, err := p.sqlBuilder.Insert("pin_tag").
+func (p *pinRepoPG) addTagsByTitleOnPin(ctx context.Context, tx pgx.Tx, titles []string, pinID int, newPin bool) error {
+	insertQuery := p.sqlBuilder.Insert("pin_tag").
 		Columns("pin_id", "tag_id").
 		Select(
 			sq.Select(strconv.FormatInt(int64(pinID), 10), "id").
 				From("tag").
 				Where(sq.Eq{"title": titles}),
-		).
-		ToSql()
+		)
+	if !newPin {
+		insertQuery = insertQuery.Suffix("ON CONFLICT (pin_id, tag_id) DO NOTHING")
+	}
+	sqlRow, args, err := insertQuery.ToSql()
 	if err != nil {
 		return fmt.Errorf("build sql query row for insert link between pins and tags: %w", err)
 	}
@@ -51,8 +54,61 @@ func (p *pinRepoPG) addTagsByTitleOnPin(ctx context.Context, tx pgx.Tx, titles [
 		return fmt.Errorf("executing a query to insert link between pins and tags: %w", err)
 	}
 
-	if commTag.RowsAffected() != int64(len(titles)) {
+	if commTag.RowsAffected() != int64(len(titles)) && newPin {
 		return ErrNumberAffectedRows
+	}
+	return nil
+}
+
+func (p *pinRepoPG) updateSetOfTagsInPin(ctx context.Context, tx pgx.Tx, pinID int, titles []string) error {
+	if len(titles) == 0 {
+		return removeAllTagsFromPin(ctx, tx, pinID)
+	}
+
+	err := p.addTags(ctx, tx, titles)
+	if err != nil {
+		return fmt.Errorf("add tags for update set tags fo pin: %w", err)
+	}
+
+	err = p.deleteAllTagsExcept(ctx, tx, pinID, titles)
+	if err != nil {
+		return fmt.Errorf("delete tags for updates: %w", err)
+	}
+
+	err = p.addTagsByTitleOnPin(ctx, tx, titles, pinID, false)
+	if err != nil {
+		return fmt.Errorf("add tags for updates: %w", err)
+	}
+
+	return nil
+}
+
+func (p *pinRepoPG) deleteAllTagsExcept(ctx context.Context, tx pgx.Tx, pinID int, except []string) error {
+	if len(except) == 0 {
+		return removeAllTagsFromPin(ctx, tx, pinID)
+	}
+
+	sqlRow, args, err := p.sqlBuilder.Delete("pin_tag").
+		Where(sq.Eq{"pin_id": pinID}).
+		Where(sq.Expr("tag_id NOT IN (?)", sq.Select("id").
+			From("tag").
+			Where(sq.Eq{"title": except}))).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("build sql row to delete all tags except those specified: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, sqlRow, args...)
+	if err != nil {
+		return fmt.Errorf("delete all tags except those specified: %w", err)
+	}
+	return nil
+}
+
+func removeAllTagsFromPin(ctx context.Context, tx pgx.Tx, pinID int) error {
+	_, err := tx.Exec(ctx, DeleteAllTagsFromPin, pinID)
+	if err != nil {
+		return fmt.Errorf("delete all tags from pin: %w", err)
 	}
 	return nil
 }

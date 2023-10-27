@@ -23,6 +23,7 @@ type Usecase interface {
 	DeletePinFromUser(ctx context.Context, pinID, userID int) error
 	SetLikeFromUser(ctx context.Context, pinID, userID int) error
 	DeleteLikeFromUser(ctx context.Context, pinID, userID int) error
+	EditPinByID(ctx context.Context, pinID, userID int, updateData *pinUpdateData) error
 }
 
 type pinCase struct {
