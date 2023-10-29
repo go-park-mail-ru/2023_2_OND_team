@@ -25,8 +25,9 @@ func New() Router {
 
 func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.SessionManager, log *logger.Logger) {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://pinspire.online", "https://pinspire.online:1443"},
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
+		AllowedOrigins: []string{"https://pinspire.online", "https://pinspire.online:1443",
+			"https://pinspire.online:1444", "https://pinspire.online:1445", "https://pinspire.online:1446"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"content-type"},
 	})
