@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -8,7 +9,13 @@ import (
 	"unicode"
 
 	valid "github.com/asaskevich/govalidator"
+
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+)
+
+var (
+	ErrCountParameterMissing = errors.New("the count parameter is missing")
+	ErrBadParams             = errors.New("bad params")
 )
 
 type errorFields []string
