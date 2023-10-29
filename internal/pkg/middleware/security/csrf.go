@@ -36,17 +36,12 @@ func CSRF(cfg CSRFConfig) mw.Middleware {
 				return
 			}
 
-			if len(tokenHeader) != cfg.LenToken || cookie.Value != tokenHeader {
-				if skip {
-					setToken(w, &cfg)
-					next.ServeHTTP(w, r)
-				} else {
-					responseCSRFErr(http.StatusForbidden, w, "invalid csrf token")
-				}
+			if !skip && (len(tokenHeader) != cfg.LenToken || cookie.Value != tokenHeader) {
+				responseCSRFErr(http.StatusForbidden, w, "invalid csrf token")
 				return
 			}
 
-			if skip && cfg.UpdateWithEachRequest {
+			if cfg.UpdateWithEachRequest {
 				setToken(w, &cfg)
 			}
 			next.ServeHTTP(w, r)
