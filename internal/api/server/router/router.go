@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/security"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
@@ -30,7 +31,10 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		AllowedHeaders:   []string{"content-type"},
 	})
 
-	r.Mux.Use(c.Handler, auth.NewAuthMiddleware(sm).ContextWithUserID)
+	cfgCSRF := security.DefaultCSRFConfig()
+	cfgCSRF.PathToGet = "/api/v1/csrf"
+
+	r.Mux.Use(c.Handler, security.CSRF(cfgCSRF), auth.NewAuthMiddleware(sm).ContextWithUserID)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
