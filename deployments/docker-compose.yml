@@ -12,3 +12,10 @@ services:
       - ../db/migrations:/docker-entrypoint-initdb.d
     ports:
       - 5432:5432
+
+  redis:
+    image: redis:latest
+    container_name: pinspireRedis
+    command: /bin/sh -c "redis-server --requirepass love"
+    ports:
+        - 6379:6379
