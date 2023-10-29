@@ -46,7 +46,7 @@ func CSRF(cfg CSRFConfig) mw.Middleware {
 				return
 			}
 
-			if skip || cfg.UpdateWithEachRequest {
+			if skip && cfg.UpdateWithEachRequest {
 				setToken(w, &cfg)
 			}
 			next.ServeHTTP(w, r)
