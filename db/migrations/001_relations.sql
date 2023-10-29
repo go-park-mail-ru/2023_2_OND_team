@@ -2,6 +2,8 @@ CREATE SCHEMA IF NOT EXISTS pinspire;
 
 SET search_path TO pinspire;
 
+CREATE EXTENSION IF NOT EXISTS moddatetime;
+
 CREATE TABLE IF NOT EXISTS profile (
 	id serial PRIMARY KEY,
 	username text NOT NULL,
@@ -17,7 +19,11 @@ CREATE TABLE IF NOT EXISTS profile (
 	CONSTRAINT profile_email_uniq UNIQUE (email)
 );
 
-ALTER TABLE profile ALTER COLUMN avatar SET DEFAULT 'avatar.jpg'; 
+CREATE OR REPLACE TRIGGER modify_profile_updated_at
+	BEFORE UPDATE
+	ON profile
+	FOR EACH ROW
+EXECUTE PROCEDURE moddatetime(updated_at);
 
 CREATE TABLE IF NOT EXISTS tag (
 	id serial PRIMARY KEY,
@@ -38,6 +44,12 @@ CREATE TABLE IF NOT EXISTS pin (
 	deleted_at timestamptz,
 	FOREIGN KEY (author) REFERENCES profile (id) ON DELETE CASCADE
 );
+
+CREATE OR REPLACE TRIGGER modify_pin_updated_at
+	BEFORE UPDATE
+	ON pin
+	FOR EACH ROW
+EXECUTE PROCEDURE moddatetime(updated_at);
 
 CREATE TABLE IF NOT EXISTS pin_tag (
 	pin_id int NOT NULL,
@@ -68,6 +80,12 @@ CREATE TABLE IF NOT EXISTS board (
 	deleted_at timestamptz,
 	FOREIGN KEY (author) REFERENCES profile (id) ON DELETE CASCADE
 );
+
+CREATE OR REPLACE TRIGGER modify_board_updated_at
+	BEFORE UPDATE
+	ON board
+	FOR EACH ROW
+EXECUTE PROCEDURE moddatetime(updated_at);
 
 CREATE TABLE IF NOT EXISTS board_tag (
 	board_id int NOT NULL,
@@ -114,6 +132,12 @@ CREATE TABLE IF NOT EXISTS contributor (
 	FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE
 );
 
+CREATE OR REPLACE TRIGGER modify_contributor_updated_at
+	BEFORE UPDATE
+	ON contributor
+	FOR EACH ROW
+EXECUTE PROCEDURE moddatetime(updated_at);
+
 CREATE TABLE IF NOT EXISTS subscription_user (
 	who int NOT NULL,
 	whom int NOT NULL,
@@ -135,6 +159,12 @@ CREATE TABLE IF NOT EXISTS comment (
 	FOREIGN KEY (pin_id) REFERENCES pin (id) ON DELETE CASCADE
 );
 
+CREATE OR REPLACE TRIGGER modify_comment_updated_at
+	BEFORE UPDATE
+	ON comment
+	FOR EACH ROW
+EXECUTE PROCEDURE moddatetime(updated_at);
+
 CREATE TABLE IF NOT EXISTS like_comment (
 	user_id int NOT NULL,
 	comment_id int NOT NULL,
@@ -155,3 +185,9 @@ CREATE TABLE IF NOT EXISTS message (
 	FOREIGN KEY (user_from) REFERENCES profile (id) ON DELETE CASCADE,
 	FOREIGN KEY (user_to) REFERENCES profile (id) ON DELETE CASCADE
 );
+
+CREATE OR REPLACE TRIGGER modify_message_updated_at
+	BEFORE UPDATE
+	ON message
+	FOR EACH ROW
+EXECUTE PROCEDURE moddatetime(updated_at);
