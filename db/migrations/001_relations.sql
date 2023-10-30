@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS profile (
 	avatar text NOT NULL DEFAULT 'default-avatar.png',
 	name text,
 	surname text,
-	about_me text,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	deleted_at timestamptz,
