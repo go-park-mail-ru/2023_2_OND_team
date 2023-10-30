@@ -36,9 +36,9 @@
 
 ## Описание функциональных зависимостей
 #### Relation [profile](#profile):
-{id} -> {username, email, password, avatar, name, surname, created_at, updated_at, deleted_at}
-{username} -> {id, email, password, avatar, name, surname, created_at, updated_at, deleted_at}
-{email} -> {id, username, password, avatar, name, surname, created_at, updated_at, deleted_at}
+{id} -> {username, email, password, avatar, name, surname, about_me, created_at, updated_at, deleted_at}
+{username} -> {id, email, password, avatar, name, surname, about_me, created_at, updated_at, deleted_at}
+{email} -> {id, username, password, avatar, name, surname, about_me, created_at, updated_at, deleted_at}
 
 #### Relation [tag](#tag):
 {id} -> {title, created_at}
