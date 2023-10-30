@@ -42,6 +42,9 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 	if data.Surname != nil && !isValidSurname(*data.Surname) {
 		invalidFields.addInvalidField("surname")
 	}
+	if data.AboutMe != nil && !isValidAboutMe(*data.AboutMe) {
+		invalidFields.addInvalidField("about_me")
+	}
 	if data.Password != nil && !isValidPassword(*data.Password) {
 		invalidFields.addInvalidField("password")
 	}

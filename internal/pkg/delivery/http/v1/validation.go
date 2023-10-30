@@ -125,3 +125,15 @@ func isValidSurname(surname string) bool {
 	}
 	return true
 }
+
+func isValidAboutMe(info string) bool {
+	if len(info) > 500 {
+		return false
+	}
+	for _, r := range info {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
+}
