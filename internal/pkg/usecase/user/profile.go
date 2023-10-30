@@ -13,6 +13,7 @@ import (
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	repository "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/crypto"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -20,7 +21,7 @@ var ErrBadMIMEType = errors.New("bad mime type")
 
 func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, avatar io.Reader, mimeType string) error {
 	filename := uuid.New().String()
-	dir := "upload/avatars/" + time.Now().UTC().Format("2006/02/01/")
+	dir := "upload/avatars/" + time.Now().UTC().Format("2006/01/02/")
 	err := os.MkdirAll(dir, 0750)
 	if err != nil {
 		return fmt.Errorf("create dir for upload file: %w", err)
@@ -70,7 +71,12 @@ func (u *userCase) EditProfileInfo(ctx context.Context, userID int, updateData *
 		updateFields["surname"] = *updateData.Surname
 	}
 	if updateData.Password != nil {
-		updateFields["password"] = *updateData.Password
+		salt, err := crypto.NewRandomString(lenSalt)
+		if err != nil {
+			return fmt.Errorf("generating salt for registration: %w", err)
+		}
+
+		updateFields["password"] = salt + crypto.PasswordHash(*updateData.Password, salt, lenPasswordHash)
 	}
 
 	err := u.repo.EditUserInfo(ctx, userID, updateFields)

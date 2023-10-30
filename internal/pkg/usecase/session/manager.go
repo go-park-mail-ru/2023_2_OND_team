@@ -56,9 +56,6 @@ func (sm *SessManager) GetUserIDBySessionKey(ctx context.Context, sessionKey str
 	if err != nil {
 		return 0, fmt.Errorf("getting a session by a manager: %w", err)
 	}
-	if time.Now().UTC().After(session.Expire) {
-		return 0, ErrExpiredSession
-	}
 	return session.UserID, nil
 }
 

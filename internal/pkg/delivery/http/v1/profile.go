@@ -8,7 +8,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
-	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validation"
 )
 
 func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
@@ -29,24 +28,24 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	invalidFields := new(validation.ErrorFields)
-	if data.Username != nil && !validation.IsValidUsername(*data.Username) {
-		invalidFields.AddInvalidField("username")
+	invalidFields := new(errorFields)
+	if data.Username != nil && !isValidUsername(*data.Username) {
+		invalidFields.addInvalidField("username")
 	}
-	if data.Email != nil && !validation.IsValidEmail(*data.Email) {
-		invalidFields.AddInvalidField("email")
+	if data.Email != nil && !isValidEmail(*data.Email) {
+		invalidFields.addInvalidField("email")
 	}
-	if data.Name != nil && !validation.IsValidName(*data.Name) {
-		invalidFields.AddInvalidField("name")
+	if data.Name != nil && !isValidName(*data.Name) {
+		invalidFields.addInvalidField("name")
 	}
-	if data.Surname != nil && !validation.IsValidSurname(*data.Surname) {
-		invalidFields.AddInvalidField("surname")
+	if data.Surname != nil && !isValidSurname(*data.Surname) {
+		invalidFields.addInvalidField("surname")
 	}
-	if data.Password != nil && !validation.IsValidPassword(*data.Password) {
-		invalidFields.AddInvalidField("password")
+	if data.Password != nil && !isValidPassword(*data.Password) {
+		invalidFields.addInvalidField("password")
 	}
 	if invalidFields.Err() != nil {
-		err = responseError(w, "invalid_params", err.Error())
+		err = responseError(w, "invalid_params", invalidFields.Error())
 		if err != nil {
 			h.log.Error(err.Error())
 		}

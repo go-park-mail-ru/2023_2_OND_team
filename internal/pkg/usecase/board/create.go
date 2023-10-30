@@ -9,9 +9,9 @@ import (
 
 func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, createBoardObj CreateBoard) error {
 	if !isValidBoardTitle(createBoardObj.Title) {
-		return fmt.Errorf("invalid board title")
+		return fmt.Errorf("creating new board: invalid board title '%s'", createBoardObj.Title)
 	}
-	if !isValidTagTitles(createBoardObj.TagTitles) {
+	if !isValidTagTitles(createBoardObj.TagTitles) { //return errFields, errF.Err() in Errorf
 		return fmt.Errorf("invalid board tag titles")
 	}
 

@@ -1,13 +1,39 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
+	"unicode"
+
+	valid "github.com/asaskevich/govalidator"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
-	valid "github.com/go-park-mail-ru/2023_2_OND_team/pkg/validation"
 )
+
+var (
+	ErrCountParameterMissing = errors.New("the count parameter is missing")
+	ErrBadParams             = errors.New("bad params")
+)
+
+type errorFields []string
+
+func (b *errorFields) Error() string {
+	return strings.Join(*b, ",")
+}
+
+func (b *errorFields) addInvalidField(fieldName string) {
+	*b = append(*b, fieldName)
+}
+
+func (b *errorFields) Err() error {
+	if len(*b) == 0 {
+		return nil
+	}
+	return b
+}
 
 func FetchValidParamForLoadTape(u *url.URL) (count int, lastID int, err error) {
 	if param := u.Query().Get("count"); len(param) > 0 {
@@ -33,17 +59,69 @@ func FetchValidParamForLoadTape(u *url.URL) (count int, lastID int, err error) {
 }
 
 func IsValidUserForRegistration(user *user.User) error {
-	invalidFields := new(valid.ErrorFields)
+	invalidFields := new(errorFields)
 
-	if !valid.IsValidPassword(user.Password) {
-		invalidFields.AddInvalidField("password")
+	if !isValidPassword(user.Password) {
+		invalidFields.addInvalidField("password")
 	}
-	if !valid.IsValidEmail(user.Email) {
-		invalidFields.AddInvalidField("email")
+	if !isValidEmail(user.Email) {
+		invalidFields.addInvalidField("email")
 	}
-	if !valid.IsValidUsername(user.Username) {
-		invalidFields.AddInvalidField("username")
+	if !isValidUsername(user.Username) {
+		invalidFields.addInvalidField("username")
 	}
 
 	return invalidFields.Err()
+}
+
+func isValidUsername(username string) bool {
+	if len(username) < 4 || len(username) > 50 {
+		return false
+	}
+	for _, r := range username {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidEmail(email string) bool {
+	return valid.IsEmail(email) && len(email) <= 50
+}
+
+func isValidPassword(password string) bool {
+	if len(password) < 8 || len(password) > 50 {
+		return false
+	}
+	for _, r := range password {
+		if !(unicode.IsNumber(r) || unicode.IsSymbol(r) || unicode.IsPunct(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidName(name string) bool {
+	if len(name) > 50 {
+		return false
+	}
+	for _, r := range name {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidSurname(surname string) bool {
+	if len(surname) > 50 {
+		return false
+	}
+	for _, r := range surname {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	return true
 }

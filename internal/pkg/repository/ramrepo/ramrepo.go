@@ -2,10 +2,13 @@ package ramrepo
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/proullon/ramsql/driver"
 )
+
+var ErrMethodUnimplemented = errors.New("unimplemented")
 
 func OpenDB(dataSourceName string) (*sql.DB, error) {
 	db, err := sql.Open("ramsql", dataSourceName)
