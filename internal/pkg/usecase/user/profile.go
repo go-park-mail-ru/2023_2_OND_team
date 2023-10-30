@@ -69,6 +69,9 @@ func (u *userCase) EditProfileInfo(ctx context.Context, userID int, updateData *
 	if updateData.Surname != nil {
 		updateFields["surname"] = *updateData.Surname
 	}
+	if updateData.AboutMe != nil {
+		updateFields["about_me"] = *updateData.AboutMe
+	}
 	if updateData.Password != nil {
 		updateFields["password"] = *updateData.Password
 	}

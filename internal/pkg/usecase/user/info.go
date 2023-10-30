@@ -5,6 +5,7 @@ type profileUpdateData struct {
 	Email    *string
 	Name     *string
 	Surname  *string
+	AboutMe  *string `json:"about_me`
 	Password *string
 }
 

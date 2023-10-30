@@ -67,7 +67,7 @@ func (u *userRepoPG) EditUserAvatar(ctx context.Context, userID int, avatar stri
 func (u *userRepoPG) GetAllUserData(ctx context.Context, userID int) (*user.User, error) {
 	row := u.db.QueryRow(ctx, SelectUserDataExceptPassword, userID)
 	user := &user.User{ID: userID}
-	err := row.Scan(&user.Username, &user.Email, &user.Avatar, &user.Name, &user.Surname)
+	err := row.Scan(&user.Username, &user.Email, &user.Avatar, &user.Name, &user.Surname, &user.AboutMe)
 	if err != nil {
 		return nil, fmt.Errorf("get user info by id in storage: %w", err)
 	}
