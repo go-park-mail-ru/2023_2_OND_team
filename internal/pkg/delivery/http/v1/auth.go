@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validation"
 )
 
 // Login godoc
@@ -70,7 +71,7 @@ func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidPassword(params.Password) || !isValidUsername(params.Username) {
+	if !validation.IsValidPassword(params.Password) || !validation.IsValidUsername(params.Username) {
 		h.log.Info("invalid credentials")
 		err = responseError(w, "invalid_credentials", "invalid user credentials")
 		if err != nil {

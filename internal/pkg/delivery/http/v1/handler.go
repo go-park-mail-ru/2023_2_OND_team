@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -8,17 +9,19 @@ import (
 )
 
 type HandlerHTTP struct {
-	log      *logger.Logger
-	userCase user.Usecase
-	pinCase  pin.Usecase
-	sm       session.SessionManager
+	log       *logger.Logger
+	userCase  user.Usecase
+	pinCase   pin.Usecase
+	boardCase board.Usecase
+	sm        session.SessionManager
 }
 
-func New(log *logger.Logger, sm session.SessionManager, user user.Usecase, pin pin.Usecase) *HandlerHTTP {
+func New(log *logger.Logger, sm session.SessionManager, user user.Usecase, pin pin.Usecase, board board.Usecase) *HandlerHTTP {
 	return &HandlerHTTP{
-		log:      log,
-		userCase: user,
-		pinCase:  pin,
-		sm:       sm,
+		log:       log,
+		userCase:  user,
+		pinCase:   pin,
+		boardCase: board,
+		sm:        sm,
 	}
 }
