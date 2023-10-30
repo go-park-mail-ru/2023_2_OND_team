@@ -8,6 +8,7 @@
             text avatar
             text name
             text surname
+            text about_me
             timestamptz created_at
             timestamptz updated_at
             timestamptz deleted_at
