@@ -1,7 +1,7 @@
 package pin
 
 var (
-	SelectAfterIdWithLimit = "SELECT id, picture FROM pin WHERE id > $1 ORDER BY created_at DESC, id LIMIT $2;"
+	SelectAfterIdWithLimit = "SELECT id, picture FROM pin WHERE  id < $2 OR id > $1 ORDER BY id DESC LIMIT $3;"
 
 	InsertLikePinFromUser = "INSERT INTO like_pin (pin_id, user_id) VALUES ($1, $2);"
 

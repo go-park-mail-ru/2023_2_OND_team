@@ -34,17 +34,18 @@ func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("request on get pins", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
 	SetContentTypeJSON(w)
 
-	count, lastID, err := FetchValidParamForLoadTape(r.URL)
+	count, minID, maxID, err := FetchValidParamForLoadTape(r.URL)
 	if err != nil {
 		h.log.Info("parse url query params", log.F{"error", err.Error()})
 		err = responseError(w, "bad_params",
 			"expected parameters: count(positive integer: [1; 1000]), lastID(positive integer, the absence of this parameter is equal to the value 0)")
 	} else {
-		h.log.Sugar().Infof("param: count=%d, lastID=%d", count, lastID)
-		pins, last := h.pinCase.SelectNewPins(r.Context(), count, lastID)
+		h.log.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
+		pins, minID, maxID := h.pinCase.SelectNewPins(r.Context(), count, minID, maxID)
 		err = responseOk(w, "pins received are sorted by id", map[string]any{
-			"pins":   pins,
-			"lastID": last,
+			"pins":  pins,
+			"minID": minID,
+			"maxID": maxID,
 		})
 	}
 	if err != nil {

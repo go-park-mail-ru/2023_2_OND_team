@@ -15,7 +15,7 @@ import (
 
 type S map[string]any
 type Repository interface {
-	GetSortedNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]entity.Pin, error)
+	GetSortedNPinsAfterID(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePin(ctx context.Context, pinID, userID int) error
@@ -36,10 +36,10 @@ func NewPinRepoPG(db *pgxpool.Pool) *pinRepoPG {
 	}
 }
 
-func (p *pinRepoPG) GetSortedNPinsAfterID(ctx context.Context, count int, afterPinID int) ([]entity.Pin, error) {
-	rows, err := p.db.Query(ctx, SelectAfterIdWithLimit, afterPinID, count)
+func (p *pinRepoPG) GetSortedNPinsAfterID(ctx context.Context, count, minID, maxID int) ([]entity.Pin, error) {
+	rows, err := p.db.Query(ctx, SelectAfterIdWithLimit, minID, maxID, count)
 	if err != nil {
-		return nil, fmt.Errorf("select to receive %d pins after %d: %w", count, afterPinID, err)
+		return nil, fmt.Errorf("select to receive %d pins: %w", count, err)
 	}
 
 	pins := make([]entity.Pin, 0, count)
@@ -47,7 +47,7 @@ func (p *pinRepoPG) GetSortedNPinsAfterID(ctx context.Context, count int, afterP
 	for rows.Next() {
 		err := rows.Scan(&pin.ID, &pin.Picture)
 		if err != nil {
-			return pins, fmt.Errorf("scan to receive %d pins after %d: %w", count, afterPinID, err)
+			return pins, fmt.Errorf("scan to receive %d pins: %w", count, err)
 		}
 		pins = append(pins, pin)
 	}

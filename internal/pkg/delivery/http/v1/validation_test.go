@@ -29,7 +29,7 @@ func TestFetchValidParams(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error when parsing into the url.URL structure: %v", err)
 			}
-			actualCount, actualLastID, err := FetchValidParamForLoadTape(URL)
+			actualCount, actualLastID, _, err := FetchValidParamForLoadTape(URL)
 			require.NoError(t, err)
 			require.Equal(t, test.wantCount, actualCount)
 			require.Equal(t, test.wantLastID, actualLastID)
@@ -59,7 +59,7 @@ func TestErrorFetchValidParams(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error when parsing into the url.URL structure: %v", err)
 			}
-			actualCount, actualLastID, err := FetchValidParamForLoadTape(URL)
+			actualCount, actualLastID, _, err := FetchValidParamForLoadTape(URL)
 			require.ErrorIs(t, err, test.wantErr)
 			require.Equal(t, 0, actualCount)
 			require.Equal(t, 0, actualLastID)
