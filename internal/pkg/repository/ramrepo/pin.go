@@ -18,7 +18,7 @@ func NewRamPinRepo(db *sql.DB) *ramPinRepo {
 	return &ramPinRepo{db}
 }
 
-func (r *ramPinRepo) GetSortedNPinsAfterID(ctx context.Context, count, minID, maxID int) ([]pin.Pin, error) {
+func (r *ramPinRepo) GetSortedNewNPins(ctx context.Context, count, minID, maxID int) ([]pin.Pin, error) {
 	rows, err := r.db.QueryContext(ctx, "SELECT id, picture FROM pin WHERE id > $1 ORDER BY id LIMIT $2;", maxID, count)
 	if err != nil {
 		return nil, fmt.Errorf("select to receive %d pins after %d: %w", count, maxID, err)

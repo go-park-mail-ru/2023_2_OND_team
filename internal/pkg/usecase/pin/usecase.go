@@ -36,7 +36,7 @@ func New(log *log.Logger, repo repo.Repository) *pinCase {
 }
 
 func (p *pinCase) SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int) {
-	pins, err := p.repo.GetSortedNPinsAfterID(ctx, count, minID, maxID)
+	pins, err := p.repo.GetSortedNewNPins(ctx, count, minID, maxID)
 	if err != nil {
 		p.log.Error(err.Error())
 	}

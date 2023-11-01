@@ -41,7 +41,7 @@ func TestSelectNewPins(t *testing.T) {
 
 	for _, tCase := range testCases {
 		t.Run(tCase.name, func(t *testing.T) {
-			_, actualLastID := pinCase.SelectNewPins(context.Background(), tCase.count, tCase.lastID)
+			_, actualLastID, _ := pinCase.SelectNewPins(context.Background(), tCase.count, tCase.lastID, 0)
 			require.Equal(t, tCase.expNewLastID, actualLastID)
 		})
 	}

@@ -1,7 +1,7 @@
 package pin
 
 var (
-	SelectAfterIdWithLimit = "SELECT id, picture FROM pin WHERE  id < $2 OR id > $1 ORDER BY id DESC LIMIT $3;"
+	SelectWithExcludeLimit = "SELECT id, picture FROM pin WHERE public AND (id < $1 OR id > $2) ORDER BY id DESC LIMIT $3;"
 
 	InsertLikePinFromUser = "INSERT INTO like_pin (pin_id, user_id) VALUES ($1, $2);"
 
