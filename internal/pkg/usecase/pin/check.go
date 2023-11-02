@@ -17,7 +17,7 @@ var (
 const UserUnknown = -1
 
 func (p *pinCase) IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID int) error {
-	pin, err := p.repo.GetPinByID(ctx, pinID)
+	pin, err := p.repo.GetPinByID(ctx, pinID, false)
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func (p *pinCase) IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID
 	if pin.DeletedAt.Valid {
 		return ErrPinDeleted
 	}
-	if !pin.Public && pin.AuthorID != userID {
+	if !pin.Public && pin.Author.ID != userID {
 		return ErrForbiddenAction
 	}
 
@@ -37,7 +37,7 @@ func (p *pinCase) isAvailablePinForViewingUser(ctx context.Context, pin *entity.
 		return ErrPinDeleted
 	}
 
-	if pin.Public || pin.AuthorID == userID {
+	if pin.Public || pin.Author.ID == userID {
 		return nil
 	}
 	if userID == UserUnknown {
@@ -56,7 +56,7 @@ func (p *pinCase) isAvailablePinForViewingUser(ctx context.Context, pin *entity.
 }
 
 func (p *pinCase) isAvailablePinForSetLike(ctx context.Context, pinID, userID int) error {
-	pin, err := p.repo.GetPinByID(ctx, pinID)
+	pin, err := p.repo.GetPinByID(ctx, pinID, false)
 	if err != nil {
 		return fmt.Errorf("get a pin to check for the availability of a like: %w", err)
 	}

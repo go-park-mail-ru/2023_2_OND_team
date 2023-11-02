@@ -87,7 +87,7 @@ func (p *pinCase) DeletePinFromUser(ctx context.Context, pinID, userID int) erro
 }
 
 func (p *pinCase) ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error) {
-	pin, err := p.repo.GetPinByID(ctx, pinID)
+	pin, err := p.repo.GetPinByID(ctx, pinID, true)
 	if err != nil {
 		return nil, fmt.Errorf("get a pin to view: %w", err)
 	}

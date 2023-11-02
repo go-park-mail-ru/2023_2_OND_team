@@ -9,6 +9,7 @@ import (
 	chi "github.com/go-chi/chi/v5"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -75,8 +76,8 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	newPin := &entity.Pin{}
-	newPin.AuthorID = r.Context().Value(auth.KeyCurrentUserID).(int)
+	newPin := &entity.Pin{Author: &user.User{}}
+	newPin.Author.ID = r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	tags := r.FormValue("tags")
 	titles := strings.Split(tags, ",")

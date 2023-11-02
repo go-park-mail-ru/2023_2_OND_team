@@ -65,7 +65,7 @@ func (r *ramPinRepo) EditPin(ctx context.Context, pinID int, updateData reposito
 	return ErrMethodUnimplemented
 }
 
-func (r *ramPinRepo) GetPinByID(ctx context.Context, pinID int) (*pin.Pin, error) {
+func (r *ramPinRepo) GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*pin.Pin, error) {
 	return nil, ErrMethodUnimplemented
 }
 

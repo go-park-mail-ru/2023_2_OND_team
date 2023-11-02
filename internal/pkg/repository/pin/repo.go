@@ -17,7 +17,7 @@ type S map[string]any
 type Repository interface {
 	GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
-	GetPinByID(ctx context.Context, pinID int) (*entity.Pin, error)
+	GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePin(ctx context.Context, pinID, userID int) error
 	SetLike(ctx context.Context, pinID, userID int) error
@@ -47,7 +47,7 @@ func (p *pinRepoPG) GetSortedNewNPins(ctx context.Context, count, minID, maxID i
 	}
 
 	pins := make([]entity.Pin, 0, count)
-	pin := entity.Pin{}
+	pin := entity.Pin{Public: true}
 	for rows.Next() {
 		err := rows.Scan(&pin.ID, &pin.Picture)
 		if err != nil {
@@ -59,14 +59,23 @@ func (p *pinRepoPG) GetSortedNewNPins(ctx context.Context, count, minID, maxID i
 	return pins, nil
 }
 
-func (p *pinRepoPG) GetPinByID(ctx context.Context, pinID int) (*entity.Pin, error) {
-	row := p.db.QueryRow(ctx, SelectPinByID, pinID)
-	pin := &entity.Pin{}
-	err := row.Scan(&pin.AuthorID, &pin.Title, &pin.Description,
-		&pin.Picture, &pin.Public, &pin.DeletedAt)
+func (p *pinRepoPG) GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error) {
+	pin := &entity.Pin{Author: &user.User{}}
+	var err error
+	if revealAuthor {
+		err = p.getPinByID(ctx, pinID, SelectPinByIDWithAuthor,
+			&pin.Author.ID, &pin.Title, &pin.Description,
+			&pin.Picture, &pin.Public, &pin.DeletedAt,
+			&pin.Author.Username, &pin.Author.Avatar)
+	} else {
+		err = p.getPinByID(ctx, pinID, SelectPinByID,
+			&pin.Author.ID, &pin.Title, &pin.Description,
+			&pin.Picture, &pin.Public, &pin.DeletedAt)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("get pin by id from storage: %w", err)
 	}
+
 	pin.ID = pinID
 	return pin, nil
 }
@@ -168,7 +177,7 @@ func (p *pinRepoPG) updateHeaderPin(ctx context.Context, tx pgx.Tx, pinID int, n
 func (p *pinRepoPG) addPin(ctx context.Context, tx pgx.Tx, pin *entity.Pin) (int, error) {
 	sqlRow, args, err := p.sqlBuilder.Insert("pin").
 		Columns("author", "title", "description", "picture", "public").
-		Values(pin.AuthorID, pin.Title, pin.Description, pin.Picture, pin.Public).
+		Values(pin.Author.ID, pin.Title, pin.Description, pin.Picture, pin.Public).
 		Suffix("RETURNING id").
 		ToSql()
 	if err != nil {
@@ -182,4 +191,9 @@ func (p *pinRepoPG) addPin(ctx context.Context, tx pgx.Tx, pin *entity.Pin) (int
 		return 0, fmt.Errorf("scan the result of the insert query to add pin: %w", err)
 	}
 	return pinID, nil
+}
+
+func (p *pinRepoPG) getPinByID(ctx context.Context, pinID int, query string, dest ...any) error {
+	row := p.db.QueryRow(ctx, query, pinID)
+	return row.Scan(dest...)
 }
