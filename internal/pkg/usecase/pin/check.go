@@ -9,11 +9,28 @@ import (
 )
 
 var (
-	ErrPinNotAccess = errors.New("pin is not available")
-	ErrPinDeleted   = errors.New("")
+	ErrPinNotAccess    = errors.New("pin is not available")
+	ErrPinDeleted      = errors.New("pin has been deleted")
+	ErrForbiddenAction = errors.New("this action is not available to the user")
 )
 
 const UserUnknown = -1
+
+func (p *pinCase) IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID int) error {
+	pin, err := p.repo.GetPinByID(ctx, pinID)
+	if err != nil {
+		return err
+	}
+
+	if pin.DeletedAt.Valid {
+		return ErrPinDeleted
+	}
+	if !pin.Public && pin.AuthorID != userID {
+		return ErrForbiddenAction
+	}
+
+	return nil
+}
 
 func (p *pinCase) isAvailablePinForViewingUser(ctx context.Context, pin *entity.Pin, userID int) error {
 	if pin.DeletedAt.Valid {

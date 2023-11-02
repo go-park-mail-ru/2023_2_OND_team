@@ -27,7 +27,7 @@ var (
 								   		FROM pin WHERE id = $1
 							       );`
 
-	UpdatePinSetStatusDelete = "UPDATE pin SET deleted_at = now() WHERE id = $1 AND author = $2;"
+	UpdatePinSetStatusDelete = "UPDATE pin SET deleted_at = now() WHERE id = $1 AND author = $2 AND deleted_at IS NULL;"
 
 	DeleteLikePinFromUser = "DELETE FROM like_pin WHERE pin_id = $1 AND user_id = $2;"
 	DeleteAllTagsFromPin  = "DELETE FROM pin_tag WHERE pin_id = $1;"
