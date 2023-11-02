@@ -17,11 +17,15 @@ type S map[string]any
 type Repository interface {
 	GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
+	GetPinByID(ctx context.Context, pinID int) (*entity.Pin, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePin(ctx context.Context, pinID, userID int) error
 	SetLike(ctx context.Context, pinID, userID int) error
 	DelLike(ctx context.Context, pinID, userID int) error
 	EditPin(ctx context.Context, pinID int, updateData S, titleTags []string) error
+	GetCountLikeByPinID(ctx context.Context, pinID int) (int, error)
+	GetTagsByPinID(ctx context.Context, pinID int) ([]entity.Tag, error)
+	IsAvailableToUserAsContributorBoard(ctx context.Context, pinID, userID int) (bool, error)
 }
 
 type pinRepoPG struct {
@@ -53,6 +57,18 @@ func (p *pinRepoPG) GetSortedNewNPins(ctx context.Context, count, minID, maxID i
 	}
 
 	return pins, nil
+}
+
+func (p *pinRepoPG) GetPinByID(ctx context.Context, pinID int) (*entity.Pin, error) {
+	row := p.db.QueryRow(ctx, SelectPinByID, pinID)
+	pin := &entity.Pin{}
+	err := row.Scan(&pin.AuthorID, &pin.Title, &pin.Description,
+		&pin.Picture, &pin.Public, &pin.DeletedAt)
+	if err != nil {
+		return nil, fmt.Errorf("get pin by id from storage: %w", err)
+	}
+	pin.ID = pinID
+	return pin, nil
 }
 
 func (p *pinRepoPG) AddNewPin(ctx context.Context, pin *entity.Pin) error {

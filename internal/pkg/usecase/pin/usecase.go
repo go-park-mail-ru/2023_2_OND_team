@@ -24,6 +24,7 @@ type Usecase interface {
 	SetLikeFromUser(ctx context.Context, pinID, userID int) error
 	DeleteLikeFromUser(ctx context.Context, pinID, userID int) error
 	EditPinByID(ctx context.Context, pinID, userID int, updateData *pinUpdateData) error
+	ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error)
 }
 
 type pinCase struct {
@@ -83,4 +84,26 @@ func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, picture io.
 
 func (p *pinCase) DeletePinFromUser(ctx context.Context, pinID, userID int) error {
 	return p.repo.DeletePin(ctx, pinID, userID)
+}
+
+func (p *pinCase) ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error) {
+	pin, err := p.repo.GetPinByID(ctx, pinID)
+	if err != nil {
+		return nil, fmt.Errorf("get a pin to view: %w", err)
+	}
+
+	if err := p.isAvailablePinForViewingUser(ctx, pin, userID); err != nil {
+		return nil, fmt.Errorf("view pin: %w", err)
+	}
+
+	pin.CountLike, err = p.repo.GetCountLikeByPinID(ctx, pinID)
+	if err != nil {
+		p.log.Error(err.Error())
+	}
+	pin.Tags, err = p.repo.GetTagsByPinID(ctx, pinID)
+	if err != nil {
+		p.log.Error(err.Error())
+	}
+
+	return pin, nil
 }

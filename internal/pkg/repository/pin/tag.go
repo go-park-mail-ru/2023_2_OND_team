@@ -14,6 +14,25 @@ import (
 
 var ErrNumberAffectedRows = errors.New("different number of affected rows was expected")
 
+func (p *pinRepoPG) GetTagsByPinID(ctx context.Context, pinID int) ([]pin.Tag, error) {
+	rows, err := p.db.Query(ctx, SelectTagsByPinID, pinID)
+	if err != nil {
+		return nil, fmt.Errorf("get pin tags by its id in storage: %w", err)
+	}
+	defer rows.Close()
+
+	tags := []pin.Tag{}
+	tag := pin.Tag{}
+	for rows.Next() {
+		err = rows.Scan(&tag.Title)
+		if err != nil {
+			return tags, fmt.Errorf("scan title tag for get pin tags in storage: %w", err)
+		}
+		tags = append(tags, tag)
+	}
+	return tags, nil
+}
+
 func (p *pinRepoPG) addTags(ctx context.Context, tx pgx.Tx, titles []string) error {
 	insertBuilder := p.sqlBuilder.Insert("tag").Columns("title")
 	for _, title := range titles {

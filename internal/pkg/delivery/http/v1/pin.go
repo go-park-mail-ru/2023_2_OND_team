@@ -85,9 +85,9 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 		newPin.Tags = append(newPin.Tags, entity.Tag{Title: title})
 	}
 
-	newPin.Title = r.FormValue("title")
+	newPin.SetTitle(r.FormValue("title"))
 
-	newPin.Description = r.FormValue("description")
+	newPin.SetDescription(r.FormValue("description"))
 
 	public := r.FormValue("public")
 
@@ -184,6 +184,37 @@ func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
 		err = responseOk(w, "pin data has been successfully changed", nil)
 	}
 
+	if err != nil {
+		h.log.Error(err.Error())
+	}
+}
+
+func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("request on view pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
+
+	pinIdStr := chi.URLParam(r, "pinID")
+	pinID, err := strconv.ParseInt(pinIdStr, 10, 64)
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "parse_url", "internal error")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+		return
+	}
+
+	userID, ok := r.Context().Value(auth.KeyCurrentUserID).(int)
+	if !ok {
+		userID = usecase.UserUnknown
+	}
+	pin, err := h.pinCase.ViewAnPin(r.Context(), int(pinID), userID)
+	if err != nil {
+		h.log.Error(err.Error())
+		err = responseError(w, "edit_pin", "internal error")
+	} else {
+		err = responseOk(w, "pin was successfully received", pin)
+	}
 	if err != nil {
 		h.log.Error(err.Error())
 	}

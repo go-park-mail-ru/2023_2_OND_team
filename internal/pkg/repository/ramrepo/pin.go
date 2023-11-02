@@ -64,3 +64,19 @@ func (r *ramPinRepo) EditPinTags(ctx context.Context, pinID, userID int, titlePi
 func (r *ramPinRepo) EditPin(ctx context.Context, pinID int, updateData repository.S, titleTags []string) error {
 	return ErrMethodUnimplemented
 }
+
+func (r *ramPinRepo) GetPinByID(ctx context.Context, pinID int) (*pin.Pin, error) {
+	return nil, ErrMethodUnimplemented
+}
+
+func (r *ramPinRepo) IsAvailableToUserAsContributorBoard(ctx context.Context, pinID, userID int) (bool, error) {
+	return false, ErrMethodUnimplemented
+}
+
+func (r *ramPinRepo) GetCountLikeByPinID(ctx context.Context, pinID int) (int, error) {
+	return 0, ErrMethodUnimplemented
+}
+
+func (r *ramPinRepo) GetTagsByPinID(ctx context.Context, pinID int) ([]pin.Tag, error) {
+	return nil, ErrMethodUnimplemented
+}

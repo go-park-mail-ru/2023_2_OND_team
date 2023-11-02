@@ -44,9 +44,8 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/login", handler.Login)
 			r.Post("/signup", handler.Signup)
-			r.Group(func(r chi.Router) {
-				r.Use(auth.RequireAuth)
 
+			r.With(auth.RequireAuth).Group(func(r chi.Router) {
 				r.Get("/login", handler.CheckLogin)
 				r.Delete("/logout", handler.Logout)
 			})
@@ -60,9 +59,9 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 
 		r.Route("/pin", func(r chi.Router) {
 			r.Get("/", handler.GetPins)
-			r.Group(func(r chi.Router) {
-				r.Use(auth.RequireAuth)
+			r.Get("/{pinID:\\d+}", handler.ViewPin)
 
+			r.With(auth.RequireAuth).Group(func(r chi.Router) {
 				r.Post("/create", handler.CreateNewPin)
 				r.Post("/like/{pinID:\\d+}", handler.SetLikePin)
 				r.Put("/edit/{pinID:\\d+}", handler.EditPin)

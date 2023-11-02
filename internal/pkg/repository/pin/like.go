@@ -20,3 +20,13 @@ func (p *pinRepoPG) DelLike(ctx context.Context, pinID, userID int) error {
 	}
 	return nil
 }
+
+func (p *pinRepoPG) GetCountLikeByPinID(ctx context.Context, pinID int) (int, error) {
+	row := p.db.QueryRow(ctx, SelectCountLikePin, pinID)
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("get count like by pin id: %w", err)
+	}
+	return count, nil
+}
