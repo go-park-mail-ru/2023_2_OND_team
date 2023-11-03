@@ -4,23 +4,24 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
+	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
+	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, createBoardObj CreateBoard) error {
-	if !isValidBoardTitle(createBoardObj.Title) {
-		return fmt.Errorf("creating new board: invalid board title '%s'", createBoardObj.Title)
+func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.CreateBoard) error {
+	if !bCase.isValidBoardTitle(newBoard.Title) {
+		return ErrInvalidBoardTitle
 	}
-	if !isValidTagTitles(createBoardObj.TagTitles) { //return errFields, errF.Err() in Errorf
-		return fmt.Errorf("invalid board tag titles")
+	if err := bCase.checkIsValidTagTitles(newBoard.TagTitles); err != nil {
+		return fmt.Errorf("%s: %w", err.Error(), ErrInvalidTagTitles)
 	}
 
-	err := bCase.BoardRepo.CreateBoard(ctx, board.Board{
-		AuthorID:    createBoardObj.AuthorID,
-		Title:       createBoardObj.Title,
-		Description: createBoardObj.Description,
-		Public:      createBoardObj.Public,
-	}, createBoardObj.PinIDs, createBoardObj.TagTitles)
+	err := bCase.boardRepo.CreateBoard(ctx, entity.Board{
+		AuthorID:    newBoard.AuthorID,
+		Title:       newBoard.Title,
+		Description: newBoard.Description,
+		Public:      newBoard.Public,
+	}, newBoard.TagTitles)
 
 	if err != nil {
 		return fmt.Errorf("create new board usecase: %w", err)

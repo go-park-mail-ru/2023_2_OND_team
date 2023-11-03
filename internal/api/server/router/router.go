@@ -36,7 +36,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		ExposedHeaders:   []string{cfgCSRF.HeaderSet},
 	})
 
-	r.Mux.Use(c.Handler, security.CSRF(cfgCSRF), auth.NewAuthMiddleware(sm).ContextWithUserID)
+	r.Mux.Use(c.Handler, auth.NewAuthMiddleware(sm).ContextWithUserID) //security.CSRF(cfgCSRF)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
@@ -68,6 +68,15 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 				r.Put("/edit/{pinID:\\d+}", handler.EditPin)
 				r.Delete("/like/{pinID:\\d+}", handler.DeleteLikePin)
 				r.Delete("/delete/{pinID:\\d+}", handler.DeletePin)
+			})
+		})
+
+		r.Route("/board", func(r chi.Router) {
+			r.Get("/{username}", handler.GetUserBoards)
+			r.Get("/get/{boardID:\\d+}", handler.GetCertainBoard)
+			r.Group(func(r chi.Router) {
+				r.Use(auth.RequireAuth)
+				r.Post("/create", handler.CreateNewBoard)
 			})
 		})
 	})

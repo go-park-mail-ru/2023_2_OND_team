@@ -4,29 +4,26 @@ import (
 	"context"
 
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board"
+	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
+	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	"github.com/microcosm-cc/bluemonday"
 )
 
-type CreateBoard struct {
-	Title       string   `json:"title" example:"Sunny places"`
-	Description string   `json:"description" example:"long description"`
-	AuthorID    int      `json:"author_id" example:"45"`
-	Public      bool     `json:"public" example:"true"`
-	PinIDs      []int    `json:"pin_ids" example:"[1, 2, 3]"`
-	TagTitles   []string `json:"tags" example:"['flowers', 'sunrise']"`
-} //@name Board
-
 type Usecase interface {
-	CreateNewBoard(ctx context.Context, createBoardObj CreateBoard) error
-	// GetOwnBoards()
-	// GetUserBoards()
+	CreateNewBoard(ctx context.Context, createBoardObj dto.CreateBoard) error
+	GetBoardsByUsername(ctx context.Context, username string) ([]dto.GetUserBoard, error)
+	GetCertainBoardByID(ctx context.Context, boardID int) (dto.GetUserBoard, error)
+	// CheckBoardContributor(ctx context.Context, userID int) (bool, error)
 }
 
 type BoardUsecase struct {
 	log       *logger.Logger
-	BoardRepo boardRepo.Repository
+	boardRepo boardRepo.Repository
+	userRepo  userRepo.Repository
+	sanitizer *bluemonday.Policy
 }
 
-func New(logger *logger.Logger, boardRepo boardRepo.Repository) *BoardUsecase {
-	return &BoardUsecase{log: logger, BoardRepo: boardRepo}
+func New(logger *logger.Logger, boardRepo boardRepo.Repository, userRepo userRepo.Repository, sanitizer *bluemonday.Policy) *BoardUsecase {
+	return &BoardUsecase{log: logger, boardRepo: boardRepo, userRepo: userRepo, sanitizer: sanitizer}
 }

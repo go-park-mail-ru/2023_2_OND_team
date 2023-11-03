@@ -7,5 +7,7 @@ var (
 	SelectUsernameAndAvatar      = "SELECT username, avatar FROM profile WHERE id = $1;"
 	SelectUserDataExceptPassword = "SELECT username, email, avatar, name, surname FROM profile WHERE id = $1;"
 
-	UpdateAvatarProfile = "UPDATE profile SET avatar = $1 WHERE id = $2;"
+	UpdateAvatarProfile    = "UPDATE profile SET avatar = $1 WHERE id = $2;"
+	SelectUserIdByUsername = "SELECT id FROM profile WHERE username = $1;"
+	SelectLastUserID       = "SELECT id FROM profile ORDER BY id DESC LIMIT 1;"
 )

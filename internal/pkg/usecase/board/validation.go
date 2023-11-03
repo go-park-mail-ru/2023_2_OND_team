@@ -1,8 +1,15 @@
 package board
 
-import "unicode"
+import (
+	"fmt"
+	"unicode"
+)
 
-func isValidTagTitle(title string) bool {
+func (bCase *BoardUsecase) isValidTagTitle(title string) bool {
+	if len(title) > 20 {
+		return false
+	}
+
 	for _, sym := range title {
 		if !(unicode.IsNumber(sym) || unicode.IsLetter(sym)) {
 			return false
@@ -11,26 +18,46 @@ func isValidTagTitle(title string) bool {
 	return true
 }
 
-func isValidTagTitles(titles []string) bool {
+func (bCase *BoardUsecase) checkIsValidTagTitles(titles []string) error {
 	if len(titles) > 7 {
-		return false
+		return fmt.Errorf("too many titles")
 	}
+
+	invalidTitles := make([]string, 0)
 	for _, title := range titles {
-		if !isValidTagTitle(title) {
-			return false
+		if !bCase.isValidTagTitle(title) {
+			invalidTitles = append(invalidTitles, title)
 		}
 	}
-	return true
+	if len(invalidTitles) > 0 {
+		return fmt.Errorf("%v", invalidTitles)
+	}
+	return nil
 }
 
-func isValidBoardTitle(title string) bool {
-	if len(title) < 4 || len(title) > 50 {
+func (bCase *BoardUsecase) isValidBoardTitle(title string) bool {
+	if len(title) == 0 || len(title) > 20 {
 		return false
 	}
 	for _, sym := range title {
-		if !(unicode.IsNumber(sym) || unicode.IsLetter(sym)) {
+		if !(unicode.IsNumber(sym) || unicode.IsLetter(sym) || unicode.IsPunct(sym) || unicode.IsSpace(sym)) {
 			return false
 		}
 	}
+	bCase.sanitizer.Sanitize(title)
+	return true
+}
+
+func (bCase *BoardUsecase) isValidUsername(username string) bool {
+	if len(username) < 4 || len(username) > 50 {
+		return false
+	}
+	for _, r := range username {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+			return false
+		}
+	}
+	bCase.sanitizer.Sanitize(username)
+
 	return true
 }
