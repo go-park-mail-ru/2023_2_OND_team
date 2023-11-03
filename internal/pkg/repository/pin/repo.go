@@ -16,6 +16,7 @@ import (
 type S map[string]any
 type Repository interface {
 	GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
+	GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 	GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
@@ -50,6 +51,25 @@ func (p *pinRepoPG) GetSortedNewNPins(ctx context.Context, count, minID, maxID i
 	pin := entity.Pin{Public: true}
 	for rows.Next() {
 		err := rows.Scan(&pin.ID, &pin.Picture)
+		if err != nil {
+			return pins, fmt.Errorf("scan to receive %d pins: %w", count, err)
+		}
+		pins = append(pins, pin)
+	}
+
+	return pins, nil
+}
+
+func (p *pinRepoPG) GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error) {
+	rows, err := p.db.Query(ctx, SelectUserPinsLimit, userID, minID, maxID, count)
+	if err != nil {
+		return nil, fmt.Errorf("select to receive %d pins: %w", count, err)
+	}
+
+	pins := make([]entity.Pin, 0, count)
+	pin := entity.Pin{}
+	for rows.Next() {
+		err := rows.Scan(&pin.ID, &pin.Picture, &pin.Public)
 		if err != nil {
 			return pins, fmt.Errorf("scan to receive %d pins: %w", count, err)
 		}

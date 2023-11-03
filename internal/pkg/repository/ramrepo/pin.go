@@ -80,3 +80,7 @@ func (r *ramPinRepo) GetCountLikeByPinID(ctx context.Context, pinID int) (int, e
 func (r *ramPinRepo) GetTagsByPinID(ctx context.Context, pinID int) ([]pin.Tag, error) {
 	return nil, ErrMethodUnimplemented
 }
+
+func (r *ramPinRepo) GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]pin.Pin, error) {
+	return nil, ErrMethodUnimplemented
+}

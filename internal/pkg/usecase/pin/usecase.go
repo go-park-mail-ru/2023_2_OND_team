@@ -19,6 +19,7 @@ var ErrBadMIMEType = errors.New("bad mime type")
 
 type Usecase interface {
 	SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int)
+	SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
 	CreateNewPin(ctx context.Context, pin *entity.Pin, picture io.Reader, mimeType string) error
 	DeletePinFromUser(ctx context.Context, pinID, userID int) error
 	SetLikeFromUser(ctx context.Context, pinID, userID int) error
@@ -38,6 +39,17 @@ func New(log *log.Logger, repo repo.Repository) *pinCase {
 
 func (p *pinCase) SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int) {
 	pins, err := p.repo.GetSortedNewNPins(ctx, count, minID, maxID)
+	if err != nil {
+		p.log.Error(err.Error())
+	}
+	if len(pins) == 0 {
+		return []entity.Pin{}, minID, maxID
+	}
+	return pins, pins[len(pins)-1].ID, pins[0].ID
+}
+
+func (p *pinCase) SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int) {
+	pins, err := p.repo.GetSortedUserPins(ctx, userID, count, minID, maxID)
 	if err != nil {
 		p.log.Error(err.Error())
 	}

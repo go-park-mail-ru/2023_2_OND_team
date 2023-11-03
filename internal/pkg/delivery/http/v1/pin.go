@@ -39,7 +39,7 @@ func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Info("parse url query params", log.F{"error", err.Error()})
 		err = responseError(w, "bad_params",
-			"expected parameters: count(positive integer: [1; 1000]), lastID(positive integer, the absence of this parameter is equal to the value 0)")
+			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
 	} else {
 		h.log.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectNewPins(r.Context(), count, minID, maxID)
@@ -219,4 +219,30 @@ func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Error(err.Error())
 	}
+}
+
+func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("request on view pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
+	SetContentTypeJSON(w)
+
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	count, minID, maxID, err := FetchValidParamForLoadTape(r.URL)
+	if err != nil {
+		h.log.Info("parse url query params", log.F{"error", err.Error()})
+		err = responseError(w, "bad_params",
+			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
+	} else {
+		h.log.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
+		pins, minID, maxID := h.pinCase.SelectUserPins(r.Context(), userID, count, minID, maxID)
+		err = responseOk(w, "pins received are sorted by id", map[string]any{
+			"pins":  pins,
+			"minID": minID,
+			"maxID": maxID,
+		})
+	}
+	if err != nil {
+		h.log.Error(err.Error())
+	}
+
 }

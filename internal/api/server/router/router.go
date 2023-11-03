@@ -62,6 +62,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			r.Get("/{pinID:\\d+}", handler.ViewPin)
 
 			r.With(auth.RequireAuth).Group(func(r chi.Router) {
+				r.Get("/personal", handler.GetUserPins)
 				r.Post("/create", handler.CreateNewPin)
 				r.Post("/like/{pinID:\\d+}", handler.SetLikePin)
 				r.Put("/edit/{pinID:\\d+}", handler.EditPin)
