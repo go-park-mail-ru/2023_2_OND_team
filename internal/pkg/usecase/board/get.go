@@ -10,7 +10,7 @@ import (
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]dto.GetUserBoard, error) {
+func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error) {
 	if !bCase.isValidUsername(username) {
 		return nil, ErrInvalidUsername
 	}
@@ -30,7 +30,14 @@ func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username str
 	if loggedIn && currUserID == userID {
 		isAuthor = true
 	}
-	boards, err := bCase.boardRepo.GetBoardsByUserID(ctx, userID, isAuthor)
+
+	contributorBoardsIDs, err := bCase.boardRepo.GetContributorBoardsIDs(ctx, currUserID)
+	if err != nil {
+		return nil, fmt.Errorf("get contributor boards in get boards by username usecase: %w", err)
+	}
+
+	fmt.Println(currUserID, isAuthor, contributorBoardsIDs)
+	boards, err := bCase.boardRepo.GetBoardsByUserID(ctx, userID, isAuthor, contributorBoardsIDs)
 	if err != nil {
 		return nil, fmt.Errorf("get boards by user id usecase: %w", err)
 	}
@@ -38,28 +45,27 @@ func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username str
 	return boards, nil
 }
 
-func (bCase *BoardUsecase) GetCertainBoardByID(ctx context.Context, boardID int) (dto.GetUserBoard, error) {
+func (bCase *BoardUsecase) GetCertainBoardByID(ctx context.Context, boardID int) (dto.UserBoard, error) {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
-			return dto.GetUserBoard{}, ErrNoSuchBoard
+			return dto.UserBoard{}, ErrNoSuchBoard
 		default:
-			return dto.GetUserBoard{}, fmt.Errorf("get certain board by id: %w", err)
+			return dto.UserBoard{}, fmt.Errorf("get certain board by id: %w", err)
 		}
 	}
 
 	boardContributors, err := bCase.boardRepo.GetContributorsByBoardID(ctx, boardID)
 	if err != nil {
-		return dto.GetUserBoard{}, fmt.Errorf("get certain board by id usecase: %w", err)
+		return dto.UserBoard{}, fmt.Errorf("get certain board by id usecase: %w", err)
 	}
 
 	boardContributorsIDs := make([]int, 0, len(boardContributors))
-	func() {
-		for _, contributor := range boardContributors {
-			boardContributorsIDs = append(boardContributorsIDs, contributor.ID)
-		}
-	}()
+
+	for _, contributor := range boardContributors {
+		boardContributorsIDs = append(boardContributorsIDs, contributor.ID)
+	}
 
 	var hasAccess bool
 	currUserID, loggedIn := ctx.Value(auth.KeyCurrentUserID).(int)
@@ -67,14 +73,13 @@ func (bCase *BoardUsecase) GetCertainBoardByID(ctx context.Context, boardID int)
 		hasAccess = true
 	}
 
-	fmt.Println(loggedIn, currUserID, boardAuthorID, hasAccess)
 	board, err := bCase.boardRepo.GetBoardByID(ctx, boardID, hasAccess)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
-			return dto.GetUserBoard{}, ErrNoSuchBoard
+			return dto.UserBoard{}, ErrNoSuchBoard
 		default:
-			return dto.GetUserBoard{}, fmt.Errorf("get certain board by id usecase: %w", err)
+			return dto.UserBoard{}, fmt.Errorf("get certain board by id usecase: %w", err)
 		}
 	}
 

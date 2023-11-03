@@ -19,7 +19,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("request on create new board:", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
 	SetContentTypeJSON(w)
 
-	var newBoard boardDTO.CreateBoard
+	var newBoard boardDTO.BoardData
 	err := json.NewDecoder(r.Body).Decode(&newBoard)
 	defer r.Body.Close()
 	if err != nil {

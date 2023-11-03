@@ -49,9 +49,13 @@ func (repo *BoardRepoPG) addTagsToBoard(ctx context.Context, tx pgx.Tx, tagTitle
 		return fmt.Errorf("building sql query row for adding tags to board: %w", err)
 	}
 
-	_, err = tx.Exec(ctx, sqlRow, args...)
+	cmdTag, err := tx.Exec(ctx, sqlRow, args...)
 	if err != nil {
 		return fmt.Errorf("execute sql query to add tags to board: %w", err)
+	}
+
+	if isNewBoard && int(cmdTag.RowsAffected()) != len(tagTitles) {
+		return ErrIncorrectNumberRowsAffcted
 	}
 
 	return nil

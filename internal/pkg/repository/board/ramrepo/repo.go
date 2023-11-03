@@ -24,12 +24,12 @@ func (repo *BoardRepoRam) CreateBoard(ctx context.Context, board entity.Board, t
 	return repository.ErrMethodUnimplemented
 }
 
-func (repo *BoardRepoRam) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool) ([]dto.GetUserBoard, error) {
+func (repo *BoardRepoRam) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool) ([]dto.UserBoard, error) {
 	return nil, repository.ErrMethodUnimplemented
 }
 
-func (repo *BoardRepoRam) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.GetUserBoard, err error) {
-	return dto.GetUserBoard{}, repository.ErrMethodUnimplemented
+func (repo *BoardRepoRam) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.UserBoard, err error) {
+	return dto.UserBoard{}, repository.ErrMethodUnimplemented
 }
 
 func (repo *BoardRepoRam) GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error) {

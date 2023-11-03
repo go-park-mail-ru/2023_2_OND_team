@@ -11,9 +11,10 @@ import (
 )
 
 type Usecase interface {
-	CreateNewBoard(ctx context.Context, createBoardObj dto.CreateBoard) error
-	GetBoardsByUsername(ctx context.Context, username string) ([]dto.GetUserBoard, error)
-	GetCertainBoardByID(ctx context.Context, boardID int) (dto.GetUserBoard, error)
+	CreateNewBoard(ctx context.Context, createBoardObj dto.BoardData) error
+	GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error)
+	GetCertainBoardByID(ctx context.Context, boardID int) (dto.UserBoard, error)
+	UpdateBoard(ctx context.Context, updatedData dto.BoardData) error
 	// CheckBoardContributor(ctx context.Context, userID int) (bool, error)
 }
 

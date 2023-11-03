@@ -52,7 +52,7 @@ func (repo *BoardRepoPG) CreateBoard(ctx context.Context, board entity.Board, ta
 	return nil
 }
 
-func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool) ([]dto.GetUserBoard, error) {
+func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]dto.UserBoard, error) {
 	getBoardsQuery := boardRepo.sqlBuilder.
 		Select(
 			"board.id",
@@ -63,10 +63,16 @@ func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 		From("membership").
 		JoinClause("FULL JOIN pin ON membership.pin_id = pin.id").
 		JoinClause("FULL JOIN board ON membership.board_id = board.id").
+		Where(squirrel.Eq{"board.deleted_at": nil}).
 		Where(squirrel.Eq{"board.author": userID})
 
 	if !isAuthor {
-		getBoardsQuery = getBoardsQuery.Where(squirrel.Eq{"board.public": true})
+		getBoardsQuery = getBoardsQuery.Where(
+			squirrel.Or{
+				squirrel.Eq{"board.public": true},
+				squirrel.Eq{"board.id": accessableBoardsIDs},
+			},
+		)
 	}
 	getBoardsQuery = getBoardsQuery.
 		GroupBy(
@@ -87,9 +93,9 @@ func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	}
 	defer rows.Close()
 
-	boards := make([]dto.GetUserBoard, 0)
+	boards := make([]dto.UserBoard, 0)
 	for rows.Next() {
-		board := dto.GetUserBoard{}
+		board := dto.UserBoard{}
 		err = rows.Scan(&board.BoardID, &board.Title, &board.CreatedAt, &board.PinsNumber, &board.Pins)
 		if err != nil {
 			return nil, fmt.Errorf("scanning the result of get boards by user id query: %w", err)
@@ -100,7 +106,7 @@ func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	return boards, nil
 }
 
-func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.GetUserBoard, err error) {
+func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.UserBoard, err error) {
 	getBoardByIdQuery := repo.sqlBuilder.
 		Select(
 			"board.id",
@@ -115,6 +121,7 @@ func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 		JoinClause("FULL JOIN board ON membership.board_id = board.id").
 		JoinClause("FULL JOIN board_tag ON board_tag.board_id = board.id").
 		JoinClause("FULL JOIN tag ON board_tag.tag_id = tag.id").
+		Where(squirrel.Eq{"board.deleted_at": nil}).
 		Where(squirrel.Eq{"board.id": boardID})
 
 	if !hasAccess {
@@ -130,18 +137,18 @@ func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 
 	sqlRow, args, err := getBoardByIdQuery.ToSql()
 	if err != nil {
-		return dto.GetUserBoard{}, fmt.Errorf("building get board by id query: %w", err)
+		return dto.UserBoard{}, fmt.Errorf("building get board by id query: %w", err)
 	}
 
 	row := repo.db.QueryRow(ctx, sqlRow, args...)
-	board = dto.GetUserBoard{}
+	board = dto.UserBoard{}
 	err = row.Scan(&board.BoardID, &board.Title, &board.Description, &board.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			return dto.GetUserBoard{}, repository.ErrNoData
+			return dto.UserBoard{}, repository.ErrNoData
 		default:
-			return dto.GetUserBoard{}, fmt.Errorf("scan result of get board by id query: %w", err)
+			return dto.UserBoard{}, fmt.Errorf("scan result of get board by id query: %w", err)
 		}
 	}
 
@@ -181,6 +188,55 @@ func (repo *BoardRepoPG) GetContributorsByBoardID(ctx context.Context, boardID i
 	}
 
 	return contributors, nil
+}
+
+func (repo *BoardRepoPG) GetContributorBoardsIDs(ctx context.Context, contributorID int) ([]int, error) {
+	rows, err := repo.db.Query(ctx, GetContributorBoardsIDs, contributorID)
+	if err != nil {
+		return nil, fmt.Errorf("get contributor boardsIDs query: %w", err)
+	}
+	defer rows.Close()
+
+	boardsIDs := make([]int, 0)
+	for rows.Next() {
+		var boardID int
+		err = rows.Scan(&boardID)
+		if err != nil {
+			return nil, fmt.Errorf("get contributor boardsIDs query: %w", err)
+		}
+		boardsIDs = append(boardsIDs, boardID)
+	}
+
+	return boardsIDs, nil
+}
+
+func (repo *BoardRepoPG) UpdateBoard(ctx context.Context, newBoardData entity.Board, tagTitles []string) error {
+	tx, err := repo.db.Begin(ctx)
+	if err != nil {
+		tx.Rollback(ctx)
+		return fmt.Errorf("start update board transaction: %w", err)
+	}
+
+	err = repo.insertTags(ctx, tx, tagTitles)
+	if err != nil {
+		tx.Rollback(ctx)
+		return fmt.Errorf("update board: insert tags within transaction - %w", err)
+	}
+
+	err = repo.addTagsToBoard(ctx, tx, tagTitles, newBoardData.ID, false)
+	if err != nil {
+		tx.Rollback(ctx)
+		return fmt.Errorf("update board: add tags to board within transsaction - %w", err)
+	}
+
+	_, err = repo.db.Exec(ctx, UpdateBoardByIdQuery, newBoardData.Title, newBoardData.Description, newBoardData.Public, newBoardData.ID)
+	if err != nil {
+		tx.Rollback(ctx)
+		return fmt.Errorf("update board: edit board data within transaction - %w", err)
+	}
+
+	tx.Commit(ctx)
+	return nil
 }
 
 func (repo *BoardRepoPG) insertBoard(ctx context.Context, tx pgx.Tx, board entity.Board) (int, error) {
