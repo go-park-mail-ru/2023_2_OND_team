@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-func (p *pinCase) SetLikeFromUser(ctx context.Context, pinID, userID int) error {
+func (p *pinCase) SetLikeFromUser(ctx context.Context, pinID, userID int) (int, error) {
 	if err := p.isAvailablePinForSetLike(ctx, pinID, userID); err != nil {
-		return fmt.Errorf("set like from user: %w", err)
+		return 0, fmt.Errorf("set like from user: %w", err)
 	}
 	return p.repo.SetLike(ctx, pinID, userID)
 }

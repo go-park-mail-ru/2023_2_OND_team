@@ -26,12 +26,12 @@ func (h *HandlerHTTP) SetLikePin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.pinCase.SetLikeFromUser(r.Context(), int(pinID), userID)
+	countLike, err := h.pinCase.SetLikeFromUser(r.Context(), int(pinID), userID)
 	if err != nil {
 		h.log.Error(err.Error())
-		err = responseError(w, "like_pin_del", "internal error")
+		err = responseError(w, "like_pin_set", "internal error")
 	} else {
-		err = responseOk(w, "ok", nil)
+		err = responseOk(w, "ok", map[string]int{"count_like": countLike})
 	}
 	if err != nil {
 		h.log.Error(err.Error())

@@ -5,12 +5,14 @@ import (
 	"fmt"
 )
 
-func (p *pinRepoPG) SetLike(ctx context.Context, pinID, userID int) error {
-	_, err := p.db.Exec(ctx, InsertLikePinFromUser, pinID, userID)
+func (p *pinRepoPG) SetLike(ctx context.Context, pinID, userID int) (int, error) {
+	row := p.db.QueryRow(ctx, InsertLikePinFromUser, pinID, userID)
+	var currCountLike int
+	err := row.Scan(&currCountLike)
 	if err != nil {
-		return fmt.Errorf("insert like to pin from user in storage: %w", err)
+		return 0, fmt.Errorf("insert like to pin from user in storage: %w", err)
 	}
-	return nil
+	return currCountLike + 1, nil
 }
 
 func (p *pinRepoPG) DelLike(ctx context.Context, pinID, userID int) error {
