@@ -36,7 +36,6 @@ func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username str
 		return nil, fmt.Errorf("get contributor boards in get boards by username usecase: %w", err)
 	}
 
-	fmt.Println(currUserID, isAuthor, contributorBoardsIDs)
 	boards, err := bCase.boardRepo.GetBoardsByUserID(ctx, userID, isAuthor, contributorBoardsIDs)
 	if err != nil {
 		return nil, fmt.Errorf("get boards by user id usecase: %w", err)
@@ -45,20 +44,20 @@ func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username str
 	return boards, nil
 }
 
-func (bCase *BoardUsecase) GetCertainBoardByID(ctx context.Context, boardID int) (dto.UserBoard, error) {
+func (bCase *BoardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dto.UserBoard, error) {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
 			return dto.UserBoard{}, ErrNoSuchBoard
 		default:
-			return dto.UserBoard{}, fmt.Errorf("get certain board by id: %w", err)
+			return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
 		}
 	}
 
 	boardContributors, err := bCase.boardRepo.GetContributorsByBoardID(ctx, boardID)
 	if err != nil {
-		return dto.UserBoard{}, fmt.Errorf("get certain board by id usecase: %w", err)
+		return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
 	}
 
 	boardContributorsIDs := make([]int, 0, len(boardContributors))
@@ -79,7 +78,7 @@ func (bCase *BoardUsecase) GetCertainBoardByID(ctx context.Context, boardID int)
 		case repository.ErrNoData:
 			return dto.UserBoard{}, ErrNoSuchBoard
 		default:
-			return dto.UserBoard{}, fmt.Errorf("get certain board by id usecase: %w", err)
+			return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
 		}
 	}
 

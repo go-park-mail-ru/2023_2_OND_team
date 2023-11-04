@@ -3,6 +3,7 @@ package board
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
@@ -22,34 +23,34 @@ func NewBoardRepoPG(db *pgxpool.Pool) *BoardRepoPG {
 	return &BoardRepoPG{db: db, sqlBuilder: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)}
 }
 
-func (repo *BoardRepoPG) CreateBoard(ctx context.Context, board entity.Board, tagTitles []string) error {
+func (repo *BoardRepoPG) CreateBoard(ctx context.Context, board entity.Board, tagTitles []string) (int, error) {
 
 	tx, err := repo.db.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("starting transaction for creating new board: %w", err)
+		return 0, fmt.Errorf("starting transaction for creating new board: %w", err)
 	}
 
 	newBoardId, err := repo.insertBoard(ctx, tx, board)
 	if err != nil {
 		tx.Rollback(ctx)
-		return fmt.Errorf("inserting board within transaction: %w", err)
+		return 0, fmt.Errorf("inserting board within transaction: %w", err)
 	}
 
 	err = repo.insertTags(ctx, tx, tagTitles)
 	if err != nil {
 		tx.Rollback(ctx)
-		return fmt.Errorf("inserting new tags within transaction: %w", err)
+		return 0, fmt.Errorf("inserting new tags within transaction: %w", err)
 	}
 
 	err = repo.addTagsToBoard(ctx, tx, tagTitles, newBoardId, true)
 	if err != nil {
 		tx.Rollback(ctx)
-		return fmt.Errorf("adding new tags on board within transaction: %w", err)
+		return 0, fmt.Errorf("adding new tags on board within transaction: %w", err)
 	}
 
 	tx.Commit(ctx)
 
-	return nil
+	return newBoardId, nil
 }
 
 func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]dto.UserBoard, error) {
@@ -226,16 +227,34 @@ func (repo *BoardRepoPG) UpdateBoard(ctx context.Context, newBoardData entity.Bo
 	err = repo.addTagsToBoard(ctx, tx, tagTitles, newBoardData.ID, false)
 	if err != nil {
 		tx.Rollback(ctx)
-		return fmt.Errorf("update board: add tags to board within transsaction - %w", err)
+		return fmt.Errorf("update board: add tags to board within transaction - %w", err)
 	}
 
-	_, err = repo.db.Exec(ctx, UpdateBoardByIdQuery, newBoardData.Title, newBoardData.Description, newBoardData.Public, newBoardData.ID)
+	status, err := repo.db.Exec(ctx, UpdateBoardByIdQuery, newBoardData.Title, newBoardData.Description, newBoardData.Public, newBoardData.ID)
 	if err != nil {
 		tx.Rollback(ctx)
 		return fmt.Errorf("update board: edit board data within transaction - %w", err)
 	}
 
+	if status.RowsAffected() == 0 {
+		tx.Rollback(ctx)
+		return repository.ErrNoData
+	}
+
 	tx.Commit(ctx)
+	return nil
+}
+
+func (repo *BoardRepoPG) DeleteBoardByID(ctx context.Context, boardID int) error {
+	status, err := repo.db.Exec(ctx, DeleteBoardByIdQuery, time.Now(), boardID)
+	if err != nil {
+		return fmt.Errorf("delete board by id: %w", err)
+	}
+
+	if status.RowsAffected() == 0 {
+		return repository.ErrNoDataAffected
+	}
+
 	return nil
 }
 

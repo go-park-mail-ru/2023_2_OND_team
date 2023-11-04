@@ -8,4 +8,5 @@ var (
 	ErrInvalidBoardTitle = errors.New("invalid or empty board title has been provided")
 	ErrInvalidTagTitles  = errors.New("invalid tag titles have been provided")
 	ErrInvalidUserID     = errors.New("invalid user id has been provided")
+	ErrNoAccess          = errors.New("no access for this action")
 )

@@ -41,7 +41,7 @@ func (repo *BoardRepoPG) addTagsToBoard(ctx context.Context, tx pgx.Tx, tagTitle
 		)
 
 	if !isNewBoard {
-		addTagsToBoardQuery.Suffix("ON CONFLICT DO NOTHING")
+		addTagsToBoardQuery = addTagsToBoardQuery.Suffix("ON CONFLICT DO NOTHING")
 	}
 
 	sqlRow, args, err := addTagsToBoardQuery.ToSql()
@@ -49,12 +49,12 @@ func (repo *BoardRepoPG) addTagsToBoard(ctx context.Context, tx pgx.Tx, tagTitle
 		return fmt.Errorf("building sql query row for adding tags to board: %w", err)
 	}
 
-	cmdTag, err := tx.Exec(ctx, sqlRow, args...)
+	status, err := tx.Exec(ctx, sqlRow, args...)
 	if err != nil {
 		return fmt.Errorf("execute sql query to add tags to board: %w", err)
 	}
 
-	if isNewBoard && int(cmdTag.RowsAffected()) != len(tagTitles) {
+	if isNewBoard && int(status.RowsAffected()) != len(tagTitles) {
 		return ErrIncorrectNumberRowsAffcted
 	}
 

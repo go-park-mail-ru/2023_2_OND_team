@@ -26,7 +26,7 @@ func Run(ctx context.Context, log *log.Logger, configFile string) {
 	ctxApp, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	pool, err := pgxpool.New(ctxApp, "postgres://exy:password@localhost:5432/pinspire?search_path=pinspire") // change creds
+	pool, err := pgxpool.New(ctxApp, "postgres://ond_team:love@localhost:5432/pinspire?search_path=pinspire")
 	if err != nil {
 		log.Error(err.Error())
 		return

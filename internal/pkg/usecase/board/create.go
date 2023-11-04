@@ -8,15 +8,16 @@ import (
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.BoardData) error {
+func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error) {
 	if !bCase.isValidBoardTitle(newBoard.Title) {
-		return ErrInvalidBoardTitle
+		return 0, ErrInvalidBoardTitle
 	}
 	if err := bCase.checkIsValidTagTitles(newBoard.TagTitles); err != nil {
-		return fmt.Errorf("%s: %w", err.Error(), ErrInvalidTagTitles)
+		return 0, fmt.Errorf("%s: %w", err.Error(), ErrInvalidTagTitles)
 	}
+	bCase.sanitizer.Sanitize(newBoard.Description)
 
-	err := bCase.boardRepo.CreateBoard(ctx, entity.Board{
+	newBoardID, err := bCase.boardRepo.CreateBoard(ctx, entity.Board{
 		AuthorID:    newBoard.AuthorID,
 		Title:       newBoard.Title,
 		Description: newBoard.Description,
@@ -24,7 +25,7 @@ func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.Boar
 	}, newBoard.TagTitles)
 
 	if err != nil {
-		return fmt.Errorf("create new board usecase: %w", err)
+		return 0, fmt.Errorf("create new board: %w", err)
 	}
-	return nil
+	return newBoardID, nil
 }

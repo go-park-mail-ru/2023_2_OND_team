@@ -1,6 +1,7 @@
 package board
 
 type BoardData struct {
+	ID          int      `json:"board_id,omitempty" example:"33"`
 	Title       string   `json:"title" example:"Sunny places"`
 	Description string   `json:"description" example:"long description"`
 	AuthorID    int      `json:"author_id,omitempty" example:"45"`

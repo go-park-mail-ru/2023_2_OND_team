@@ -72,11 +72,15 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		})
 
 		r.Route("/board", func(r chi.Router) {
-			r.Get("/{username}", handler.GetUserBoards)
-			r.Get("/get/{boardID:\\d+}", handler.GetCertainBoard)
+			r.Route("/get", func(r chi.Router) {
+				r.Get("/user/{username}", handler.GetUserBoards)
+				r.Get("/{boardID:\\d+}", handler.GetCertainBoard)
+			})
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireAuth)
 				r.Post("/create", handler.CreateNewBoard)
+				r.Put("/update/{boardID:\\d+}", handler.UpdateBoardInfo)
+				r.Delete("/delete/{boardID:\\d+}", handler.DeleteBoard)
 			})
 		})
 	})

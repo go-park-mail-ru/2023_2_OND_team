@@ -11,7 +11,7 @@ func (bCase *BoardUsecase) isValidTagTitle(title string) bool {
 	}
 
 	for _, sym := range title {
-		if !(unicode.IsNumber(sym) || unicode.IsLetter(sym)) {
+		if !(unicode.IsNumber(sym) || unicode.IsLetter(sym) || unicode.IsPunct(sym) || unicode.IsSpace(sym)) {
 			return false
 		}
 	}
@@ -36,7 +36,7 @@ func (bCase *BoardUsecase) checkIsValidTagTitles(titles []string) error {
 }
 
 func (bCase *BoardUsecase) isValidBoardTitle(title string) bool {
-	if len(title) == 0 || len(title) > 20 {
+	if len(title) == 0 || len(title) > 40 {
 		return false
 	}
 	for _, sym := range title {

@@ -11,11 +11,11 @@ import (
 )
 
 type Usecase interface {
-	CreateNewBoard(ctx context.Context, createBoardObj dto.BoardData) error
+	CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error)
 	GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error)
-	GetCertainBoardByID(ctx context.Context, boardID int) (dto.UserBoard, error)
-	UpdateBoard(ctx context.Context, updatedData dto.BoardData) error
-	// CheckBoardContributor(ctx context.Context, userID int) (bool, error)
+	GetCertainBoard(ctx context.Context, boardID int) (dto.UserBoard, error)
+	UpdateBoardInfo(ctx context.Context, updatedData dto.BoardData) error
+	DeleteCertainBoard(ctx context.Context, boardID int) error
 }
 
 type BoardUsecase struct {
