@@ -61,9 +61,9 @@ func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 			"TO_CHAR(board.created_at, 'DD:MM:YYYY')",
 			"COUNT(pin.id) AS pins_number",
 			"ARRAY_REMOVE((ARRAY_AGG(pin.picture))[:3], NULL) AS pins").
-		From("membership").
-		JoinClause("FULL JOIN pin ON membership.pin_id = pin.id").
-		JoinClause("FULL JOIN board ON membership.board_id = board.id").
+		From("board").
+		LeftJoin("membership ON board.id = membership.board_id").
+		LeftJoin("pin ON membership.pin_id = pin.id").
 		Where(squirrel.Eq{"board.deleted_at": nil}).
 		Where(squirrel.Eq{"board.author": userID})
 
@@ -117,11 +117,11 @@ func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 			"COUNT(DISTINCT pin.id) AS pins_number",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT pin.picture), NULL) AS pins",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
-		From("membership").
-		JoinClause("FULL JOIN pin ON membership.pin_id = pin.id").
-		JoinClause("FULL JOIN board ON membership.board_id = board.id").
-		JoinClause("FULL JOIN board_tag ON board_tag.board_id = board.id").
-		JoinClause("FULL JOIN tag ON board_tag.tag_id = tag.id").
+		From("board").
+		LeftJoin("board_tag ON board.id = board_tag.board_id").
+		LeftJoin("tag ON board_tag.tag_id = tag.id").
+		LeftJoin("membership ON board.id = membership.board_id").
+		LeftJoin("pin ON membership.pin_id = pin.id").
 		Where(squirrel.Eq{"board.deleted_at": nil}).
 		Where(squirrel.Eq{"board.id": boardID})
 
