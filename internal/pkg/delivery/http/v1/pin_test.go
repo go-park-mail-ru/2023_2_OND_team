@@ -24,7 +24,7 @@ func TestGetPins(t *testing.T) {
 	defer db.Close()
 
 	pinCase := pinCase.New(log, ramrepo.NewRamPinRepo(db))
-	service := New(log, nil, nil, pinCase)
+	service := New(log, nil, nil, pinCase, nil)
 
 	rawUrl := "https://domain.test:8080/api/v1/pin"
 	goodCases := []struct {
