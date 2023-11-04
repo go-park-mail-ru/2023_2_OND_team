@@ -4,15 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"strings"
-	"time"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
-	"github.com/google/uuid"
 )
 
 var ErrBadMIMEType = errors.New("bad mime type")
@@ -20,7 +15,7 @@ var ErrBadMIMEType = errors.New("bad mime type")
 type Usecase interface {
 	SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int)
 	SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
-	CreateNewPin(ctx context.Context, pin *entity.Pin, picture io.Reader, mimeType string) error
+	CreateNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePinFromUser(ctx context.Context, pinID, userID int) error
 	SetLikeFromUser(ctx context.Context, pinID, userID int) error
 	DeleteLikeFromUser(ctx context.Context, pinID, userID int) error
@@ -59,34 +54,10 @@ func (p *pinCase) SelectUserPins(ctx context.Context, userID, count, minID, maxI
 	return pins, pins[len(pins)-1].ID, pins[0].ID
 }
 
-func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, picture io.Reader, mimeType string) error {
-	filename := uuid.New().String()
-	dir := "upload/pins/" + time.Now().UTC().Format("2006/01/02/")
-	err := os.MkdirAll(dir, 0750)
-	if err != nil {
-		return fmt.Errorf("create dir for upload file: %w", err)
-	}
-	piecesMimeType := strings.Split(mimeType, "/")
-	if len(piecesMimeType) != 2 || piecesMimeType[0] != "image" {
-		return ErrBadMIMEType
-	}
+func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin) error {
+	pin.Picture = "https://pinspire.online:8081/" + pin.Picture
 
-	filePath := dir + filename + "." + piecesMimeType[1]
-	file, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("create %s to save avatar to it: %w", filePath, err)
-	}
-	defer file.Close()
-
-	_, err = io.Copy(file, picture)
-	if err != nil {
-		return fmt.Errorf("copy avatar in file %s: %w", filePath, err)
-	}
-	p.log.Info("upload file", log.F{"file", filePath})
-
-	pin.Picture = "https://pinspire.online:8081/" + filePath
-
-	err = p.repo.AddNewPin(ctx, pin)
+	err := p.repo.AddNewPin(ctx, pin)
 	if err != nil {
 		return fmt.Errorf("add new pin: %w", err)
 	}

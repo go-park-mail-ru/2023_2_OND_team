@@ -10,9 +10,11 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -50,8 +52,9 @@ func Run(ctx context.Context, log *log.Logger, configFile string) {
 	sm := session.New(log, sessionRepo.NewSessionRepo(redisCl))
 	userCase := user.New(log, userRepo.NewUserRepoPG(pool))
 	pinCase := pin.New(log, pinRepo.NewPinRepoPG(pool))
+	imgCase := image.New(log, imgRepo.NewImageRepoFS("upload/"))
 
-	handler := deliveryHTTP.New(log, sm, userCase, pinCase)
+	handler := deliveryHTTP.New(log, sm, userCase, pinCase, imgCase)
 	cfgServ, err := server.NewConfig(configFile)
 	if err != nil {
 		log.Error(err.Error())

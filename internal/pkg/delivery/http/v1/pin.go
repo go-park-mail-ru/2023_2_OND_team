@@ -101,12 +101,24 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 
 	picture, mime, err := r.FormFile("picture")
 	if err != nil {
-		responseError(w, "bad_body", "unable to get an image from the request body")
+		err = responseError(w, "bad_body", "unable to get an image from the request body")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
 		return
 	}
 	defer picture.Close()
 
-	err = h.pinCase.CreateNewPin(r.Context(), newPin, picture, mime.Header.Get("Content-Type"))
+	newPin.Picture, err = h.imgCase.UploadImage("pins/", mime.Header.Get("Content-Type"), mime.Size, picture)
+	if err != nil {
+		err = responseError(w, "bad_body", "failed to upload the file received in the body")
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+		return
+	}
+
+	err = h.pinCase.CreateNewPin(r.Context(), newPin)
 	if err != nil {
 		h.log.Error(err.Error())
 		err = responseError(w, "add_pin", "failed to create pin")
