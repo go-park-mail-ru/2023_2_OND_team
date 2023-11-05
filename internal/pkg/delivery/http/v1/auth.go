@@ -23,20 +23,18 @@ import (
 //	@Failure		500			{object}	JsonErrResponse
 //	@Router			/api/v1/auth/login [get]
 func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on check login", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
-
+	logger := h.getRequestLogger(r)
 	userID, _ := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	username, avatar, err := h.userCase.FindOutUsernameAndAvatar(r.Context(), userID)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "no_auth", "no user was found for this session")
 	} else {
 		err = responseOk(w, "user found", map[string]string{"username": username, "avatar": avatar})
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
@@ -55,46 +53,45 @@ func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
 //	@Header			200			{string}	session_key	"Auth cookie with new valid session id"
 //	@Router			/api/v1/auth/login [post]
 func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	params := usecase.NewCredentials()
 	err := json.NewDecoder(r.Body).Decode(&params)
 	defer r.Body.Close()
 	if err != nil {
-		h.log.Info("failed to parse parameters", log.F{"error", err.Error()})
+		logger.Info("failed to parse parameters", log.F{"error", err.Error()})
 		err = responseError(w, "parse_body", "the correct username and password are expected to be received in JSON format")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	if !isValidPassword(params.Password) || !isValidUsername(params.Username) {
-		h.log.Info("invalid credentials")
+		logger.Info("invalid credentials")
 		err = responseError(w, "invalid_credentials", "invalid user credentials")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	user, err := h.userCase.Authentication(r.Context(), params)
 	if err != nil {
-		h.log.Warn(err.Error())
+		logger.Warn(err.Error())
 		err = responseError(w, "bad_credentials", "incorrect user credentials")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	session, err := h.sm.CreateNewSessionForUser(r.Context(), user.ID)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "session", "failed to create a session for the user")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -112,7 +109,7 @@ func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 
 	err = responseOk(w, "a new session has been created for the user", nil)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
@@ -131,39 +128,38 @@ func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{object}	JsonErrResponse
 //	@Router			/api/v1/auth/signup [post]
 func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	user := &user.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
 	defer r.Body.Close()
 	if err != nil {
-		h.log.Info("failed to parse parameters", log.F{"error", err.Error()})
+		logger.Info("failed to parse parameters", log.F{"error", err.Error()})
 		err = responseError(w, "parse_body", "the correct username, email and password are expected to be received in JSON format")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	if err := IsValidUserForRegistration(user); err != nil {
-		h.log.Info("invalid user registration data")
+		logger.Info("invalid user registration data")
 		err = responseError(w, "invalid_params", err.Error())
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	err = h.userCase.Register(r.Context(), user)
 	if err != nil {
-		h.log.Warn(err.Error())
+		logger.Warn(err.Error())
 		err = responseError(w, "uniq_fields", "there is already an account with this username or email")
 	} else {
 		err = responseOk(w, "the user has been successfully registered", nil)
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
@@ -181,15 +177,14 @@ func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
 //	@Header			200			{string}	Session-id	"Auth cookie with expired session id"
 //	@Router			/api/v1/auth/logout [delete]
 func (h *HandlerHTTP) Logout(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on logout", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	cookie, err := r.Cookie("session_key")
 	if err != nil {
-		h.log.Info("no cookie", log.F{"error", err.Error()})
+		logger.Info("no cookie", log.F{"error", err.Error()})
 		err = responseError(w, "no_auth", "to log out, you must first log in")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -200,12 +195,12 @@ func (h *HandlerHTTP) Logout(w http.ResponseWriter, r *http.Request) {
 
 	err = h.sm.DeleteUserSession(r.Context(), cookie.Value)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "session", "the user logged out, but his session did not end")
 	} else {
 		err = responseOk(w, "the user has successfully logged out", nil)
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }

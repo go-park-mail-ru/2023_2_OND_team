@@ -18,6 +18,7 @@ type Usecase interface {
 	CreateNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePinFromUser(ctx context.Context, pinID, userID int) error
 	SetLikeFromUser(ctx context.Context, pinID, userID int) (int, error)
+	CheckUserHasSetLike(ctx context.Context, pinID, userID int) (bool, error)
 	DeleteLikeFromUser(ctx context.Context, pinID, userID int) error
 	EditPinByID(ctx context.Context, pinID, userID int, updateData *pinUpdateData) error
 	ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error)

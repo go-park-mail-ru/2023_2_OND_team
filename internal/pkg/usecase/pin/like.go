@@ -15,3 +15,7 @@ func (p *pinCase) SetLikeFromUser(ctx context.Context, pinID, userID int) (int, 
 func (p *pinCase) DeleteLikeFromUser(ctx context.Context, pinID, userID int) error {
 	return p.repo.DelLike(ctx, pinID, userID)
 }
+
+func (p *pinCase) CheckUserHasSetLike(ctx context.Context, pinID, userID int) (bool, error) {
+	return p.repo.IsSetLike(ctx, pinID, userID)
+}

@@ -15,7 +15,7 @@ import (
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-const MaxMemoryParseFormData = 10 * 1 << 20
+const MaxMemoryParseFormData = 12 * 1 << 20
 
 // GetPins godoc
 //
@@ -32,16 +32,15 @@ const MaxMemoryParseFormData = 10 * 1 << 20
 // @Failure		500		{object}	JsonErrResponse
 // @Router			/api/v1/pin [get]
 func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on get pins", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	count, minID, maxID, err := FetchValidParamForLoadTape(r.URL)
 	if err != nil {
-		h.log.Info("parse url query params", log.F{"error", err.Error()})
+		logger.Info("parse url query params", log.F{"error", err.Error()})
 		err = responseError(w, "bad_params",
 			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
 	} else {
-		h.log.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
+		logger.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectNewPins(r.Context(), count, minID, maxID)
 		err = responseOk(w, "pins received are sorted by id", map[string]any{
 			"pins":  pins,
@@ -50,18 +49,17 @@ func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on create new pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		err := responseError(w, "bad_request", "the request body should be multipart/form-data")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -70,7 +68,7 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = responseError(w, "bad_body", "failed to read request body")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -103,7 +101,7 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = responseError(w, "bad_body", "unable to get an image from the request body")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -113,65 +111,63 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = responseError(w, "bad_body", "failed to upload the file received in the body")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	err = h.pinCase.CreateNewPin(r.Context(), newPin)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "add_pin", "failed to create pin")
 	} else {
 		err = responseOk(w, "pin successfully created", nil)
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) DeletePin(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on delete new pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	pinIdStr := chi.URLParam(r, "pinID")
 	pinID, err := strconv.ParseInt(pinIdStr, 10, 64)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "parse_url", "internal error")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	err = h.pinCase.DeletePinFromUser(r.Context(), int(pinID), userID)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "pin_del", "internal error")
 	} else {
 		err = responseOk(w, "ok", nil)
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on edit pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	pinIdStr := chi.URLParam(r, "pinID")
 	pinID, err := strconv.ParseInt(pinIdStr, 10, 64)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "parse_url", "internal error")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -183,36 +179,35 @@ func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(pinUpdate)
 	defer r.Body.Close()
 	if err != nil {
-		h.log.Info(err.Error())
+		logger.Info(err.Error())
 		err = responseError(w, "parse_body", "could not read the data to change")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	}
 	err = h.pinCase.EditPinByID(r.Context(), int(pinID), userID, pinUpdate)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "edit_pin", "internal error")
 	} else {
 		err = responseOk(w, "pin data has been successfully changed", nil)
 	}
 
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on view pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	pinIdStr := chi.URLParam(r, "pinID")
 	pinID, err := strconv.ParseInt(pinIdStr, 10, 64)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "parse_url", "internal error")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -223,29 +218,28 @@ func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
 	}
 	pin, err := h.pinCase.ViewAnPin(r.Context(), int(pinID), userID)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "edit_pin", "internal error")
 	} else {
 		err = responseOk(w, "pin was successfully received", pin)
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on view pin", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	count, minID, maxID, err := FetchValidParamForLoadTape(r.URL)
 	if err != nil {
-		h.log.Info("parse url query params", log.F{"error", err.Error()})
+		logger.Info("parse url query params", log.F{"error", err.Error()})
 		err = responseError(w, "bad_params",
 			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
 	} else {
-		h.log.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
+		logger.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectUserPins(r.Context(), userID, count, minID, maxID)
 		err = responseOk(w, "pins received are sorted by id", map[string]any{
 			"pins":  pins,
@@ -254,7 +248,7 @@ func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 
 }

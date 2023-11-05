@@ -7,13 +7,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type F struct {
-	FieldName string
-	Value     string
-}
-
 type Logger struct {
 	*zap.Logger
+	fields []F
 }
 
 func New(options ...ConfigOption) (*Logger, error) {
@@ -28,14 +24,64 @@ func New(options ...ConfigOption) (*Logger, error) {
 	return &Logger{Logger: log}, nil
 }
 
+func (log *Logger) WithField(key string, val any) *Logger {
+	newFields := make([]F, len(log.fields)+1)
+	copy(newFields, log.fields)
+	newFields[len(log.fields)] = F{key, val}
+	return &Logger{
+		Logger: log.Logger,
+		fields: newFields,
+	}
+}
+
 func (log *Logger) Info(msg string, fields ...F) {
+	log.multiLevelLog(log.Logger.Info, msg, fields...)
+}
+
+func (log *Logger) Warn(msg string, fields ...F) {
+	log.multiLevelLog(log.Logger.Warn, msg, fields...)
+}
+
+func (log *Logger) Error(msg string, fields ...F) {
+	log.multiLevelLog(log.Logger.Error, msg, fields...)
+}
+
+func (log *Logger) InfoMap(msg string, mapFields M) {
+	log.Info(msg, mapToSliceFields(mapFields)...)
+}
+
+func (log *Logger) makeFields(fields []F) []zap.Field {
 	listFields := make([]zap.Field, 0, len(fields))
 	for _, field := range fields {
-		listFields = append(listFields, zap.Field{
-			Key:    field.FieldName,
-			Type:   zapcore.StringType,
-			String: field.Value,
-		})
+		zf := zap.Field{
+			Key: field.FieldName,
+		}
+
+		switch value := field.Value.(type) {
+		case string:
+			zf.Type = zapcore.StringType
+			zf.String = value
+		case int64:
+			zf.Type = zapcore.Int64Type
+			zf.Integer = value
+		case int:
+			zf.Type = zapcore.Int64Type
+			zf.Integer = int64(value)
+		case bool:
+			zf.Type = zapcore.BoolType
+			zf.Interface = value
+
+		default:
+			log.Warn("unknown type field for the logger")
+			zf.Type = zapcore.SkipType
+		}
+
+		listFields = append(listFields, zf)
 	}
-	log.Logger.Info(msg, listFields...)
+	return listFields
+}
+
+func (log *Logger) multiLevelLog(logFn zapLogFn, msg string, fields ...F) {
+	fields = append(fields, log.fields...)
+	logFn(msg, log.makeFields(fields)...)
 }

@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	mw "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/security"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
@@ -36,7 +37,11 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		ExposedHeaders:   []string{cfgCSRF.HeaderSet},
 	})
 
-	r.Mux.Use(c.Handler, auth.NewAuthMiddleware(sm).ContextWithUserID) //security.CSRF(cfgCSRF)
+	r.Mux.Use(mw.RequestID(log), mw.Logger(log), c.Handler,
+		security.CSRF(cfgCSRF), mw.SetResponseHeaders(map[string]string{
+			"Content-Type": "application/json",
+		}),
+		auth.NewAuthMiddleware(sm).ContextWithUserID)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
@@ -63,8 +68,9 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 
 			r.With(auth.RequireAuth).Group(func(r chi.Router) {
 				r.Get("/personal", handler.GetUserPins)
+				r.Get("/like/isSet/{pinID:\\d+}", handler.IsSetLikePin)
 				r.Post("/create", handler.CreateNewPin)
-				r.Post("/like/{pinID:\\d+}", handler.SetLikePin)
+				r.Post("/like/set/{pinID:\\d+}", handler.SetLikePin)
 				r.Put("/edit/{pinID:\\d+}", handler.EditPin)
 				r.Delete("/like/{pinID:\\d+}", handler.DeleteLikePin)
 				r.Delete("/delete/{pinID:\\d+}", handler.DeletePin)

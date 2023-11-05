@@ -14,6 +14,7 @@ var (
 			                                  ON membership.board_id = board.id INNER JOIN contributor 
 			                                  ON board.id = contributor.board_id 
 			                                  WHERE pin.id = $1 AND (board.author = $2 OR contributor.user_id = $2));`
+	SelectCheckSetLike = "SELECT pin_id FROM like_pin WHERE pin_id = $1 AND user_id = $2;"
 
 	InsertLikePinFromUser       = "INSERT INTO like_pin (pin_id, user_id) VALUES ($1, $2) RETURNING (SELECT COUNT(*) FROM like_pin WHERE pin_id = $1);"
 	InsertLikePinFromUserAtomic = `INSERT INTO like_pin (pin_id, user_id)

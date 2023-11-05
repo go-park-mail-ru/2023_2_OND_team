@@ -11,8 +11,7 @@ import (
 )
 
 func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
@@ -20,11 +19,11 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(data)
 	defer r.Body.Close()
 	if err != nil {
-		h.log.Info("json decode: " + err.Error())
+		logger.Info("json decode: " + err.Error())
 		err = responseError(w, "parse_body",
 			"the request body must contain json with any of the fields: username, email, name, surname, password")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
@@ -50,69 +49,69 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 	if invalidFields.Err() != nil {
 		err = responseError(w, "invalid_params", invalidFields.Error())
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	err = h.userCase.EditProfileInfo(r.Context(), userID, data)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "uniq_fields", "there is already an account with this username or email")
 	} else {
 		err = responseOk(w, "user data has been successfully changed", nil)
 	}
 
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) ProfileEditAvatar(w http.ResponseWriter, r *http.Request) {
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
-	h.log.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path},
+	logger.Info("request on signup", log.F{"method", r.Method}, log.F{"path", r.URL.Path},
 		log.F{"userID", fmt.Sprint(userID)}, log.F{"content-type", r.Header.Get("Content-Type")})
 
 	defer r.Body.Close()
 
 	avatar, err := h.imgCase.UploadImage("avatars/", r.Header.Get("Content-Type"), r.ContentLength, r.Body)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "edit_avatar", "file upload failed")
 		if err != nil {
-			h.log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 		return
 	}
 
 	err = h.userCase.UpdateUserAvatar(r.Context(), userID, avatar)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "edit_avatar", "failed to change user's avatar")
 	} else {
 		err = responseOk(w, "the user's avatar has been successfully changed", nil)
 	}
 
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
 
 func (h *HandlerHTTP) GetProfileInfo(w http.ResponseWriter, r *http.Request) {
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 	user, err := h.userCase.GetAllProfileInfo(r.Context(), userID)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		err = responseError(w, "get_info", "failed to get user information")
 	} else {
 		err = responseOk(w, "user data has been successfully received", user)
 	}
 
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 	}
 }
