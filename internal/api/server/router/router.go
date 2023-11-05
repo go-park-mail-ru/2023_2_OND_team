@@ -37,7 +37,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		ExposedHeaders:   []string{cfgCSRF.HeaderSet},
 	})
 
-	r.Mux.Use(mw.RequestID, mw.Logger(log), c.Handler,
+	r.Mux.Use(mw.RequestID(log), mw.Logger(log), c.Handler,
 		security.CSRF(cfgCSRF), auth.NewAuthMiddleware(sm).ContextWithUserID)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
