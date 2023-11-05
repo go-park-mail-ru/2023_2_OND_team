@@ -38,7 +38,10 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 	})
 
 	r.Mux.Use(mw.RequestID(log), mw.Logger(log), c.Handler,
-		security.CSRF(cfgCSRF), auth.NewAuthMiddleware(sm).ContextWithUserID)
+		security.CSRF(cfgCSRF), mw.SetResponseHeaders(map[string]string{
+			"Content-Type": "application/json",
+		}),
+		auth.NewAuthMiddleware(sm).ContextWithUserID)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
