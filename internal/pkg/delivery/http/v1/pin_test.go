@@ -23,8 +23,8 @@ func TestGetPins(t *testing.T) {
 	db, _ := ramrepo.OpenDB(strconv.FormatInt(int64(rand.Int()), 10))
 	defer db.Close()
 
-	pinCase := pinCase.New(log, ramrepo.NewRamPinRepo(db))
-	service := New(log, nil, nil, pinCase, nil, nil)
+	pinCase := pinCase.New(log, nil, ramrepo.NewRamPinRepo(db))
+	service := New(log, nil, nil, pinCase, nil)
 
 	rawUrl := "https://domain.test:8080/api/v1/pin"
 	goodCases := []struct {

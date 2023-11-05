@@ -4,16 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	repository "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/crypto"
+	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validator/image/check"
 )
 
 var ErrBadBody = errors.New("bad body avatar")
 
-func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, avatar string) error {
-	err := u.repo.EditUserAvatar(ctx, userID, "https://pinspire.online:8081/"+avatar)
+func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, mimeTypeAvatar string, sizeAvatar int64, avatar io.Reader) error {
+	avatarProfile, err := u.UploadImage("avatars/", mimeTypeAvatar, sizeAvatar, avatar, check.BothSidesFallIntoRange(200, 1800))
+	if err != nil {
+		return fmt.Errorf("uploading an avatar when updating avatar profile: %w", err)
+	}
+	err = u.repo.EditUserAvatar(ctx, userID, avatarProfile)
 	if err != nil {
 		return fmt.Errorf("edit user avatar: %w", err)
 	}

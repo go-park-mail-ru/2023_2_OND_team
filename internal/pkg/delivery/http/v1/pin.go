@@ -107,16 +107,7 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer picture.Close()
 
-	newPin.Picture, err = h.imgCase.UploadImage("pins/", mime.Header.Get("Content-Type"), mime.Size, picture)
-	if err != nil {
-		err = responseError(w, "bad_body", "failed to upload the file received in the body")
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		return
-	}
-
-	err = h.pinCase.CreateNewPin(r.Context(), newPin)
+	err = h.pinCase.CreateNewPin(r.Context(), newPin, mime.Header.Get("Content-Type"), mime.Size, picture)
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "add_pin", "failed to create pin")

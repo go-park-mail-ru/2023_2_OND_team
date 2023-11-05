@@ -43,10 +43,10 @@ func (img *imageRepoFS) SaveImage(prefixPath, extension string, image io.Reader)
 		return "", 0, fmt.Errorf("mkdir %s to save file: %w", dir, err)
 	}
 
-	filePath := dir + filename + "." + extension
-	file, err := os.Create(filePath)
+	filename = dir + filename + "." + extension
+	file, err := os.Create(filename)
 	if err != nil {
-		return "", 0, fmt.Errorf("create %s to save file: %w", filePath, err)
+		return "", 0, fmt.Errorf("create %s to save file: %w", filename, err)
 	}
 	defer file.Close()
 

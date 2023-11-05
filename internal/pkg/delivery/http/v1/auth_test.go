@@ -37,8 +37,8 @@ func TestCheckLogin(t *testing.T) {
 	defer db.Close()
 
 	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
-	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
-	service := New(log, sm, userCase, nil, nil, nil)
+	userCase := user.New(log, nil, ramrepo.NewRamUserRepo(db))
+	service := New(log, sm, userCase, nil, nil)
 
 	url := "https://domain.test:8080/api/v1/login"
 	goodCases := []struct {
@@ -143,8 +143,8 @@ func TestLogin(t *testing.T) {
 	defer db.Close()
 
 	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
-	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
-	service := New(log, sm, userCase, nil, nil, nil)
+	userCase := user.New(log, nil, ramrepo.NewRamUserRepo(db))
+	service := New(log, sm, userCase, nil, nil)
 
 	goodCases := []struct {
 		name    string
@@ -279,8 +279,8 @@ func TestSignUp(t *testing.T) {
 	defer db.Close()
 
 	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
-	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
-	service := New(log, sm, userCase, nil, nil, nil)
+	userCase := user.New(log, nil, ramrepo.NewRamUserRepo(db))
+	service := New(log, sm, userCase, nil, nil)
 
 	goodCases := []struct {
 		name    string
@@ -395,8 +395,8 @@ func TestLogout(t *testing.T) {
 	defer db.Close()
 
 	sm := session.New(log, ramrepo.NewRamSessionRepo(db))
-	userCase := user.New(log, ramrepo.NewRamUserRepo(db))
-	service := New(log, sm, userCase, nil, nil, nil)
+	userCase := user.New(log, nil, ramrepo.NewRamUserRepo(db))
+	service := New(log, sm, userCase, nil, nil)
 
 	goodCases := []struct {
 		name    string

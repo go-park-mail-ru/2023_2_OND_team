@@ -3,16 +3,15 @@ package png
 import (
 	"image/png"
 	"io"
+
+	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validator/image/check"
 )
 
-func IsValidPNG(r io.Reader) bool {
+func IsValidPNG(r io.Reader, check check.CheckSize) bool {
 	cfg, err := png.DecodeConfig(r)
 	if err != nil {
 		return false
 	}
 
-	if cfg.Height < 200 || cfg.Width < 200 || cfg.Height > 600 || cfg.Width > 600 {
-		return false
-	}
-	return true
+	return check(float64(cfg.Width), float64(cfg.Height))
 }

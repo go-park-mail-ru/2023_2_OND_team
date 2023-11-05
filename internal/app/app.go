@@ -53,12 +53,12 @@ func Run(ctx context.Context, log *log.Logger, configFile string) {
 	}
 
 	sm := session.New(log, sessionRepo.NewSessionRepo(redisCl))
-	userCase := user.New(log, userRepo.NewUserRepoPG(pool))
-	pinCase := pin.New(log, pinRepo.NewPinRepoPG(pool))
-	boardCase := board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy())
 	imgCase := image.New(log, imgRepo.NewImageRepoFS("upload/"))
+	userCase := user.New(log, imgCase, userRepo.NewUserRepoPG(pool))
+	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
+	boardCase := board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy())
 
-	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase, imgCase)
+	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase)
 	cfgServ, err := server.NewConfig(configFile)
 	if err != nil {
 		log.Error(err.Error())

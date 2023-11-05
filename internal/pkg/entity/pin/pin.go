@@ -10,8 +10,8 @@ type Pin struct {
 	ID          int         `json:"id" example:"55"`
 	Author      *user.User  `json:"author,omitempty" example:"23"`
 	Picture     string      `json:"picture" example:"pinspire/imgs/image.png"`
-	Title       pgtype.Text `json:"-" example:"Nature's beauty"`
-	Description pgtype.Text `json:"-" example:"about face"`
+	Title       pgtype.Text `json:"title" example:"Nature's beauty"`
+	Description pgtype.Text `json:"description" example:"about face"`
 	Public      bool        `json:"public"`
 
 	Tags      []Tag `json:"tags,omitempty"`

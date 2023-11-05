@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validator/image/check"
 )
 
 var ErrBadMIMEType = errors.New("bad mime type")
@@ -15,7 +18,7 @@ var ErrBadMIMEType = errors.New("bad mime type")
 type Usecase interface {
 	SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int)
 	SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
-	CreateNewPin(ctx context.Context, pin *entity.Pin) error
+	CreateNewPin(ctx context.Context, pin *entity.Pin, mimeTypePicture string, sizePicture int64, picture io.Reader) error
 	DeletePinFromUser(ctx context.Context, pinID, userID int) error
 	SetLikeFromUser(ctx context.Context, pinID, userID int) (int, error)
 	CheckUserHasSetLike(ctx context.Context, pinID, userID int) (bool, error)
@@ -25,12 +28,17 @@ type Usecase interface {
 }
 
 type pinCase struct {
+	image.Usecase
 	log  *log.Logger
 	repo repo.Repository
 }
 
-func New(log *log.Logger, repo repo.Repository) *pinCase {
-	return &pinCase{log, repo}
+func New(log *log.Logger, imgCase image.Usecase, repo repo.Repository) *pinCase {
+	return &pinCase{
+		Usecase: imgCase,
+		log:     log,
+		repo:    repo,
+	}
 }
 
 func (p *pinCase) SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int) {
@@ -55,10 +63,14 @@ func (p *pinCase) SelectUserPins(ctx context.Context, userID, count, minID, maxI
 	return pins, pins[len(pins)-1].ID, pins[0].ID
 }
 
-func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin) error {
-	pin.Picture = "https://pinspire.online:8081/" + pin.Picture
+func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, mimeTypePicture string, sizePicture int64, picture io.Reader) error {
+	picturePin, err := p.UploadImage("pins/", mimeTypePicture, sizePicture, picture, check.BothSidesFallIntoRange(200, 1800))
+	if err != nil {
+		return fmt.Errorf("uploading an avatar when creating pin: %w", err)
+	}
+	pin.Picture = picturePin
 
-	err := p.repo.AddNewPin(ctx, pin)
+	err = p.repo.AddNewPin(ctx, pin)
 	if err != nil {
 		return fmt.Errorf("add new pin: %w", err)
 	}

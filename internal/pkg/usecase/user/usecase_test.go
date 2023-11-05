@@ -24,7 +24,7 @@ func TestRegister(t *testing.T) {
 	db, _ := ramrepo.OpenDB(strconv.FormatInt(int64(rand.Int()), 10))
 	defer db.Close()
 
-	userCase := New(log, ramrepo.NewRamUserRepo(db))
+	userCase := New(log, nil, ramrepo.NewRamUserRepo(db))
 
 	testCases := []struct {
 		name   string

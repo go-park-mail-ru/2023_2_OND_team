@@ -76,17 +76,7 @@ func (h *HandlerHTTP) ProfileEditAvatar(w http.ResponseWriter, r *http.Request) 
 
 	defer r.Body.Close()
 
-	avatar, err := h.imgCase.UploadImage("avatars/", r.Header.Get("Content-Type"), r.ContentLength, r.Body)
-	if err != nil {
-		logger.Error(err.Error())
-		err = responseError(w, "edit_avatar", "file upload failed")
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		return
-	}
-
-	err = h.userCase.UpdateUserAvatar(r.Context(), userID, avatar)
+	err := h.userCase.UpdateUserAvatar(r.Context(), userID, r.Header.Get("Content-Type"), r.ContentLength, r.Body)
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "edit_avatar", "failed to change user's avatar")

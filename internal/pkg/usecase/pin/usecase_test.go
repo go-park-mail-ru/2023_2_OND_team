@@ -18,7 +18,7 @@ func TestSelectNewPins(t *testing.T) {
 	db, _ := ramrepo.OpenDB(strconv.FormatInt(int64(rand.Int()), 10))
 	defer db.Close()
 
-	pinCase := New(log, ramrepo.NewRamPinRepo(db))
+	pinCase := New(log, nil, ramrepo.NewRamPinRepo(db))
 
 	testCases := []struct {
 		name          string

@@ -3,16 +3,14 @@ package webp
 import (
 	"io"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validator/image/check"
 	"golang.org/x/image/webp"
 )
 
-func IsValidWEBP(r io.Reader) bool {
+func IsValidWEBP(r io.Reader, check check.CheckSize) bool {
 	cfg, err := webp.DecodeConfig(r)
 	if err != nil {
 		return false
 	}
-	if cfg.Height < 200 || cfg.Width < 200 || cfg.Height > 600 || cfg.Width > 600 {
-		return false
-	}
-	return true
+	return check(float64(cfg.Width), float64(cfg.Height))
 }
