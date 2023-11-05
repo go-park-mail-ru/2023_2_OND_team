@@ -6,10 +6,17 @@ import (
 	"net/http"
 )
 
-// type JsonResponseNoBody struct {
-// 	Status  string `json:"status" example:"ok"`
-// 	Message string `json:"message" example:"Response message"`
-// }
+var (
+	InternalServerErrMessage = "internal server error occured"
+	BadBodyMessage           = "can't parse body, JSON expected"
+	BadQueryParamMessage     = "invalid query parameters have been provided"
+)
+
+var (
+	BadBodyCode       = "bad_body"
+	BadQueryParamCode = "bad_queryParam"
+	InternalErrorCode = "internal_error"
+)
 
 type JsonResponse struct {
 	Status  string      `json:"status" example:"ok"`

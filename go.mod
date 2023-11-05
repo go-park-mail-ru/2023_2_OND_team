@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v5 v5.4.3
+	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/proullon/ramsql v0.0.1
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/rs/cors v1.10.1
@@ -24,6 +25,7 @@ require (
 require (
 	github.com/ByteArena/poly2tri-go v0.0.0-20170716161910-d102ad91854f // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/benoitkugler/textlayout v0.3.0 // indirect
 	github.com/benoitkugler/textprocessing v0.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -37,6 +39,7 @@ require (
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-text/typesetting v0.0.0-20231013144250-6cc35dbfae7d // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect

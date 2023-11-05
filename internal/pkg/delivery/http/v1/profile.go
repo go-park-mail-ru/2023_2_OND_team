@@ -28,7 +28,6 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 	invalidFields := new(errorFields)
 	if data.Username != nil && !isValidUsername(*data.Username) {
 		invalidFields.addInvalidField("username")

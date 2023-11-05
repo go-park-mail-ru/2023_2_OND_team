@@ -55,3 +55,11 @@ func (r *ramUserRepo) GetAllUserData(ctx context.Context, userID int) (*entity.U
 func (r *ramUserRepo) EditUserInfo(ctx context.Context, userID int, s rp.S) error {
 	return ErrMethodUnimplemented
 }
+
+func (r *ramUserRepo) GetUserIdByUsername(ctx context.Context, username string) (int, error) {
+	return 0, ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) GetLastUserID(ctx context.Context) (int, error) {
+	return 0, ErrMethodUnimplemented
+}

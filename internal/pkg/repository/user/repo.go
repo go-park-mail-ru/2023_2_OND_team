@@ -5,15 +5,19 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 )
 
 type Repository interface {
 	AddNewUser(ctx context.Context, user *user.User) error
 	GetUserByUsername(ctx context.Context, username string) (*user.User, error)
 	GetUsernameAndAvatarByID(ctx context.Context, userID int) (username string, avatar string, err error)
+	GetUserIdByUsername(ctx context.Context, username string) (int, error)
+	GetLastUserID(ctx context.Context) (int, error)
 	EditUserAvatar(ctx context.Context, userID int, avatar string) error
 	GetAllUserData(ctx context.Context, userID int) (*user.User, error)
 	EditUserInfo(ctx context.Context, userID int, updateFields S) error
@@ -90,4 +94,27 @@ func (u *userRepoPG) EditUserInfo(ctx context.Context, userID int, updateFields 
 		return fmt.Errorf("update user info in the storage: %w", err)
 	}
 	return nil
+}
+
+func (u *userRepoPG) GetUserIdByUsername(ctx context.Context, username string) (int, error) {
+	var userID int
+	err := u.db.QueryRow(ctx, SelectUserIdByUsername, username).Scan(&userID)
+	if err != nil {
+		switch err {
+		case pgx.ErrNoRows:
+			return 0, repository.ErrNoData
+		default:
+			return 0, fmt.Errorf("scan result of get user id by username query: %w", err)
+		}
+	}
+	return userID, nil
+}
+
+func (u *userRepoPG) GetLastUserID(ctx context.Context) (int, error) {
+	var lastUserID int
+	err := u.db.QueryRow(ctx, SelectLastUserID).Scan(&lastUserID)
+	if err != nil {
+		return 0, fmt.Errorf("get last user id: %w", err)
+	}
+	return lastUserID, nil
 }

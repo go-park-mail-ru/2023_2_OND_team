@@ -5,15 +5,18 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/microcosm-cc/bluemonday"
 	redis "github.com/redis/go-redis/v9"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
@@ -52,9 +55,10 @@ func Run(ctx context.Context, log *log.Logger, configFile string) {
 	sm := session.New(log, sessionRepo.NewSessionRepo(redisCl))
 	userCase := user.New(log, userRepo.NewUserRepoPG(pool))
 	pinCase := pin.New(log, pinRepo.NewPinRepoPG(pool))
+	boardCase := board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy())
 	imgCase := image.New(log, imgRepo.NewImageRepoFS("upload/"))
 
-	handler := deliveryHTTP.New(log, sm, userCase, pinCase, imgCase)
+	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase, imgCase)
 	cfgServ, err := server.NewConfig(configFile)
 	if err != nil {
 		log.Error(err.Error())
