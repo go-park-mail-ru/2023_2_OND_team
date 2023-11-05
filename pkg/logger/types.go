@@ -1,6 +1,9 @@
 package logger
 
-import "go.uber.org/zap/zapcore"
+import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
 
 type (
 	F struct {
@@ -11,7 +14,10 @@ type (
 	M map[string]any
 )
 
-type zapLogFn func(msg string, fields ...zapcore.Field)
+type (
+	zapLogFn      func(msg string, fields ...zapcore.Field)
+	zapSugarLogFn func(sugarLogger *zap.SugaredLogger, template string, args ...any)
+)
 
 type ctxLoggerKey int8
 
