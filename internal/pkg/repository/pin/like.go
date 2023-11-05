@@ -3,6 +3,8 @@ package pin
 import (
 	"context"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (p *pinRepoPG) SetLike(ctx context.Context, pinID, userID int) (int, error) {
@@ -31,4 +33,17 @@ func (p *pinRepoPG) GetCountLikeByPinID(ctx context.Context, pinID int) (int, er
 		return 0, fmt.Errorf("get count like by pin id: %w", err)
 	}
 	return count, nil
+}
+
+func (p *pinRepoPG) IsSetLike(ctx context.Context, pinID, userID int) (bool, error) {
+	row := p.db.QueryRow(ctx, SelectCheckSetLike, pinID, userID)
+	var check int
+	err := row.Scan(&check)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("is set like to pin in storage: %w", err)
+	}
+	return true, nil
 }
