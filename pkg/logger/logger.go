@@ -46,6 +46,18 @@ func (log *Logger) Error(msg string, fields ...F) {
 	log.multiLevelLog(log.Logger.Error, msg, fields...)
 }
 
+func (log *Logger) Infof(template string, args ...any) {
+	log.multiLevelSugarLog((*zap.SugaredLogger).Infof, template, args...)
+}
+
+func (log *Logger) Warnf(template string, args ...any) {
+	log.multiLevelSugarLog((*zap.SugaredLogger).Warnf, template, args...)
+}
+
+func (log *Logger) Errorf(template string, args ...any) {
+	log.multiLevelSugarLog((*zap.SugaredLogger).Errorf, template, args...)
+}
+
 func (log *Logger) InfoMap(msg string, mapFields M) {
 	log.Info(msg, mapToSliceFields(mapFields)...)
 }
@@ -84,4 +96,12 @@ func (log *Logger) makeFields(fields []F) []zap.Field {
 func (log *Logger) multiLevelLog(logFn zapLogFn, msg string, fields ...F) {
 	fields = append(fields, log.fields...)
 	logFn(msg, log.makeFields(fields)...)
+}
+
+func (log *Logger) multiLevelSugarLog(logFn zapSugarLogFn, template string, args ...any) {
+	fieldsSugarLogger := make([]any, 0, 2*len(log.fields))
+	for _, field := range log.fields {
+		fieldsSugarLogger = append(fieldsSugarLogger, field.FieldName, field.Value)
+	}
+	logFn(log.Logger.Sugar().With(fieldsSugarLogger...), template, args...)
 }

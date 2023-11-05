@@ -40,7 +40,7 @@ func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
 		err = responseError(w, "bad_params",
 			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
 	} else {
-		logger.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
+		logger.Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectNewPins(r.Context(), count, minID, maxID)
 		err = responseOk(w, "pins received are sorted by id", map[string]any{
 			"pins":  pins,
@@ -239,7 +239,7 @@ func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
 		err = responseError(w, "bad_params",
 			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
 	} else {
-		logger.Sugar().Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
+		logger.Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectUserPins(r.Context(), userID, count, minID, maxID)
 		err = responseOk(w, "pins received are sorted by id", map[string]any{
 			"pins":  pins,
