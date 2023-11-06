@@ -31,7 +31,7 @@ func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "no_auth", "no user was found for this session")
 	} else {
-		err = responseOk(w, "user found", map[string]string{"username": username, "avatar": avatar})
+		err = responseOk(http.StatusOK, w, "user found", map[string]string{"username": username, "avatar": avatar})
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -107,7 +107,7 @@ func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, cookie)
 
-	err = responseOk(w, "a new session has been created for the user", nil)
+	err = responseOk(http.StatusCreated, w, "a new session has been created for the user", nil)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -156,7 +156,7 @@ func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
 		logger.Warn(err.Error())
 		err = responseError(w, "uniq_fields", "there is already an account with this username or email")
 	} else {
-		err = responseOk(w, "the user has been successfully registered", nil)
+		err = responseOk(http.StatusCreated, w, "the user has been successfully registered", nil)
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -198,7 +198,7 @@ func (h *HandlerHTTP) Logout(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "session", "the user logged out, but his session did not end")
 	} else {
-		err = responseOk(w, "the user has successfully logged out", nil)
+		err = responseOk(http.StatusOK, w, "the user has successfully logged out", nil)
 	}
 	if err != nil {
 		logger.Error(err.Error())

@@ -59,7 +59,7 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "uniq_fields", "there is already an account with this username or email")
 	} else {
-		err = responseOk(w, "user data has been successfully changed", nil)
+		err = responseOk(http.StatusOK, w, "user data has been successfully changed", nil)
 	}
 
 	if err != nil {
@@ -81,7 +81,7 @@ func (h *HandlerHTTP) ProfileEditAvatar(w http.ResponseWriter, r *http.Request) 
 		logger.Error(err.Error())
 		err = responseError(w, "edit_avatar", "failed to change user's avatar")
 	} else {
-		err = responseOk(w, "the user's avatar has been successfully changed", nil)
+		err = responseOk(http.StatusOK, w, "the user's avatar has been successfully changed", nil)
 	}
 
 	if err != nil {
@@ -98,7 +98,7 @@ func (h *HandlerHTTP) GetProfileInfo(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "get_info", "failed to get user information")
 	} else {
-		err = responseOk(w, "user data has been successfully received", user)
+		err = responseOk(http.StatusOK, w, "user data has been successfully received", user)
 	}
 
 	if err != nil {

@@ -42,7 +42,7 @@ func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
 	} else {
 		logger.Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectNewPins(r.Context(), count, minID, maxID)
-		err = responseOk(w, "pins received are sorted by id", map[string]any{
+		err = responseOk(http.StatusOK, w, "pins received are sorted by id", map[string]any{
 			"pins":  pins,
 			"minID": minID,
 			"maxID": maxID,
@@ -112,7 +112,7 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "add_pin", "failed to create pin")
 	} else {
-		err = responseOk(w, "pin successfully created", nil)
+		err = responseOk(http.StatusCreated, w, "pin successfully created", nil)
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -140,7 +140,7 @@ func (h *HandlerHTTP) DeletePin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "pin_del", "internal error")
 	} else {
-		err = responseOk(w, "ok", nil)
+		err = responseOk(http.StatusOK, w, "ok", nil)
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -181,7 +181,7 @@ func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "edit_pin", "internal error")
 	} else {
-		err = responseOk(w, "pin data has been successfully changed", nil)
+		err = responseOk(http.StatusOK, w, "pin data has been successfully changed", nil)
 	}
 
 	if err != nil {
@@ -212,7 +212,7 @@ func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "edit_pin", "internal error")
 	} else {
-		err = responseOk(w, "pin was successfully received", pin)
+		err = responseOk(http.StatusOK, w, "pin was successfully received", pin)
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -232,7 +232,7 @@ func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
 	} else {
 		logger.Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
 		pins, minID, maxID := h.pinCase.SelectUserPins(r.Context(), userID, count, minID, maxID)
-		err = responseOk(w, "pins received are sorted by id", map[string]any{
+		err = responseOk(http.StatusOK, w, "pins received are sorted by id", map[string]any{
 			"pins":  pins,
 			"minID": minID,
 			"maxID": maxID,
@@ -241,5 +241,4 @@ func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 	}
-
 }

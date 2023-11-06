@@ -30,7 +30,7 @@ func (h *HandlerHTTP) SetLikePin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "like_pin_set", "internal error")
 	} else {
-		err = responseOk(w, "ok", map[string]int{"count_like": countLike})
+		err = responseOk(http.StatusCreated, w, "ok", map[string]int{"count_like": countLike})
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -58,7 +58,7 @@ func (h *HandlerHTTP) DeleteLikePin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "like_pin_del", "internal error")
 	} else {
-		err = responseOk(w, "ok", nil)
+		err = responseOk(http.StatusOK, w, "ok", nil)
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -84,7 +84,7 @@ func (h *HandlerHTTP) IsSetLikePin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "like_pin_set", "internal error")
 	} else {
-		err = responseOk(w, "ok", map[string]bool{"is_set": isSet})
+		err = responseOk(http.StatusOK, w, "ok", map[string]bool{"is_set": isSet})
 	}
 	if err != nil {
 		logger.Error(err.Error())
