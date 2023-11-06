@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (repo *BoardRepoPG) insertTags(ctx context.Context, tx pgx.Tx, titles []string) error {
+func (repo *boardRepoPG) insertTags(ctx context.Context, tx pgx.Tx, titles []string) error {
 	insertTagsQuery := repo.sqlBuilder.
 		Insert("tag").
 		Columns("title")
@@ -30,7 +30,7 @@ func (repo *BoardRepoPG) insertTags(ctx context.Context, tx pgx.Tx, titles []str
 	return nil
 }
 
-func (repo *BoardRepoPG) addTagsToBoard(ctx context.Context, tx pgx.Tx, tagTitles []string, boardID int, isNewBoard bool) error {
+func (repo *boardRepoPG) addTagsToBoard(ctx context.Context, tx pgx.Tx, tagTitles []string, boardID int, isNewBoard bool) error {
 	addTagsToBoardQuery := repo.sqlBuilder.
 		Insert("board_tag").
 		Columns("board_id", "tag_id").
