@@ -29,7 +29,7 @@ func TestSelectNewPins(t *testing.T) {
 			name:         "provide correct count and lastID",
 			count:        2,
 			lastID:       1,
-			expNewLastID: 3,
+			expNewLastID: 2,
 		},
 		{
 			name:         "provide incorrect count",

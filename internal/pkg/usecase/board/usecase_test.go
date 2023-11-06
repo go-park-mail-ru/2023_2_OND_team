@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
+	uEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 	mock_board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/mock"
@@ -19,12 +20,14 @@ import (
 )
 
 type (
-	CreateBoard             func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string)
-	UpdateBoard             CreateBoard
-	GetBoardAuthorByBoardID func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int)
-	GetUserIdByUsername     func(mockRepo *mock_user.MockRepository, ctx context.Context, username string)
-	GetContributorBoardsIDs func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int)
-	GetBoardsByUserID       func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int)
+	CreateBoard              func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string)
+	UpdateBoard              CreateBoard
+	GetBoardAuthorByBoardID  func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int)
+	GetContributorBoardsIDs  func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int)
+	GetBoardsByUserID        func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int)
+	GetContributorsByBoardID func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int)
+	GetBoardByID             func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool)
+	GetUserIdByUsername      func(mockRepo *mock_user.MockRepository, ctx context.Context, username string)
 )
 
 var (
@@ -316,14 +319,14 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 							BoardID:    23,
 							Title:      "title",
 							CreatedAt:  "25:10:2022",
-							PinsNumber: 10,
+							PinsNumber: 2,
 							Pins:       []string{"/pic1", "/pic2"},
 						},
 						{
 							BoardID:    21,
 							Title:      "title21",
 							CreatedAt:  "25:10:2012",
-							PinsNumber: 2,
+							PinsNumber: 0,
 							Pins:       []string{},
 						},
 					}, nil).Times(1)
@@ -333,14 +336,14 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 					BoardID:    23,
 					Title:      "title",
 					CreatedAt:  "25:10:2022",
-					PinsNumber: 10,
+					PinsNumber: 2,
 					Pins:       []string{"/pic1", "/pic2"},
 				},
 				{
 					BoardID:    21,
 					Title:      "title21",
 					CreatedAt:  "25:10:2012",
-					PinsNumber: 2,
+					PinsNumber: 0,
 					Pins:       []string{},
 				},
 			},
@@ -399,6 +402,193 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 			}
 
 			require.Equal(t, test.expBoards, userBoards)
+		})
+	}
+}
+
+func TestBoardUsecase_GetCertainBoard(t *testing.T) {
+	tests := []struct {
+		name                     string
+		inCtx                    context.Context
+		boardID                  int
+		GetBoardAuthorByBoardID  GetBoardAuthorByBoardID
+		GetContributorsByBoardID GetContributorsByBoardID
+		GetBoardByID             GetBoardByID
+		hasAccess                bool
+		expBoard                 dto.UserBoard
+		expErr                   error
+	}{
+		{
+			name:    "private board, valid board id, request from author",
+			inCtx:   context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			boardID: 22,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(1, nil).Times(1)
+			},
+			GetContributorsByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{}, nil).Times(1)
+			},
+			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(dto.UserBoard{
+					BoardID:     boardID,
+					Title:       "title",
+					Description: "description",
+					CreatedAt:   "10:10:2020",
+					PinsNumber:  1,
+					Pins:        []string{"/pic1"},
+					TagTitles:   []string{"good", "bad"},
+				}, nil).Times(1)
+			},
+			hasAccess: true,
+			expBoard: dto.UserBoard{
+				BoardID:     22,
+				Title:       "title",
+				Description: "description",
+				CreatedAt:   "10:10:2020",
+				PinsNumber:  1,
+				Pins:        []string{"/pic1"},
+				TagTitles:   []string{"good", "bad"},
+			},
+			expErr: nil,
+		},
+		{
+			name:    "private board, valid board id, request from contributor",
+			inCtx:   context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			boardID: 22,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(2, nil).Times(1)
+			},
+			GetContributorsByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{{ID: 1}}, nil).Times(1)
+			},
+			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(dto.UserBoard{
+					BoardID:     boardID,
+					Title:       "title",
+					Description: "description",
+					CreatedAt:   "10:10:2020",
+					PinsNumber:  1,
+					Pins:        []string{"/pic1"},
+					TagTitles:   []string{"good", "bad"},
+				}, nil).Times(1)
+			},
+			hasAccess: true,
+			expBoard: dto.UserBoard{
+				BoardID:     22,
+				Title:       "title",
+				Description: "description",
+				CreatedAt:   "10:10:2020",
+				PinsNumber:  1,
+				Pins:        []string{"/pic1"},
+				TagTitles:   []string{"good", "bad"},
+			},
+			expErr: nil,
+		},
+		{
+			name:    "private board, valid board id, request from not author, not contributor",
+			inCtx:   context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			boardID: 22,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(2, nil).Times(1)
+			},
+			GetContributorsByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{{ID: 123}}, nil).Times(1)
+			},
+			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(dto.UserBoard{}, repository.ErrNoData).Times(1)
+			},
+			hasAccess: false,
+			expBoard:  dto.UserBoard{},
+			expErr:    ErrNoSuchBoard,
+		},
+		{
+			name:    "private board, valid board id, request from unauthorized",
+			inCtx:   context.Background(),
+			boardID: 22,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(2, nil).Times(1)
+			},
+			GetContributorsByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{{ID: 123}}, nil).Times(1)
+			},
+			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(dto.UserBoard{}, repository.ErrNoData).Times(1)
+			},
+			hasAccess: false,
+			expBoard:  dto.UserBoard{},
+			expErr:    ErrNoSuchBoard,
+		},
+		{
+			name:    "public board, valid board id, request from unauthorized",
+			inCtx:   context.Background(),
+			boardID: 22,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(2, nil).Times(1)
+			},
+			GetContributorsByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{{ID: 123}}, nil).Times(1)
+			},
+			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(dto.UserBoard{
+					BoardID:     boardID,
+					Title:       "title",
+					Description: "description",
+					CreatedAt:   "10:10:2020",
+					PinsNumber:  1,
+					Pins:        []string{"/pic1"},
+					TagTitles:   []string{"good", "bad"},
+				}, nil).Times(1)
+			},
+			hasAccess: false,
+			expBoard: dto.UserBoard{
+				BoardID:     22,
+				Title:       "title",
+				Description: "description",
+				CreatedAt:   "10:10:2020",
+				PinsNumber:  1,
+				Pins:        []string{"/pic1"},
+				TagTitles:   []string{"good", "bad"},
+			},
+			expErr: nil,
+		},
+		{
+			name:    "invalid board id",
+			inCtx:   context.Background(),
+			boardID: 1222,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(0, repository.ErrNoData).Times(1)
+			},
+			GetContributorsByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+			},
+			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
+			},
+			expBoard: dto.UserBoard{},
+			expErr:   ErrNoSuchBoard,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
+
+			log, err := logger.New(logger.RFC3339FormatTime())
+			if err != nil {
+				stdLog.Fatal(err)
+			}
+			mockBoardRepo := mock_board.NewMockRepository(ctl)
+			test.GetBoardAuthorByBoardID(mockBoardRepo, test.inCtx, test.boardID)
+			test.GetContributorsByBoardID(mockBoardRepo, test.inCtx, test.boardID)
+			test.GetBoardByID(mockBoardRepo, test.inCtx, test.boardID, test.hasAccess)
+
+			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
+			board, err := boardUsecase.GetCertainBoard(test.inCtx, test.boardID)
+
+			if err != nil {
+				require.EqualError(t, err, test.expErr.Error())
+			}
+
+			require.Equal(t, test.expBoard, board)
 		})
 	}
 }
