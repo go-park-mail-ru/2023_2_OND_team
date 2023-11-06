@@ -21,7 +21,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&newBoard)
 	defer r.Body.Close()
 	if err != nil {
-		logger.Info("create board: ", log.F{"message", err.Error()})
+		logger.Info("create board", log.F{"message", err.Error()})
 		responseError(w, BadBodyCode, BadBodyMessage)
 		return
 	}
@@ -57,7 +57,7 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 
 	userBoards, err := h.boardCase.GetBoardsByUsername(r.Context(), chi.URLParam(r, "username"))
 	if err != nil {
-		logger.Info("get user boards: ", log.F{"message", err.Error()})
+		logger.Info("get user boards", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrInvalidUsername:
 			responseError(w, "bad_username", err.Error())
@@ -81,14 +81,14 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		logger.Info("get certain board ", log.F{"message", err.Error()})
+		logger.Info("get certain board", log.F{"message", err.Error()})
 		responseError(w, BadQueryParamCode, BadQueryParamMessage)
 		return
 	}
 
 	board, err := h.boardCase.GetCertainBoard(r.Context(), int(boardID))
 	if err != nil {
-		logger.Info("get certain board: ", log.F{"message", err.Error()})
+		logger.Info("get certain board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrNoSuchBoard:
 			responseError(w, "no_board", err.Error())
@@ -112,7 +112,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		logger.Info("update certain board ", log.F{"message", err.Error()})
+		logger.Info("update certain board", log.F{"message", err.Error()})
 		responseError(w, BadQueryParamCode, BadQueryParamMessage)
 		return
 	}
@@ -121,7 +121,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&updatedBoard)
 	defer r.Body.Close()
 	if err != nil {
-		logger.Info("update certain board: ", log.F{"message", err.Error()})
+		logger.Info("update certain board", log.F{"message", err.Error()})
 		responseError(w, BadBodyCode, BadBodyMessage)
 		return
 	}
@@ -129,7 +129,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 
 	err = h.boardCase.UpdateBoardInfo(r.Context(), updatedBoard)
 	if err != nil {
-		logger.Info("update certain board: ", log.F{"message", err.Error()})
+		logger.Info("update certain board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrNoSuchBoard:
 			responseError(w, "no_board", err.Error())
@@ -161,14 +161,14 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		logger.Info("delete board ", log.F{"message", err.Error()})
+		logger.Info("delete board", log.F{"message", err.Error()})
 		responseError(w, BadQueryParamCode, BadQueryParamMessage)
 		return
 	}
 
 	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
 	if err != nil {
-		logger.Info("delete board: ", log.F{"message", err.Error()})
+		logger.Info("delete board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrNoSuchBoard:
 			responseError(w, "no_board", err.Error())
