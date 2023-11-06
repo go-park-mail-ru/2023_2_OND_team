@@ -18,6 +18,7 @@ const lenSessionKey = 16
 
 var ErrExpiredSession = errors.New("session lifetime expired")
 
+//go:generate mockgen -destination=./mock/session_mock.go -package=mock -source=manager.go SessionManager
 type SessionManager interface {
 	CreateNewSessionForUser(ctx context.Context, userID int) (*session.Session, error)
 	GetUserIDBySessionKey(ctx context.Context, sessionKey string) (int, error)

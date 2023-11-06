@@ -8,6 +8,7 @@ import (
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
+//go:generate mockgen -destination=./mock/board_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	CreateBoard(ctx context.Context, board entity.Board, tagTitles []string) (int, error)
 	GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]dto.UserBoard, error)

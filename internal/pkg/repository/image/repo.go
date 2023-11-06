@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate mockgen -destination=./mock/image_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	SaveImage(prefixPath, extension string, image io.Reader) (filename string, written int64, err error)
 	SetBasePath(path string)

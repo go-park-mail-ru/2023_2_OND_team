@@ -17,6 +17,7 @@ const PrefixURLImage = "httsp://pinspire.online:8081/"
 var ErrInvalidImage = errors.New("invalid images")
 var ErrUploadFile = errors.New("file upload failed")
 
+//go:generate mockgen -destination=./mock/image_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	UploadImage(path string, mimeType string, size int64, image io.Reader, check check.CheckSize) (string, error)
 }

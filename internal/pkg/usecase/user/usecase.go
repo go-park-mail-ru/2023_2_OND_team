@@ -18,6 +18,7 @@ const (
 	lenPasswordHash = 64
 )
 
+//go:generate mockgen -destination=./mock/user_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	Register(ctx context.Context, user *entity.User) error
 	Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error)

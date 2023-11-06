@@ -10,6 +10,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate mockgen -destination=./mock/board_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error)
 	GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error)

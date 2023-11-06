@@ -13,6 +13,7 @@ import (
 var ErrMethodUnimplemented = errors.New("unimplemented")
 var ErrExistsSession = errors.New("the session already exists")
 
+//go:generate mockgen -destination=./mock/session_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	AddSession(ctx context.Context, session *session.Session) error
 	GetSessionByKey(ctx context.Context, key string) (*session.Session, error)

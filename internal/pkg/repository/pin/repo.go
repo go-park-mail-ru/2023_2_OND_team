@@ -14,6 +14,8 @@ import (
 )
 
 type S map[string]any
+
+//go:generate mockgen -destination=./mock/pin_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
 	GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error)

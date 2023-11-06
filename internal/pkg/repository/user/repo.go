@@ -12,6 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 )
 
+//go:generate mockgen -destination=./mock/user_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	AddNewUser(ctx context.Context, user *user.User) error
 	GetUserByUsername(ctx context.Context, username string) (*user.User, error)

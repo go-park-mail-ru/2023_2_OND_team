@@ -15,6 +15,7 @@ import (
 
 var ErrBadMIMEType = errors.New("bad mime type")
 
+//go:generate mockgen -destination=./mock/pin_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int)
 	SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
