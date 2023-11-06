@@ -17,4 +17,16 @@ type Repository interface {
 	GetContributorBoardsIDs(ctx context.Context, contributorID int) ([]int, error)
 	UpdateBoard(ctx context.Context, newBoardData entity.Board, tagTitles []string) error
 	DeleteBoardByID(ctx context.Context, boardID int) error
+	RoleUserHaveOnThisBoard(ctx context.Context, boardID int, userID int) (UserRole, error)
+	AddPinsOnBoard(ctx context.Context, boardID int, pinIds []int) error
 }
+
+type UserRole uint8
+
+const (
+	RegularUser UserRole = 1 << iota
+	Subscriber
+	ContributorForReading
+	ContributorForAdding
+	Author
+)

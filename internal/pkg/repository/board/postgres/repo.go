@@ -271,3 +271,20 @@ func (repo *boardRepoPG) insertBoard(ctx context.Context, tx pgx.Tx, board entit
 	}
 	return newBoardID, nil
 }
+
+func (repo *boardRepoPG) AddPinsOnBoard(ctx context.Context, boardID int, pinIds []int) error {
+	insertBuilder := repo.sqlBuilder.Insert("membership").Columns("pin_id", "board_id")
+	for _, pinID := range pinIds {
+		insertBuilder = insertBuilder.Values(pinID, boardID)
+	}
+	sqlRow, args, err := insertBuilder.Suffix("ON CONFLICT (pin_id, board_id) DO NOTHING").ToSql()
+	if err != nil {
+		return fmt.Errorf("build sql query for add pins on board: %w", err)
+	}
+
+	_, err = repo.db.Exec(ctx, sqlRow, args...)
+	if err != nil {
+		return fmt.Errorf("insert membership for add pins on board: %w", err)
+	}
+	return nil
+}

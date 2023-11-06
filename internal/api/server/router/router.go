@@ -83,6 +83,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 				r.Get("/{boardID:\\d+}", handler.GetCertainBoard)
 			})
 			r.With(auth.RequireAuth).Group(func(r chi.Router) {
+				r.Post("/add/pins/{boardID:\\d+}", handler.AddPinsToBoard)
 				r.Post("/create", handler.CreateNewBoard)
 				r.Put("/update/{boardID:\\d+}", handler.UpdateBoardInfo)
 				r.Delete("/delete/{boardID:\\d+}", handler.DeleteBoard)

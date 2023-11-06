@@ -51,7 +51,7 @@ func Logger(logMW *logger.Logger) Middleware {
 			defer func(t time.Time) {
 				log.InfoMap("response", logger.M{
 					"status":             wrapResponse.statusCode,
-					"processing_time_ms": time.Since(t).Milliseconds(),
+					"processing_time_us": time.Since(t).Microseconds(),
 					"content_type":       w.Header().Get("Content-Type"),
 					"content_length":     w.Header().Get("Content-Length"),
 					"written":            wrapResponse.written,

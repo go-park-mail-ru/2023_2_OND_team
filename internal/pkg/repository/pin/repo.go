@@ -19,6 +19,7 @@ type Repository interface {
 	GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 	GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error)
+	GetBatchPinByID(ctx context.Context, pinID []int) ([]entity.Pin, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePin(ctx context.Context, pinID, userID int) error
 	SetLike(ctx context.Context, pinID, userID int) (int, error)
@@ -99,6 +100,36 @@ func (p *pinRepoPG) GetPinByID(ctx context.Context, pinID int, revealAuthor bool
 
 	pin.ID = pinID
 	return pin, nil
+}
+
+func (p *pinRepoPG) GetBatchPinByID(ctx context.Context, pinID []int) ([]entity.Pin, error) {
+	sqlRow, args, err := p.sqlBuilder.Select("id", "author", "public", "deleted_at").
+		From("profile").
+		Where(sq.Eq{"id": pinID}).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("sql query build for get batch pins: %w", err)
+	}
+
+	rows, err := p.db.Query(ctx, sqlRow, args...)
+	if err != nil {
+		return nil, fmt.Errorf("select batch pins: %w", err)
+	}
+
+	pin := entity.Pin{}
+	pins := make([]entity.Pin, 0, len(pinID))
+	for rows.Next() {
+		err = rows.Scan(&pin.ID, &pin.Author.ID, &pin.Public, &pin.DeletedAt)
+		if err != nil {
+			return nil, fmt.Errorf("scan result select batch pins: %w", err)
+		}
+		pins = append(pins, pin)
+	}
+
+	if len(pins) != len(pinID) {
+		return nil, ErrNumberSelectRows
+	}
+	return pins, nil
 }
 
 func (p *pinRepoPG) AddNewPin(ctx context.Context, pin *entity.Pin) error {

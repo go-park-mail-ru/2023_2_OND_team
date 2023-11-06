@@ -16,6 +16,7 @@ type Usecase interface {
 	GetCertainBoard(ctx context.Context, boardID int) (dto.UserBoard, error)
 	UpdateBoardInfo(ctx context.Context, updatedData dto.BoardData) error
 	DeleteCertainBoard(ctx context.Context, boardID int) error
+	FixPinsOnBoard(ctx context.Context, boardID int, pinIds []int, userID int) error
 }
 
 type boardUsecase struct {

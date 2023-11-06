@@ -88,3 +88,7 @@ func (r *ramPinRepo) GetSortedUserPins(ctx context.Context, userID, count, minID
 func (r *ramPinRepo) IsSetLike(ctx context.Context, pinID, userID int) (bool, error) {
 	return false, ErrMethodUnimplemented
 }
+
+func (r *ramPinRepo) GetBatchPinByID(ctx context.Context, pinID []int) ([]pin.Pin, error) {
+	return nil, ErrMethodUnimplemented
+}

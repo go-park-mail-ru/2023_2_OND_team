@@ -188,3 +188,61 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(InternalServerErrMessage))
 	}
 }
+
+func (h *HandlerHTTP) AddPinsToBoard(w http.ResponseWriter, r *http.Request) {
+	logger := h.getRequestLogger(r)
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	boardIDStr := chi.URLParam(r, "boardID")
+	boardID, err := strconv.ParseInt(boardIDStr, 10, 64)
+	if err != nil {
+		logger.Error("parse board id from query params")
+		err = responseError(w, "parse_url", "internal error")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+
+	pins := make(map[string][]int)
+	err = json.NewDecoder(r.Body).Decode(&pins)
+	defer r.Body.Close()
+	if err != nil {
+		logger.Info("bad decode body")
+		err = responseError(w, "bad_body", "failed to parse the request body")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+	pinIds, ok := pins["pins"]
+	if !ok {
+		logger.Info("the request does not specify pins")
+		err = responseError(w, "bad_body", "the request does not specify pins")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+
+	err = h.pinCase.IsAvailableBatchPinForFixOnBoard(r.Context(), pinIds, userID)
+	if err != nil {
+		logger.Warn(err.Error(), log.F{"action", "check availability pins for fixed on board"})
+		err = responseError(w, "not_access", "there are pins in the batch that are not available for the user to add")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+
+	err = h.boardCase.FixPinsOnBoard(r.Context(), int(boardID), pinIds, userID)
+	if err != nil {
+		logger.Warn(err.Error(), log.F{"action", "fix pins on board"})
+		err = responseError(w, "not_access", "there are pins in the batch that are not available for the user to add")
+	} else {
+		err = responseOk(http.StatusCreated, w, "pins have been successfully added to the board", nil)
+	}
+	if err != nil {
+		logger.Error(err.Error())
+	}
+}
