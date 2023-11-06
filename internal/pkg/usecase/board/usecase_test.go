@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 	mock_board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/mock"
+	mock_user "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user/mock"
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 	"github.com/golang/mock/gomock"
@@ -21,6 +22,9 @@ type (
 	CreateBoard             func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string)
 	UpdateBoard             CreateBoard
 	GetBoardAuthorByBoardID func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int)
+	GetUserIdByUsername     func(mockRepo *mock_user.MockRepository, ctx context.Context, username string)
+	GetContributorBoardsIDs func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int)
+	GetBoardsByUserID       func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int)
 )
 
 var (
@@ -28,7 +32,6 @@ var (
 )
 
 func TestBoardUsecase_CreateNewBoard(t *testing.T) {
-
 	tests := []struct {
 		name         string
 		inCtx        context.Context
@@ -144,7 +147,6 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 }
 
 func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
-
 	tests := []struct {
 		name                    string
 		inCtx                   context.Context
@@ -282,6 +284,121 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			if err != nil {
 				require.EqualError(t, err, test.expErr.Error())
 			}
+		})
+	}
+}
+
+func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
+	tests := []struct {
+		name                    string
+		inCtx                   context.Context
+		username                string
+		GetUserIdByUsername     GetUserIdByUsername
+		GetContributorBoardsIDs GetContributorBoardsIDs
+		GetBoardsByUserID       GetBoardsByUserID
+		expBoards               []dto.UserBoard
+		expErr                  error
+	}{
+		{
+			name:     "exisitng user with valid username",
+			inCtx:    context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			username: "validGuy",
+			GetUserIdByUsername: func(mockRepo *mock_user.MockRepository, ctx context.Context, username string) {
+				mockRepo.EXPECT().GetUserIdByUsername(ctx, username).Return(3, nil).Times(1)
+			},
+			GetContributorBoardsIDs: func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int) {
+				mockRepo.EXPECT().GetContributorBoardsIDs(ctx, contributorID).Return([]int{1, 2, 3}, nil).Times(1)
+			},
+			GetBoardsByUserID: func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) {
+				mockRepo.EXPECT().GetBoardsByUserID(ctx, userID, isAuthor, accessableBoardsIDs).Return(
+					[]dto.UserBoard{
+						{
+							BoardID:    23,
+							Title:      "title",
+							CreatedAt:  "25:10:2022",
+							PinsNumber: 10,
+							Pins:       []string{"/pic1", "/pic2"},
+						},
+						{
+							BoardID:    21,
+							Title:      "title21",
+							CreatedAt:  "25:10:2012",
+							PinsNumber: 2,
+							Pins:       []string{},
+						},
+					}, nil).Times(1)
+			},
+			expBoards: []dto.UserBoard{
+				{
+					BoardID:    23,
+					Title:      "title",
+					CreatedAt:  "25:10:2022",
+					PinsNumber: 10,
+					Pins:       []string{"/pic1", "/pic2"},
+				},
+				{
+					BoardID:    21,
+					Title:      "title21",
+					CreatedAt:  "25:10:2012",
+					PinsNumber: 2,
+					Pins:       []string{},
+				},
+			},
+			expErr: nil,
+		},
+		{
+			name:     "non-exisitng user with valid username",
+			inCtx:    context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			username: "validGuy",
+			GetUserIdByUsername: func(mockRepo *mock_user.MockRepository, ctx context.Context, username string) {
+				mockRepo.EXPECT().GetUserIdByUsername(ctx, username).Return(0, repository.ErrNoData).Times(1)
+			},
+			GetContributorBoardsIDs: func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int) {
+			},
+			GetBoardsByUserID: func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) {
+			},
+			expBoards: nil,
+			expErr:    ErrInvalidUsername,
+		},
+		{
+			name:     "invalid username",
+			inCtx:    context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			username: "A$va@$@!%@~~~~~~uy",
+			GetUserIdByUsername: func(mockRepo *mock_user.MockRepository, ctx context.Context, username string) {
+			},
+			GetContributorBoardsIDs: func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int) {
+			},
+			GetBoardsByUserID: func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) {
+			},
+			expBoards: nil,
+			expErr:    ErrInvalidUsername,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
+
+			log, err := logger.New(logger.RFC3339FormatTime())
+			if err != nil {
+				stdLog.Fatal(err)
+			}
+			mockBoardRepo := mock_board.NewMockRepository(ctl)
+			mockUserRepo := mock_user.NewMockRepository(ctl)
+
+			test.GetUserIdByUsername(mockUserRepo, test.inCtx, test.username)
+			test.GetContributorBoardsIDs(mockBoardRepo, test.inCtx, 1)
+			test.GetBoardsByUserID(mockBoardRepo, test.inCtx, 3, *new(bool), []int{1, 2, 3})
+
+			boardUsecase := New(log, mockBoardRepo, mockUserRepo, sanitizer)
+			userBoards, err := boardUsecase.GetBoardsByUsername(test.inCtx, test.username)
+
+			if err != nil {
+				require.EqualError(t, err, test.expErr.Error())
+			}
+
+			require.Equal(t, test.expBoards, userBoards)
 		})
 	}
 }
