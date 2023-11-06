@@ -28,6 +28,7 @@ type (
 	GetContributorsByBoardID func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int)
 	GetBoardByID             func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool)
 	GetUserIdByUsername      func(mockRepo *mock_user.MockRepository, ctx context.Context, username string)
+	DeleteBoardByID          func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int)
 )
 
 var (
@@ -41,6 +42,7 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 		newBoardData dto.BoardData
 		CreateBoard  CreateBoard
 		expNewID     int
+		wantErr      bool
 		expErr       error
 	}{
 		{
@@ -57,7 +59,6 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 				mockRepo.EXPECT().CreateBoard(ctx, newBoardData, tagTitles).Return(1, nil).Times(1)
 			},
 			expNewID: 1,
-			expErr:   nil,
 		},
 		{
 			name:  "invalid board title",
@@ -72,6 +73,7 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
 			expNewID: 0,
+			wantErr:  true,
 			expErr:   ErrInvalidBoardTitle,
 		},
 		{
@@ -87,6 +89,7 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
 			expNewID: 0,
+			wantErr:  true,
 			expErr:   fmt.Errorf("%v: %w", []string{"nic~e", "gr~$een"}, ErrInvalidTagTitles),
 		},
 		{
@@ -102,6 +105,7 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
 			expNewID: 0,
+			wantErr:  true,
 			expErr:   fmt.Errorf("%v: %w", []string{"nic~e"}, ErrInvalidTagTitles),
 		},
 		{
@@ -117,6 +121,7 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
 			expNewID: 0,
+			wantErr:  true,
 			expErr:   fmt.Errorf("too many titles: %w", ErrInvalidTagTitles),
 		},
 	}
@@ -141,8 +146,10 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
 			newBoardID, err := boardUsecase.CreateNewBoard(test.inCtx, test.newBoardData)
 
-			if err != nil {
+			if test.wantErr {
 				require.EqualError(t, err, test.expErr.Error())
+			} else {
+				require.NoError(t, err)
 			}
 			require.Equal(t, test.expNewID, newBoardID)
 		})
@@ -156,6 +163,7 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 		updatedBoardData        dto.BoardData
 		GetBoardAuthorByBoardID GetBoardAuthorByBoardID
 		UpdateBoard             UpdateBoard
+		wantErr                 bool
 		expErr                  error
 	}{
 		{
@@ -174,7 +182,6 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, updatedBoardData entity.Board, tagTitles []string) {
 				mockRepo.EXPECT().UpdateBoard(ctx, updatedBoardData, tagTitles).Return(nil).Times(1)
 			},
-			expErr: nil,
 		},
 		{
 			name:  "valid data, authenticated, no access",
@@ -191,7 +198,8 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			},
 			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
-			expErr: ErrNoAccess,
+			wantErr: true,
+			expErr:  ErrNoAccess,
 		},
 		{
 			name:  "valid data, no_auth",
@@ -208,7 +216,8 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			},
 			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
-			expErr: ErrNoAccess,
+			wantErr: true,
+			expErr:  ErrNoAccess,
 		},
 		{
 			name:  "invalid board id",
@@ -225,7 +234,8 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			},
 			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
-			expErr: ErrNoSuchBoard,
+			wantErr: true,
+			expErr:  ErrNoSuchBoard,
 		},
 		{
 			name:  "invalid board title",
@@ -242,7 +252,8 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			},
 			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
-			expErr: ErrInvalidBoardTitle,
+			wantErr: true,
+			expErr:  ErrInvalidBoardTitle,
 		},
 		{
 			name:  "invalid board tags",
@@ -259,7 +270,8 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			},
 			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
 			},
-			expErr: fmt.Errorf("%v: %w", []string{"ni@#@#%!~~ce"}, ErrInvalidTagTitles),
+			wantErr: true,
+			expErr:  fmt.Errorf("%v: %w", []string{"ni@#@#%!~~ce"}, ErrInvalidTagTitles),
 		},
 	}
 
@@ -284,8 +296,10 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
 			err = boardUsecase.UpdateBoardInfo(test.inCtx, test.updatedBoardData)
 
-			if err != nil {
+			if test.wantErr {
 				require.EqualError(t, err, test.expErr.Error())
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
@@ -300,6 +314,7 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 		GetContributorBoardsIDs GetContributorBoardsIDs
 		GetBoardsByUserID       GetBoardsByUserID
 		expBoards               []dto.UserBoard
+		wantErr                 bool
 		expErr                  error
 	}{
 		{
@@ -347,7 +362,6 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 					Pins:       []string{},
 				},
 			},
-			expErr: nil,
 		},
 		{
 			name:     "non-exisitng user with valid username",
@@ -361,6 +375,7 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 			GetBoardsByUserID: func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) {
 			},
 			expBoards: nil,
+			wantErr:   true,
 			expErr:    ErrInvalidUsername,
 		},
 		{
@@ -374,6 +389,7 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 			GetBoardsByUserID: func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) {
 			},
 			expBoards: nil,
+			wantErr:   true,
 			expErr:    ErrInvalidUsername,
 		},
 	}
@@ -397,8 +413,10 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 			boardUsecase := New(log, mockBoardRepo, mockUserRepo, sanitizer)
 			userBoards, err := boardUsecase.GetBoardsByUsername(test.inCtx, test.username)
 
-			if err != nil {
+			if test.wantErr {
 				require.EqualError(t, err, test.expErr.Error())
+			} else {
+				require.NoError(t, err)
 			}
 
 			require.Equal(t, test.expBoards, userBoards)
@@ -416,6 +434,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 		GetBoardByID             GetBoardByID
 		hasAccess                bool
 		expBoard                 dto.UserBoard
+		wantErr                  bool
 		expErr                   error
 	}{
 		{
@@ -449,7 +468,6 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				Pins:        []string{"/pic1"},
 				TagTitles:   []string{"good", "bad"},
 			},
-			expErr: nil,
 		},
 		{
 			name:    "private board, valid board id, request from contributor",
@@ -482,7 +500,6 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				Pins:        []string{"/pic1"},
 				TagTitles:   []string{"good", "bad"},
 			},
-			expErr: nil,
 		},
 		{
 			name:    "private board, valid board id, request from not author, not contributor",
@@ -499,6 +516,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 			},
 			hasAccess: false,
 			expBoard:  dto.UserBoard{},
+			wantErr:   true,
 			expErr:    ErrNoSuchBoard,
 		},
 		{
@@ -516,6 +534,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 			},
 			hasAccess: false,
 			expBoard:  dto.UserBoard{},
+			wantErr:   true,
 			expErr:    ErrNoSuchBoard,
 		},
 		{
@@ -549,7 +568,6 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				Pins:        []string{"/pic1"},
 				TagTitles:   []string{"good", "bad"},
 			},
-			expErr: nil,
 		},
 		{
 			name:    "invalid board id",
@@ -563,6 +581,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
 			},
 			expBoard: dto.UserBoard{},
+			wantErr:  true,
 			expErr:   ErrNoSuchBoard,
 		},
 	}
@@ -584,11 +603,97 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
 			board, err := boardUsecase.GetCertainBoard(test.inCtx, test.boardID)
 
-			if err != nil {
+			if test.wantErr {
 				require.EqualError(t, err, test.expErr.Error())
+			} else {
+				require.NoError(t, err)
 			}
 
 			require.Equal(t, test.expBoard, board)
+		})
+	}
+}
+
+func TestBoardUsecase_DeleteCertainBoard(t *testing.T) {
+	tests := []struct {
+		name                    string
+		inCtx                   context.Context
+		boardID                 int
+		GetBoardAuthorByBoardID GetBoardAuthorByBoardID
+		DeleteBoardByID         DeleteBoardByID
+		wantErr                 bool
+		expErr                  error
+	}{
+		{
+			name:    "valid board id, deletion by author",
+			inCtx:   context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			boardID: 23,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(1, nil).Times(1)
+			},
+			DeleteBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().DeleteBoardByID(ctx, boardID).Return(nil).Times(1)
+			},
+		},
+		{
+			name:    "valid board id, deletion by another user",
+			inCtx:   context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			boardID: 23,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(2, nil).Times(1)
+			},
+			DeleteBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+			},
+			wantErr: true,
+			expErr:  ErrNoAccess,
+		},
+		{
+			name:    "valid board id, deletion by unauthorized user",
+			inCtx:   context.Background(),
+			boardID: 23,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(2, nil).Times(1)
+			},
+			DeleteBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+			},
+			wantErr: true,
+			expErr:  ErrNoAccess,
+		},
+		{
+			name:    "invalid board id",
+			inCtx:   context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
+			boardID: 1221323,
+			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(0, repository.ErrNoData).Times(1)
+			},
+			DeleteBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
+			},
+			wantErr: true,
+			expErr:  ErrNoSuchBoard,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
+
+			log, err := logger.New(logger.RFC3339FormatTime())
+			if err != nil {
+				stdLog.Fatal(err)
+			}
+			mockBoardRepo := mock_board.NewMockRepository(ctl)
+			test.GetBoardAuthorByBoardID(mockBoardRepo, test.inCtx, test.boardID)
+			test.DeleteBoardByID(mockBoardRepo, test.inCtx, test.boardID)
+
+			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
+			err = boardUsecase.DeleteCertainBoard(test.inCtx, test.boardID)
+
+			if test.wantErr {
+				require.EqualError(t, err, test.expErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
