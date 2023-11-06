@@ -8,7 +8,7 @@ import (
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *BoardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error) {
+func (bCase *boardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error) {
 	if !bCase.isValidBoardTitle(newBoard.Title) {
 		return 0, ErrInvalidBoardTitle
 	}

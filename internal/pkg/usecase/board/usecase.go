@@ -18,13 +18,13 @@ type Usecase interface {
 	DeleteCertainBoard(ctx context.Context, boardID int) error
 }
 
-type BoardUsecase struct {
+type boardUsecase struct {
 	log       *logger.Logger
 	boardRepo boardRepo.Repository
 	userRepo  userRepo.Repository
 	sanitizer *bluemonday.Policy
 }
 
-func New(logger *logger.Logger, boardRepo boardRepo.Repository, userRepo userRepo.Repository, sanitizer *bluemonday.Policy) *BoardUsecase {
-	return &BoardUsecase{log: logger, boardRepo: boardRepo, userRepo: userRepo, sanitizer: sanitizer}
+func New(logger *logger.Logger, boardRepo boardRepo.Repository, userRepo userRepo.Repository, sanitizer *bluemonday.Policy) *boardUsecase {
+	return &boardUsecase{log: logger, boardRepo: boardRepo, userRepo: userRepo, sanitizer: sanitizer}
 }

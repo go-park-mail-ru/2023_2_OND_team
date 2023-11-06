@@ -9,7 +9,7 @@ import (
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error) {
+func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error) {
 	if !bCase.isValidUsername(username) {
 		return nil, ErrInvalidUsername
 	}
@@ -43,7 +43,7 @@ func (bCase *BoardUsecase) GetBoardsByUsername(ctx context.Context, username str
 	return boards, nil
 }
 
-func (bCase *BoardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dto.UserBoard, error) {
+func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dto.UserBoard, error) {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
 	if err != nil {
 		switch err {

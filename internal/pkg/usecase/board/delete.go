@@ -8,7 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 )
 
-func (bCase *BoardUsecase) DeleteCertainBoard(ctx context.Context, boardID int) error {
+func (bCase *boardUsecase) DeleteCertainBoard(ctx context.Context, boardID int) error {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
 	if err != nil {
 		switch err {

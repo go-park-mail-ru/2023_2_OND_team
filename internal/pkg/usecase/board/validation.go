@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-func (bCase *BoardUsecase) isValidTagTitle(title string) bool {
+func (bCase *boardUsecase) isValidTagTitle(title string) bool {
 	if len(title) > 20 {
 		return false
 	}
@@ -18,7 +18,7 @@ func (bCase *BoardUsecase) isValidTagTitle(title string) bool {
 	return true
 }
 
-func (bCase *BoardUsecase) checkIsValidTagTitles(titles []string) error {
+func (bCase *boardUsecase) checkIsValidTagTitles(titles []string) error {
 	if len(titles) > 7 {
 		return fmt.Errorf("too many titles")
 	}
@@ -35,7 +35,7 @@ func (bCase *BoardUsecase) checkIsValidTagTitles(titles []string) error {
 	return nil
 }
 
-func (bCase *BoardUsecase) isValidBoardTitle(title string) bool {
+func (bCase *boardUsecase) isValidBoardTitle(title string) bool {
 	if len(title) == 0 || len(title) > 40 {
 		return false
 	}
@@ -48,7 +48,7 @@ func (bCase *BoardUsecase) isValidBoardTitle(title string) bool {
 	return true
 }
 
-func (bCase *BoardUsecase) isValidUsername(username string) bool {
+func (bCase *boardUsecase) isValidUsername(username string) bool {
 	if len(username) < 4 || len(username) > 50 {
 		return false
 	}

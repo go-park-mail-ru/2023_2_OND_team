@@ -10,7 +10,7 @@ import (
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *BoardUsecase) UpdateBoardInfo(ctx context.Context, updatedData dto.BoardData) error {
+func (bCase *boardUsecase) UpdateBoardInfo(ctx context.Context, updatedData dto.BoardData) error {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, updatedData.ID)
 	if err != nil {
 		switch err {
