@@ -36,6 +36,12 @@ var (
 )
 
 func TestBoardUsecase_CreateNewBoard(t *testing.T) {
+
+	log, err := logger.New(logger.RFC3339FormatTime())
+	if err != nil {
+		stdLog.Fatal(err)
+	}
+
 	tests := []struct {
 		name         string
 		inCtx        context.Context
@@ -131,10 +137,6 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 			ctl := gomock.NewController(t)
 			defer ctl.Finish()
 
-			log, err := logger.New(logger.RFC3339FormatTime())
-			if err != nil {
-				stdLog.Fatal(err)
-			}
 			mockBoardRepo := mock_board.NewMockRepository(ctl)
 			test.CreateBoard(mockBoardRepo, test.inCtx, entity.Board{
 				AuthorID:    test.newBoardData.AuthorID,
@@ -157,6 +159,12 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 }
 
 func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
+
+	log, err := logger.New(logger.RFC3339FormatTime())
+	if err != nil {
+		stdLog.Fatal(err)
+	}
+
 	tests := []struct {
 		name                    string
 		inCtx                   context.Context
@@ -280,10 +288,6 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			ctl := gomock.NewController(t)
 			defer ctl.Finish()
 
-			log, err := logger.New(logger.RFC3339FormatTime())
-			if err != nil {
-				stdLog.Fatal(err)
-			}
 			mockBoardRepo := mock_board.NewMockRepository(ctl)
 			test.GetBoardAuthorByBoardID(mockBoardRepo, test.inCtx, test.updatedBoardData.ID)
 			test.UpdateBoard(mockBoardRepo, test.inCtx, entity.Board{
@@ -294,7 +298,7 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			}, test.updatedBoardData.TagTitles)
 
 			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
-			err = boardUsecase.UpdateBoardInfo(test.inCtx, test.updatedBoardData)
+			err := boardUsecase.UpdateBoardInfo(test.inCtx, test.updatedBoardData)
 
 			if test.wantErr {
 				require.EqualError(t, err, test.expErr.Error())
@@ -306,6 +310,12 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 }
 
 func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
+
+	log, err := logger.New(logger.RFC3339FormatTime())
+	if err != nil {
+		stdLog.Fatal(err)
+	}
+
 	tests := []struct {
 		name                    string
 		inCtx                   context.Context
@@ -399,10 +409,6 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 			ctl := gomock.NewController(t)
 			defer ctl.Finish()
 
-			log, err := logger.New(logger.RFC3339FormatTime())
-			if err != nil {
-				stdLog.Fatal(err)
-			}
 			mockBoardRepo := mock_board.NewMockRepository(ctl)
 			mockUserRepo := mock_user.NewMockRepository(ctl)
 
@@ -424,6 +430,12 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 }
 
 func TestBoardUsecase_GetCertainBoard(t *testing.T) {
+
+	log, err := logger.New(logger.RFC3339FormatTime())
+	if err != nil {
+		stdLog.Fatal(err)
+	}
+
 	tests := []struct {
 		name                     string
 		inCtx                    context.Context
@@ -590,10 +602,6 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 			ctl := gomock.NewController(t)
 			defer ctl.Finish()
 
-			log, err := logger.New(logger.RFC3339FormatTime())
-			if err != nil {
-				stdLog.Fatal(err)
-			}
 			mockBoardRepo := mock_board.NewMockRepository(ctl)
 			test.GetBoardAuthorByBoardID(mockBoardRepo, test.inCtx, test.boardID)
 			test.GetContributorsByBoardID(mockBoardRepo, test.inCtx, test.boardID)
@@ -613,6 +621,12 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 }
 
 func TestBoardUsecase_DeleteCertainBoard(t *testing.T) {
+
+	log, err := logger.New(logger.RFC3339FormatTime())
+	if err != nil {
+		stdLog.Fatal(err)
+	}
+
 	tests := []struct {
 		name                    string
 		inCtx                   context.Context
@@ -676,10 +690,6 @@ func TestBoardUsecase_DeleteCertainBoard(t *testing.T) {
 			ctl := gomock.NewController(t)
 			defer ctl.Finish()
 
-			log, err := logger.New(logger.RFC3339FormatTime())
-			if err != nil {
-				stdLog.Fatal(err)
-			}
 			mockBoardRepo := mock_board.NewMockRepository(ctl)
 			test.GetBoardAuthorByBoardID(mockBoardRepo, test.inCtx, test.boardID)
 			test.DeleteBoardByID(mockBoardRepo, test.inCtx, test.boardID)
