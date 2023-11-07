@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -16,6 +18,37 @@ import (
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image/mock"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
+
+type requireVal int8
+
+const anyVal requireVal = 0
+
+type equalMap map[string]any
+
+func (em equalMap) Matches(x any) bool {
+	v := reflect.ValueOf(x)
+	fmt.Println(v.Type(), v.Type().String())
+	if v.Kind() != reflect.Map || v.Len() != len(em) {
+		return false
+	}
+	iter := v.MapRange()
+	for iter.Next() {
+		if iter.Key().Type().Name() != "string" {
+			return false
+		}
+
+		if val, ok := em[iter.Key().String()]; !ok || iter.Value().Interface() != val {
+			if t, ok := val.(requireVal); ok && t == anyVal {
+				continue
+			}
+			return false
+		}
+	}
+
+	return true
+}
+
+func (em equalMap) String() string { return "equal map" }
 
 func TestUpdateUserAvatar(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -115,16 +148,19 @@ func TestEditProfileInfo(t *testing.T) {
 		Name:     new(string),
 		Surname:  new(string),
 		AboutMe:  new(string),
+		Password: new(string),
 	}
+	*updateData.AboutMe = "friendly"
 
 	repoMock.EXPECT().
-		EditUserInfo(ctx, 5, repoUser.S{
+		EditUserInfo(ctx, 5, gomock.All(equalMap{
 			"username": "",
 			"email":    "",
 			"name":     "",
 			"surname":  "",
-			"about_me": "",
-		}).
+			"about_me": "friendly",
+			"password": anyVal,
+		})).
 		Return(nil).
 		Times(1)
 	err = usecase.EditProfileInfo(ctx, 5, updateData)
