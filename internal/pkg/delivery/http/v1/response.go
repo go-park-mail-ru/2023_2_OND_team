@@ -34,7 +34,7 @@ func SetContentTypeJSON(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func responseOk(w http.ResponseWriter, message string, body any) error {
+func responseOk(statusCode int, w http.ResponseWriter, message string, body any) error {
 	res := JsonResponse{
 		Status:  "ok",
 		Message: message,
@@ -42,9 +42,11 @@ func responseOk(w http.ResponseWriter, message string, body any) error {
 	}
 	resBytes, err := json.Marshal(res)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return fmt.Errorf("responseOk: %w", err)
 	}
-	w.WriteHeader(http.StatusOK)
+
+	w.WriteHeader(statusCode)
 	_, err = w.Write(resBytes)
 	return err
 }

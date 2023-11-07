@@ -9,22 +9,21 @@ import (
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 	uEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type BoardRepoPG struct {
-	db         *pgxpool.Pool
+type boardRepoPG struct {
+	db         pgtype.PgxPoolIface
 	sqlBuilder squirrel.StatementBuilderType
 }
 
-func NewBoardRepoPG(db *pgxpool.Pool) *BoardRepoPG {
-	return &BoardRepoPG{db: db, sqlBuilder: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)}
+func NewBoardRepoPG(db pgtype.PgxPoolIface) *boardRepoPG {
+	return &boardRepoPG{db: db, sqlBuilder: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)}
 }
 
-func (repo *BoardRepoPG) CreateBoard(ctx context.Context, board entity.Board, tagTitles []string) (int, error) {
-
+func (repo *boardRepoPG) CreateBoard(ctx context.Context, board entity.Board, tagTitles []string) (int, error) {
 	tx, err := repo.db.Begin(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("starting transaction for creating new board: %w", err)
@@ -48,12 +47,14 @@ func (repo *BoardRepoPG) CreateBoard(ctx context.Context, board entity.Board, ta
 		return 0, fmt.Errorf("adding new tags on board within transaction: %w", err)
 	}
 
-	tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("commit transaction for create new board: %w", err)
+	}
 
 	return newBoardId, nil
 }
 
-func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]dto.UserBoard, error) {
+func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]dto.UserBoard, error) {
 	getBoardsQuery := boardRepo.sqlBuilder.
 		Select(
 			"board.id",
@@ -107,7 +108,7 @@ func (boardRepo *BoardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	return boards, nil
 }
 
-func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.UserBoard, err error) {
+func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.UserBoard, err error) {
 	getBoardByIdQuery := repo.sqlBuilder.
 		Select(
 			"board.id",
@@ -156,7 +157,7 @@ func (repo *BoardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 	return board, nil
 }
 
-func (repo *BoardRepoPG) GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error) {
+func (repo *boardRepoPG) GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error) {
 	row := repo.db.QueryRow(ctx, SelectBoardAuthorByBoardIdQuery, boardID)
 	var authorID int
 	err := row.Scan(&authorID)
@@ -171,7 +172,7 @@ func (repo *BoardRepoPG) GetBoardAuthorByBoardID(ctx context.Context, boardID in
 	return authorID, nil
 }
 
-func (repo *BoardRepoPG) GetContributorsByBoardID(ctx context.Context, boardID int) ([]uEntity.User, error) {
+func (repo *boardRepoPG) GetContributorsByBoardID(ctx context.Context, boardID int) ([]uEntity.User, error) {
 	rows, err := repo.db.Query(ctx, SelectBoardContributorsByBoardIdQuery, boardID)
 	if err != nil {
 		return nil, fmt.Errorf("select contributors by board id query: %w", err)
@@ -191,7 +192,7 @@ func (repo *BoardRepoPG) GetContributorsByBoardID(ctx context.Context, boardID i
 	return contributors, nil
 }
 
-func (repo *BoardRepoPG) GetContributorBoardsIDs(ctx context.Context, contributorID int) ([]int, error) {
+func (repo *boardRepoPG) GetContributorBoardsIDs(ctx context.Context, contributorID int) ([]int, error) {
 	rows, err := repo.db.Query(ctx, GetContributorBoardsIDs, contributorID)
 	if err != nil {
 		return nil, fmt.Errorf("get contributor boardsIDs query: %w", err)
@@ -211,7 +212,7 @@ func (repo *BoardRepoPG) GetContributorBoardsIDs(ctx context.Context, contributo
 	return boardsIDs, nil
 }
 
-func (repo *BoardRepoPG) UpdateBoard(ctx context.Context, newBoardData entity.Board, tagTitles []string) error {
+func (repo *boardRepoPG) UpdateBoard(ctx context.Context, newBoardData entity.Board, tagTitles []string) error {
 	tx, err := repo.db.Begin(ctx)
 	if err != nil {
 		tx.Rollback(ctx)
@@ -241,11 +242,13 @@ func (repo *BoardRepoPG) UpdateBoard(ctx context.Context, newBoardData entity.Bo
 		return repository.ErrNoData
 	}
 
-	tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit transaction for update board: %w", err)
+	}
 	return nil
 }
 
-func (repo *BoardRepoPG) DeleteBoardByID(ctx context.Context, boardID int) error {
+func (repo *boardRepoPG) DeleteBoardByID(ctx context.Context, boardID int) error {
 	status, err := repo.db.Exec(ctx, DeleteBoardByIdQuery, time.Now(), boardID)
 	if err != nil {
 		return fmt.Errorf("delete board by id: %w", err)
@@ -258,7 +261,7 @@ func (repo *BoardRepoPG) DeleteBoardByID(ctx context.Context, boardID int) error
 	return nil
 }
 
-func (repo *BoardRepoPG) insertBoard(ctx context.Context, tx pgx.Tx, board entity.Board) (int, error) {
+func (repo *boardRepoPG) insertBoard(ctx context.Context, tx pgx.Tx, board entity.Board) (int, error) {
 	row := tx.QueryRow(ctx, InsertBoardQuery, board.AuthorID, board.Title, board.Description, board.Public)
 
 	var newBoardID int
@@ -267,4 +270,21 @@ func (repo *BoardRepoPG) insertBoard(ctx context.Context, tx pgx.Tx, board entit
 		return 0, fmt.Errorf("scan result of insterting new board: %w", err)
 	}
 	return newBoardID, nil
+}
+
+func (repo *boardRepoPG) AddPinsOnBoard(ctx context.Context, boardID int, pinIds []int) error {
+	insertBuilder := repo.sqlBuilder.Insert("membership").Columns("pin_id", "board_id")
+	for _, pinID := range pinIds {
+		insertBuilder = insertBuilder.Values(pinID, boardID)
+	}
+	sqlRow, args, err := insertBuilder.Suffix("ON CONFLICT (pin_id, board_id) DO NOTHING").ToSql()
+	if err != nil {
+		return fmt.Errorf("build sql query for add pins on board: %w", err)
+	}
+
+	_, err = repo.db.Exec(ctx, sqlRow, args...)
+	if err != nil {
+		return fmt.Errorf("insert membership for add pins on board: %w", err)
+	}
+	return nil
 }

@@ -7,18 +7,21 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 )
 
 type S map[string]any
+
+//go:generate mockgen -destination=./mock/pin_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
 	GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 	GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error)
+	GetBatchPinByID(ctx context.Context, pinID []int) ([]entity.Pin, error)
 	AddNewPin(ctx context.Context, pin *entity.Pin) error
 	DeletePin(ctx context.Context, pinID, userID int) error
 	SetLike(ctx context.Context, pinID, userID int) (int, error)
@@ -31,11 +34,11 @@ type Repository interface {
 }
 
 type pinRepoPG struct {
-	db         *pgxpool.Pool
+	db         pgtype.PgxPoolIface
 	sqlBuilder sq.StatementBuilderType
 }
 
-func NewPinRepoPG(db *pgxpool.Pool) *pinRepoPG {
+func NewPinRepoPG(db pgtype.PgxPoolIface) *pinRepoPG {
 	return &pinRepoPG{
 		db:         db,
 		sqlBuilder: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -99,6 +102,36 @@ func (p *pinRepoPG) GetPinByID(ctx context.Context, pinID int, revealAuthor bool
 
 	pin.ID = pinID
 	return pin, nil
+}
+
+func (p *pinRepoPG) GetBatchPinByID(ctx context.Context, pinID []int) ([]entity.Pin, error) {
+	sqlRow, args, err := p.sqlBuilder.Select("id", "author", "public", "deleted_at").
+		From("profile").
+		Where(sq.Eq{"id": pinID}).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("sql query build for get batch pins: %w", err)
+	}
+
+	rows, err := p.db.Query(ctx, sqlRow, args...)
+	if err != nil {
+		return nil, fmt.Errorf("select batch pins: %w", err)
+	}
+
+	pin := entity.Pin{}
+	pins := make([]entity.Pin, 0, len(pinID))
+	for rows.Next() {
+		err = rows.Scan(&pin.ID, &pin.Author.ID, &pin.Public, &pin.DeletedAt)
+		if err != nil {
+			return nil, fmt.Errorf("scan result select batch pins: %w", err)
+		}
+		pins = append(pins, pin)
+	}
+
+	if len(pins) != len(pinID) {
+		return nil, ErrNumberSelectRows
+	}
+	return pins, nil
 }
 
 func (p *pinRepoPG) AddNewPin(ctx context.Context, pin *entity.Pin) error {

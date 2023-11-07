@@ -15,6 +15,7 @@ import (
 
 var ErrBadMIMEType = errors.New("bad mime type")
 
+//go:generate mockgen -destination=./mock/pin_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int)
 	SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
@@ -25,6 +26,8 @@ type Usecase interface {
 	DeleteLikeFromUser(ctx context.Context, pinID, userID int) error
 	EditPinByID(ctx context.Context, pinID, userID int, updateData *pinUpdateData) error
 	ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error)
+	IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID int) error
+	IsAvailableBatchPinForFixOnBoard(ctx context.Context, pinID []int, userID int) error
 }
 
 type pinCase struct {

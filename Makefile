@@ -39,3 +39,4 @@ cover_all:
 currcover:
 	go test -cover -v -coverprofile=cover.out ${CURRCOVER}
 	go tool cover -html=cover.out -o cover.html
+

@@ -18,13 +18,14 @@ const (
 	lenPasswordHash = 64
 )
 
+//go:generate mockgen -destination=./mock/user_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	Register(ctx context.Context, user *entity.User) error
-	Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error)
+	Authentication(ctx context.Context, credentials UserCredentials) (*entity.User, error)
 	FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error)
 	UpdateUserAvatar(ctx context.Context, userID int, mimeTypeAvatar string, sizeAvatar int64, avatar io.Reader) error
 	GetAllProfileInfo(ctx context.Context, userID int) (*entity.User, error)
-	EditProfileInfo(ctx context.Context, userID int, updateData *profileUpdateData) error
+	EditProfileInfo(ctx context.Context, userID int, updateData *ProfileUpdateData) error
 }
 
 type userCase struct {

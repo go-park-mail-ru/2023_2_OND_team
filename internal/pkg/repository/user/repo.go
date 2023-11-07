@@ -6,18 +6,18 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 )
 
+//go:generate mockgen -destination=./mock/user_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
 	AddNewUser(ctx context.Context, user *user.User) error
 	GetUserByUsername(ctx context.Context, username string) (*user.User, error)
 	GetUsernameAndAvatarByID(ctx context.Context, userID int) (username string, avatar string, err error)
 	GetUserIdByUsername(ctx context.Context, username string) (int, error)
-	GetLastUserID(ctx context.Context) (int, error)
 	EditUserAvatar(ctx context.Context, userID int, avatar string) error
 	GetAllUserData(ctx context.Context, userID int) (*user.User, error)
 	EditUserInfo(ctx context.Context, userID int, updateFields S) error
@@ -26,10 +26,10 @@ type Repository interface {
 type S map[string]any
 
 type userRepoPG struct {
-	db *pgxpool.Pool
+	db pgtype.PgxPoolIface
 }
 
-func NewUserRepoPG(db *pgxpool.Pool) *userRepoPG {
+func NewUserRepoPG(db pgtype.PgxPoolIface) *userRepoPG {
 	return &userRepoPG{db}
 }
 
@@ -108,13 +108,4 @@ func (u *userRepoPG) GetUserIdByUsername(ctx context.Context, username string) (
 		}
 	}
 	return userID, nil
-}
-
-func (u *userRepoPG) GetLastUserID(ctx context.Context) (int, error) {
-	var lastUserID int
-	err := u.db.QueryRow(ctx, SelectLastUserID).Scan(&lastUserID)
-	if err != nil {
-		return 0, fmt.Errorf("get last user id: %w", err)
-	}
-	return lastUserID, nil
 }

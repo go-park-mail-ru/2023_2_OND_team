@@ -11,18 +11,17 @@ import (
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	bCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
-	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request on create new board:", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	var newBoard boardDTO.BoardData
 	err := json.NewDecoder(r.Body).Decode(&newBoard)
 	defer r.Body.Close()
 	if err != nil {
-		h.log.Info("create board: ", logger.F{"message", err.Error()})
+		logger.Info("create board", log.F{"message", err.Error()})
 		responseError(w, BadBodyCode, BadBodyMessage)
 		return
 	}
@@ -30,7 +29,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	newBoard.AuthorID = r.Context().Value(auth.KeyCurrentUserID).(int)
 	newBoardID, err := h.boardCase.CreateNewBoard(r.Context(), newBoard)
 	if err != nil {
-		h.log.Info("create board", logger.F{"message", err.Error()})
+		logger.Info("create board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrInvalidBoardTitle:
 			responseError(w, "bad_boardTitle", err.Error())
@@ -45,23 +44,20 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(w, "new board was created successfully", map[string]int{"new_board_id": newBoardID})
+	err = responseOk(http.StatusCreated, w, "new board was created successfully", map[string]int{"new_board_id": newBoardID})
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(InternalServerErrMessage))
-		return
 	}
-	h.log.Info("successfull respond", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
 }
 
 func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request to get user boards:", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	userBoards, err := h.boardCase.GetBoardsByUsername(r.Context(), chi.URLParam(r, "username"))
 	if err != nil {
-		h.log.Info("get user boards: ", logger.F{"message", err.Error()})
+		logger.Info("get user boards", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrInvalidUsername:
 			responseError(w, "bad_username", err.Error())
@@ -72,30 +68,27 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(w, "got user boards successfully", userBoards)
+	err = responseOk(http.StatusOK, w, "got user boards successfully", userBoards)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(InternalServerErrMessage))
-		return
 	}
-	h.log.Info("successfull respond", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
 }
 
 func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request to get certain board:", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		h.log.Info("get certain board ", logger.F{"message", err.Error()})
+		logger.Info("get certain board", log.F{"message", err.Error()})
 		responseError(w, BadQueryParamCode, BadQueryParamMessage)
 		return
 	}
 
 	board, err := h.boardCase.GetCertainBoard(r.Context(), int(boardID))
 	if err != nil {
-		h.log.Info("get certain board: ", logger.F{"message", err.Error()})
+		logger.Info("get certain board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrNoSuchBoard:
 			responseError(w, "no_board", err.Error())
@@ -106,24 +99,20 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(w, "got certain board successfully", board)
+	err = responseOk(http.StatusOK, w, "got certain board successfully", board)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(InternalServerErrMessage))
-		return
 	}
-
-	h.log.Info("successfull respond", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
 }
 
 func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request to update certain board:", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		h.log.Info("update certain board ", logger.F{"message", err.Error()})
+		logger.Info("update certain board", log.F{"message", err.Error()})
 		responseError(w, BadQueryParamCode, BadQueryParamMessage)
 		return
 	}
@@ -132,7 +121,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&updatedBoard)
 	defer r.Body.Close()
 	if err != nil {
-		h.log.Info("update certain board: ", logger.F{"message", err.Error()})
+		logger.Info("update certain board", log.F{"message", err.Error()})
 		responseError(w, BadBodyCode, BadBodyMessage)
 		return
 	}
@@ -140,7 +129,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 
 	err = h.boardCase.UpdateBoardInfo(r.Context(), updatedBoard)
 	if err != nil {
-		h.log.Info("update certain board: ", logger.F{"message", err.Error()})
+		logger.Info("update certain board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrNoSuchBoard:
 			responseError(w, "no_board", err.Error())
@@ -159,31 +148,27 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(w, "updated certain board successfully", nil)
+	err = responseOk(http.StatusOK, w, "updated certain board successfully", nil)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(InternalServerErrMessage))
-		return
 	}
-
-	h.log.Info("successfull respond", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
 }
 
 func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("request to delete board:", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
-	SetContentTypeJSON(w)
+	logger := h.getRequestLogger(r)
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		h.log.Info("delete board ", logger.F{"message", err.Error()})
+		logger.Info("delete board", log.F{"message", err.Error()})
 		responseError(w, BadQueryParamCode, BadQueryParamMessage)
 		return
 	}
 
 	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
 	if err != nil {
-		h.log.Info("delete board: ", logger.F{"message", err.Error()})
+		logger.Info("delete board", log.F{"message", err.Error()})
 		switch err {
 		case bCase.ErrNoSuchBoard:
 			responseError(w, "no_board", err.Error())
@@ -196,13 +181,68 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(w, "deleted board successfully", nil)
+	err = responseOk(http.StatusOK, w, "deleted board successfully", nil)
 	if err != nil {
-		h.log.Error(err.Error())
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(InternalServerErrMessage))
+	}
+}
+
+func (h *HandlerHTTP) AddPinsToBoard(w http.ResponseWriter, r *http.Request) {
+	logger := h.getRequestLogger(r)
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	boardIDStr := chi.URLParam(r, "boardID")
+	boardID, err := strconv.ParseInt(boardIDStr, 10, 64)
+	if err != nil {
+		logger.Error("parse board id from query params")
+		err = responseError(w, "parse_url", "internal error")
+		if err != nil {
+			logger.Error(err.Error())
+		}
 		return
 	}
 
-	h.log.Info("successfull respond", logger.F{"method", r.Method}, logger.F{"URL", r.URL.Path})
+	pins := make(map[string][]int)
+	err = json.NewDecoder(r.Body).Decode(&pins)
+	defer r.Body.Close()
+	if err != nil {
+		logger.Info("bad decode body")
+		err = responseError(w, "bad_body", "failed to parse the request body")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+	pinIds, ok := pins["pins"]
+	if !ok {
+		logger.Info("the request does not specify pins")
+		err = responseError(w, "bad_body", "the request does not specify pins")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+
+	err = h.pinCase.IsAvailableBatchPinForFixOnBoard(r.Context(), pinIds, userID)
+	if err != nil {
+		logger.Warn(err.Error(), log.F{"action", "check availability pins for fixed on board"})
+		err = responseError(w, "not_access", "there are pins in the batch that are not available for the user to add")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
+
+	err = h.boardCase.FixPinsOnBoard(r.Context(), int(boardID), pinIds, userID)
+	if err != nil {
+		logger.Warn(err.Error(), log.F{"action", "fix pins on board"})
+		err = responseError(w, "not_access", "there are pins in the batch that are not available for the user to add")
+	} else {
+		err = responseOk(http.StatusCreated, w, "pins have been successfully added to the board", nil)
+	}
+	if err != nil {
+		logger.Error(err.Error())
+	}
 }

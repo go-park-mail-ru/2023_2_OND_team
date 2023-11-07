@@ -12,7 +12,10 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 )
 
-var ErrNumberAffectedRows = errors.New("different number of affected rows was expected")
+var (
+	ErrNumberAffectedRows = errors.New("different number of affected rows was expected")
+	ErrNumberSelectRows   = errors.New("the expected number of records does not match the selected one")
+)
 
 func (p *pinRepoPG) GetTagsByPinID(ctx context.Context, pinID int) ([]pin.Tag, error) {
 	rows, err := p.db.Query(ctx, SelectTagsByPinID, pinID)

@@ -31,7 +31,7 @@ func (u *userCase) GetAllProfileInfo(ctx context.Context, userID int) (*entity.U
 	return u.repo.GetAllUserData(ctx, userID)
 }
 
-func (u *userCase) EditProfileInfo(ctx context.Context, userID int, updateData *profileUpdateData) error {
+func (u *userCase) EditProfileInfo(ctx context.Context, userID int, updateData *ProfileUpdateData) error {
 	updateFields := repository.S{}
 	if updateData.Username != nil {
 		updateFields["username"] = *updateData.Username
