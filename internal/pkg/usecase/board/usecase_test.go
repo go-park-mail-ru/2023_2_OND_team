@@ -150,8 +150,8 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 				require.EqualError(t, err, test.expErr.Error())
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, test.expNewID, newBoardID)
 			}
-			require.Equal(t, test.expNewID, newBoardID)
 		})
 	}
 }
@@ -417,9 +417,8 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 				require.EqualError(t, err, test.expErr.Error())
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, test.expBoards, userBoards)
 			}
-
-			require.Equal(t, test.expBoards, userBoards)
 		})
 	}
 }
@@ -607,9 +606,8 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				require.EqualError(t, err, test.expErr.Error())
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, test.expBoard, board)
 			}
-
-			require.Equal(t, test.expBoard, board)
 		})
 	}
 }
