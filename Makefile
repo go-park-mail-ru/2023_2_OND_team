@@ -27,7 +27,3 @@ retest:
 doc:
 	swag fmt
 	swag init -g $(ENTRYPOINT) --pd -o $(DOC_DIR)
-
-gen:
-	mockgen -source=internal/pkg/repository/board/repo.go -source=internal/pkg/repository/user/repo.go \
-	-destination=internal/pkg/repository/board/mock/mock_repo.go -destination=internal/pkg/repository/user/mock/mock_repo.go
