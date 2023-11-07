@@ -288,7 +288,7 @@ func testSignUp(t *testing.T) {
 			`{"username":"dogsLover", "password":"big_string", "email":"dogslove@gmail.com"}`,
 			JsonErrResponse{
 				Status:  "error",
-				Message: "there is already an account with this username or password",
+				Message: "there is already an account with this username or email",
 				Code:    "uniq_fields",
 			},
 		},

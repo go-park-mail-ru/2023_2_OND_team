@@ -51,7 +51,7 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dt
 			return dto.UserBoard{}, ErrNoSuchBoard
 		default:
 			return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
-		}
+		}		
 	}
 
 	boardContributors, err := bCase.boardRepo.GetContributorsByBoardID(ctx, boardID)
