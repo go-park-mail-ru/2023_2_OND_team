@@ -3,7 +3,6 @@ package board
 import (
 	"context"
 	"fmt"
-	stdLog "log"
 	"testing"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
@@ -39,7 +38,7 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 
 	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
-		stdLog.Fatal(err)
+		t.Fatalf("test: log init - %s", err.Error())
 	}
 
 	tests := []struct {
@@ -162,7 +161,7 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 
 	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
-		stdLog.Fatal(err)
+		t.Fatalf("test: log init - %s", err.Error())
 	}
 
 	tests := []struct {
@@ -313,7 +312,7 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 
 	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
-		stdLog.Fatal(err)
+		t.Fatalf("test: log init - %s", err.Error())
 	}
 
 	tests := []struct {
@@ -433,7 +432,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 
 	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
-		stdLog.Fatal(err)
+		t.Fatalf("test: log init - %s", err.Error())
 	}
 
 	tests := []struct {
@@ -624,7 +623,7 @@ func TestBoardUsecase_DeleteCertainBoard(t *testing.T) {
 
 	log, err := logger.New(logger.RFC3339FormatTime())
 	if err != nil {
-		stdLog.Fatal(err)
+		t.Fatalf("test: log init - %s", err.Error())
 	}
 
 	tests := []struct {
