@@ -15,7 +15,7 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
-	data := user.NewProfileUpdateData()
+	data := &user.ProfileUpdateData{}
 	err := json.NewDecoder(r.Body).Decode(data)
 	defer r.Body.Close()
 	if err != nil {

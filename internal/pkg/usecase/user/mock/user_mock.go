@@ -10,6 +10,7 @@ import (
 	reflect "reflect"
 
 	user "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	user0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -37,7 +38,7 @@ func (m *MockUsecase) EXPECT() *MockUsecaseMockRecorder {
 }
 
 // Authentication mocks base method.
-func (m *MockUsecase) Authentication(ctx context.Context, credentials userCredentials) (*user.User, error) {
+func (m *MockUsecase) Authentication(ctx context.Context, credentials user0.UserCredentials) (*user.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Authentication", ctx, credentials)
 	ret0, _ := ret[0].(*user.User)
@@ -52,7 +53,7 @@ func (mr *MockUsecaseMockRecorder) Authentication(ctx, credentials interface{}) 
 }
 
 // EditProfileInfo mocks base method.
-func (m *MockUsecase) EditProfileInfo(ctx context.Context, userID int, updateData *profileUpdateData) error {
+func (m *MockUsecase) EditProfileInfo(ctx context.Context, userID int, updateData *user0.ProfileUpdateData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EditProfileInfo", ctx, userID, updateData)
 	ret0, _ := ret[0].(error)

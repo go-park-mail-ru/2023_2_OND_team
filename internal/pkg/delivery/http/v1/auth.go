@@ -55,7 +55,7 @@ func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
 func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 
-	params := usecase.NewCredentials()
+	params := usecase.UserCredentials{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	defer r.Body.Close()
 	if err != nil {

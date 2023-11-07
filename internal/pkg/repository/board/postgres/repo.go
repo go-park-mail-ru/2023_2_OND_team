@@ -9,17 +9,17 @@ import (
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 	uEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type boardRepoPG struct {
-	db         *pgxpool.Pool
+	db         pgtype.PgxPoolIface
 	sqlBuilder squirrel.StatementBuilderType
 }
 
-func NewBoardRepoPG(db *pgxpool.Pool) *boardRepoPG {
+func NewBoardRepoPG(db pgtype.PgxPoolIface) *boardRepoPG {
 	return &boardRepoPG{db: db, sqlBuilder: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)}
 }
 

@@ -7,10 +7,10 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 )
 
 type S map[string]any
@@ -34,11 +34,11 @@ type Repository interface {
 }
 
 type pinRepoPG struct {
-	db         *pgxpool.Pool
+	db         pgtype.PgxPoolIface
 	sqlBuilder sq.StatementBuilderType
 }
 
-func NewPinRepoPG(db *pgxpool.Pool) *pinRepoPG {
+func NewPinRepoPG(db pgtype.PgxPoolIface) *pinRepoPG {
 	return &pinRepoPG{
 		db:         db,
 		sqlBuilder: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),

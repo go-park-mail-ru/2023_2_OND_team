@@ -22,7 +22,7 @@ func (u *userCase) Register(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
-func (u *userCase) Authentication(ctx context.Context, credentials userCredentials) (*entity.User, error) {
+func (u *userCase) Authentication(ctx context.Context, credentials UserCredentials) (*entity.User, error) {
 	user, err := u.repo.GetUserByUsername(ctx, credentials.Username)
 	if err != nil {
 		return nil, fmt.Errorf("user authentication: %w", err)
