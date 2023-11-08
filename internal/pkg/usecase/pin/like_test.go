@@ -189,7 +189,7 @@ func TestDeleteLikeFromUser(t *testing.T) {
 	wantCountLike := 999
 	repo.EXPECT().
 		DelLike(ctx, pinID, userID).
-		Return(nil).
+		Return(wantCountLike, nil).
 		Times(1)
 
 	actualCountLike, err := pinCase.DeleteLikeFromUser(ctx, pinID, userID)
