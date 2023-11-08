@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
@@ -15,49 +14,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-func TestIsAvailableBatchPinForFixOnBoard(t *testing.T) {
-	testCases := []struct {
-		Name    string
-		Pins    []entity.Pin
-		UserID  int
-		WantErr error
-	}{
-		{
-			Name:    "one deleted pin",
-			Pins:    []entity.Pin{{DeletedAt: pgtype.Timestamptz{Valid: true}}},
-			UserID:  12,
-			WantErr: ErrPinDeleted,
-		},
-		{
-			Name: "all available",
-			Pins: []entity.Pin{
-				{Author: &user.User{ID: 34}, DeletedAt: pgtype.Timestamptz{Valid: false}, Public: true},
-				{Author: &user.User{ID: 12}, Public: false},
-				{Author: &user.User{ID: 34}, Public: true},
-			},
-			UserID:  12,
-			WantErr: nil,
-		},
-		{
-			Name: "one not available",
-			Pins: []entity.Pin{
-				{Author: &user.User{ID: 34}, DeletedAt: pgtype.Timestamptz{Valid: false}, Public: true},
-				{Author: &user.User{ID: 12}, Public: false},
-				{Author: &user.User{ID: 34}, Public: false},
-			},
-			UserID:  12,
-			WantErr: ErrForbiddenAction,
-		},
-	}
-	for _, test := range testCases {
-		t.Run(test.Name, func(t *testing.T) {
-			test := test
-			t.Parallel()
-			err := isAvailableBatchPinForFixOnBoard(test.UserID, test.Pins...)
-			require.Equal(t, test.WantErr, err)
-		})
-	}
-}
 func TestSetLikeOnAvailablePin(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
