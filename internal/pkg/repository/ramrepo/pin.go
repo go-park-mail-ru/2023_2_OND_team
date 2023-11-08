@@ -53,8 +53,8 @@ func (r *ramPinRepo) SetLike(ctx context.Context, pinID, userID int) (int, error
 	return 0, ErrMethodUnimplemented
 }
 
-func (r *ramPinRepo) DelLike(ctx context.Context, pinID, userID int) error {
-	return ErrMethodUnimplemented
+func (r *ramPinRepo) DelLike(ctx context.Context, pinID, userID int) (int, error) {
+	return 0, ErrMethodUnimplemented
 }
 
 func (r *ramPinRepo) EditPinTags(ctx context.Context, pinID, userID int, titlePins []string) error {

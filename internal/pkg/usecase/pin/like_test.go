@@ -186,14 +186,15 @@ func TestDeleteLikeFromUser(t *testing.T) {
 	repo := mock.NewMockRepository(ctrl)
 	pinCase := New(log, nil, repo)
 	pinID, userID := 123, 1
-
+	wantCountLike := 999
 	repo.EXPECT().
 		DelLike(ctx, pinID, userID).
 		Return(nil).
 		Times(1)
 
-	err = pinCase.DeleteLikeFromUser(ctx, pinID, userID)
+	actualCountLike, err := pinCase.DeleteLikeFromUser(ctx, pinID, userID)
 	require.NoError(t, err)
+	require.Equal(t, wantCountLike, actualCountLike)
 }
 
 func TestCheckUserHasSetLike(t *testing.T) {

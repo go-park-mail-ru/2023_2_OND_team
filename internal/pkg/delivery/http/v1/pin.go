@@ -165,7 +165,7 @@ func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
 
 	_, _ = userID, pinID
 
-	pinUpdate := usecase.NewPinUpdateData()
+	pinUpdate := &usecase.PinUpdateData{}
 
 	err = json.NewDecoder(r.Body).Decode(pinUpdate)
 	defer r.Body.Close()

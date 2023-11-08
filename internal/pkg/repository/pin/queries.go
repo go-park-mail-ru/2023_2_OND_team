@@ -33,6 +33,6 @@ var (
 
 	UpdatePinSetStatusDelete = "UPDATE pin SET deleted_at = now() WHERE id = $1 AND author = $2 AND deleted_at IS NULL;"
 
-	DeleteLikePinFromUser = "DELETE FROM like_pin WHERE pin_id = $1 AND user_id = $2;"
+	DeleteLikePinFromUser = "DELETE FROM like_pin WHERE pin_id = $1 AND user_id = $2  RETURNING (SELECT COUNT(*) FROM like_pin WHERE pin_id = $1);"
 	DeleteAllTagsFromPin  = "DELETE FROM pin_tag WHERE pin_id = $1;"
 )

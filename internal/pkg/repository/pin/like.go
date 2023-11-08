@@ -17,12 +17,14 @@ func (p *pinRepoPG) SetLike(ctx context.Context, pinID, userID int) (int, error)
 	return currCountLike + 1, nil
 }
 
-func (p *pinRepoPG) DelLike(ctx context.Context, pinID, userID int) error {
-	_, err := p.db.Exec(ctx, DeleteLikePinFromUser, pinID, userID)
+func (p *pinRepoPG) DelLike(ctx context.Context, pinID, userID int) (int, error) {
+	row := p.db.QueryRow(ctx, DeleteLikePinFromUser, pinID, userID)
+	var currCountLike int
+	err := row.Scan(&currCountLike)
 	if err != nil {
-		return fmt.Errorf("delete like to pin from user in storage: %w", err)
+		return 0, fmt.Errorf("delete like to pin from user in storage: %w", err)
 	}
-	return nil
+	return currCountLike - 1, nil
 }
 
 func (p *pinRepoPG) GetCountLikeByPinID(ctx context.Context, pinID int) (int, error) {

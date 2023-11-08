@@ -12,7 +12,7 @@ func (p *pinCase) SetLikeFromUser(ctx context.Context, pinID, userID int) (int, 
 	return p.repo.SetLike(ctx, pinID, userID)
 }
 
-func (p *pinCase) DeleteLikeFromUser(ctx context.Context, pinID, userID int) error {
+func (p *pinCase) DeleteLikeFromUser(ctx context.Context, pinID, userID int) (int, error) {
 	return p.repo.DelLike(ctx, pinID, userID)
 }
 

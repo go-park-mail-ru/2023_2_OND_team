@@ -53,12 +53,12 @@ func (h *HandlerHTTP) DeleteLikePin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.pinCase.DeleteLikeFromUser(r.Context(), int(pinID), userID)
+	countLike, err := h.pinCase.DeleteLikeFromUser(r.Context(), int(pinID), userID)
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "like_pin_del", "internal error")
 	} else {
-		err = responseOk(http.StatusOK, w, "ok", nil)
+		err = responseOk(http.StatusOK, w, "ok", map[string]int{"count_like": countLike})
 	}
 	if err != nil {
 		logger.Error(err.Error())
