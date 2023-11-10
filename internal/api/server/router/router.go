@@ -81,6 +81,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			r.Route("/get", func(r chi.Router) {
 				r.Get("/user/{username}", handler.GetUserBoards)
 				r.Get("/{boardID:\\d+}", handler.GetCertainBoard)
+				r.Get("/forUpdate/{boardID:\\d+}", handler.GetBoardInfoForUpdate)
 			})
 			r.With(auth.RequireAuth).Group(func(r chi.Router) {
 				r.Post("/add/pins/{boardID:\\d+}", handler.AddPinsToBoard)
