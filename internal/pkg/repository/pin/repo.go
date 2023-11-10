@@ -114,7 +114,7 @@ func (p *pinRepoPG) GetFeedPins(ctx context.Context, cfg entity.FeedPinConfig) (
 	if len(feed.Pins) != 0 && feed.Pins[0].ID > cfg.MaxID {
 		feed.MaxID = feed.Pins[0].ID
 	}
-	if len(feed.Pins) != 0 && feed.Pins[len(feed.Pins)-1].ID < cfg.MinID {
+	if len(feed.Pins) != 0 && (feed.Pins[len(feed.Pins)-1].ID < cfg.MinID || cfg.MinID == 0) {
 		feed.MinID = feed.Pins[len(feed.Pins)-1].ID
 	}
 	fmt.Println(len(feed.Pins))
