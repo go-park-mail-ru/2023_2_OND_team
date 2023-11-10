@@ -10,6 +10,7 @@ import (
 	reflect "reflect"
 
 	pin "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	pin0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -66,11 +67,12 @@ func (mr *MockUsecaseMockRecorder) CreateNewPin(ctx, pin, mimeTypePicture, sizeP
 }
 
 // DeleteLikeFromUser mocks base method.
-func (m *MockUsecase) DeleteLikeFromUser(ctx context.Context, pinID, userID int) error {
+func (m *MockUsecase) DeleteLikeFromUser(ctx context.Context, pinID, userID int) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteLikeFromUser", ctx, pinID, userID)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteLikeFromUser indicates an expected call of DeleteLikeFromUser.
@@ -94,7 +96,7 @@ func (mr *MockUsecaseMockRecorder) DeletePinFromUser(ctx, pinID, userID interfac
 }
 
 // EditPinByID mocks base method.
-func (m *MockUsecase) EditPinByID(ctx context.Context, pinID, userID int, updateData *pinUpdateData) error {
+func (m *MockUsecase) EditPinByID(ctx context.Context, pinID, userID int, updateData *pin0.PinUpdateData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EditPinByID", ctx, pinID, userID, updateData)
 	ret0, _ := ret[0].(error)

@@ -7,18 +7,14 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 )
 
-type pinUpdateData struct {
+type PinUpdateData struct {
 	Title       *string
 	Description *string
 	Public      *bool
 	Tags        []string
 }
 
-func NewPinUpdateData() *pinUpdateData {
-	return &pinUpdateData{}
-}
-
-func (p *pinCase) EditPinByID(ctx context.Context, pinID, userID int, updateData *pinUpdateData) error {
+func (p *pinCase) EditPinByID(ctx context.Context, pinID, userID int, updateData *PinUpdateData) error {
 	data := pin.S{}
 	if updateData.Title != nil {
 		data["title"] = *updateData.Title

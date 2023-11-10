@@ -2,7 +2,7 @@ package pin
 
 var (
 	SelectWithExcludeLimit  = "SELECT id, picture FROM pin WHERE public AND deleted_at IS NULL AND (id < $1 OR id > $2) ORDER BY id DESC LIMIT $3;"
-	SelectUserPinsLimit     = "SELECT id, picture, public FROM pin WHERE author = $1 AND (id < $2 OR id > $3) ORDER BY id DESC LIMIT $4;"
+	SelectUserPinsLimit     = "SELECT id, picture, public FROM pin WHERE author = $1 AND deleted_at IS NULL AND (id < $2 OR id > $3) ORDER BY id DESC LIMIT $4;"
 	SelectPinByID           = "SELECT author, title, description, picture, public, deleted_at FROM pin WHERE id = $1;"
 	SelectCountLikePin      = "SELECT COUNT(*) FROM like_pin WHERE pin_id = $1;"
 	SelectPinByIDWithAuthor = `SELECT author, title, description, picture, public, pin.deleted_at, username, avatar 
@@ -33,6 +33,6 @@ var (
 
 	UpdatePinSetStatusDelete = "UPDATE pin SET deleted_at = now() WHERE id = $1 AND author = $2 AND deleted_at IS NULL;"
 
-	DeleteLikePinFromUser = "DELETE FROM like_pin WHERE pin_id = $1 AND user_id = $2;"
+	DeleteLikePinFromUser = "DELETE FROM like_pin WHERE pin_id = $1 AND user_id = $2  RETURNING (SELECT COUNT(*) FROM like_pin WHERE pin_id = $1);"
 	DeleteAllTagsFromPin  = "DELETE FROM pin_tag WHERE pin_id = $1;"
 )

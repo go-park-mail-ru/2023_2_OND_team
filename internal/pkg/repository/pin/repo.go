@@ -26,7 +26,7 @@ type Repository interface {
 	DeletePin(ctx context.Context, pinID, userID int) error
 	SetLike(ctx context.Context, pinID, userID int) (int, error)
 	IsSetLike(ctx context.Context, pinID, userID int) (bool, error)
-	DelLike(ctx context.Context, pinID, userID int) error
+	DelLike(ctx context.Context, pinID, userID int) (int, error)
 	EditPin(ctx context.Context, pinID int, updateData S, titleTags []string) error
 	GetCountLikeByPinID(ctx context.Context, pinID int) (int, error)
 	GetTagsByPinID(ctx context.Context, pinID int) ([]entity.Tag, error)

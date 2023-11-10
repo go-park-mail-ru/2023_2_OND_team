@@ -138,7 +138,7 @@ func isValidAboutMe(info string) bool {
 		return false
 	}
 	for _, r := range info {
-		if !(unicode.IsNumber(r) || unicode.IsLetter(r)) {
+		if !(unicode.IsNumber(r) || unicode.IsLetter(r) || unicode.IsSymbol(r) || unicode.IsSpace(r)) {
 			return false
 		}
 	}

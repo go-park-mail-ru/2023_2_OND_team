@@ -52,11 +52,12 @@ func (mr *MockRepositoryMockRecorder) AddNewPin(ctx, pin interface{}) *gomock.Ca
 }
 
 // DelLike mocks base method.
-func (m *MockRepository) DelLike(ctx context.Context, pinID, userID int) error {
+func (m *MockRepository) DelLike(ctx context.Context, pinID, userID int) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DelLike", ctx, pinID, userID)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DelLike indicates an expected call of DelLike.
