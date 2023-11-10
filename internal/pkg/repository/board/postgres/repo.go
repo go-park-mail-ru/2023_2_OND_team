@@ -61,7 +61,7 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 			"board.title",
 			"COALESCE(board.description, '')",
 			"TO_CHAR(board.created_at, 'DD:MM:YYYY')",
-			"COUNT(pin.id) AS pins_number",
+			"COUNT(DISTINCT pin.id) AS pins_number",
 			"ARRAY_REMOVE((ARRAY_AGG(DISTINCT pin.picture))[:3], NULL) AS pins",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
 		From("board").
