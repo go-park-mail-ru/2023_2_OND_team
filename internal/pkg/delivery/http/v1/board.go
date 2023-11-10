@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -14,33 +15,126 @@ import (
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
+var (
+	ErrEmptyTitle        = errors.New("empty or null board title has been provided")
+	ErrEmptyPubOpt       = errors.New("null public option has been provided")
+	ErrInvalidBoardTitle = errors.New("invalid or empty board title has been provided")
+	ErrInvalidTagTitles  = errors.New("invalid tag titles have been provided")
+	ErrInvalidUsername   = errors.New("invalid username has been provided")
+)
+
+var (
+	wrappedErrors      = map[error]string{ErrInvalidTagTitles: "bad_Tagtitles"}
+	errCodeCompability = map[error]string{
+		ErrInvalidBoardTitle:     "bad_boardTitle",
+		ErrEmptyTitle:            "empty_boardTitle",
+		ErrEmptyPubOpt:           "bad_pubOpt",
+		ErrInvalidUsername:       "bad_username",
+		bCase.ErrInvalidUsername: "non_existingUser",
+		bCase.ErrNoSuchBoard:     "no_board",
+		bCase.ErrNoAccess:        "no_access",
+	}
+)
+
+type BoardData struct {
+	Title       *string  `json:"title" example:"new board"`
+	Description *string  `json:"description" example:"long desc"`
+	Public      *bool    `json:"public" example:"true"`
+	Tags        []string `json:"tags" example:"['blue', 'car']"`
+}
+
+func (data *BoardData) Validate() error {
+	if data.Title == nil || *data.Title == "" {
+		return ErrInvalidBoardTitle
+	}
+	if data.Description == nil {
+		data.Description = new(string)
+		*data.Description = ""
+	}
+	if data.Public == nil {
+		return ErrEmptyPubOpt
+	}
+	if !isValidBoardTitle(*data.Title) {
+		return ErrInvalidBoardTitle
+	}
+	if err := checkIsValidTagTitles(data.Tags); err != nil {
+		return fmt.Errorf("%s: %w", err.Error(), ErrInvalidTagTitles)
+	}
+	return nil
+}
+
+func getErrCodeMessage(err error) (string, string) {
+	var (
+		code              string
+		general, specific bool
+	)
+
+	code, general = generalErrCodeCompability[err]
+	if general {
+		return code, err.Error()
+	}
+
+	code, specific = errCodeCompability[err]
+	if !specific {
+		for wrappedErr, code_ := range wrappedErrors {
+			if errors.Is(err, wrappedErr) {
+				specific = true
+				code = code_
+			}
+		}
+	}
+	if specific {
+		return code, err.Error()
+	}
+
+	return ErrInternalError.Error(), generalErrCodeCompability[ErrInternalError]
+}
+
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
-
-	var newBoard boardDTO.BoardData
-	err := json.NewDecoder(r.Body).Decode(&newBoard)
-	defer r.Body.Close()
-	if err != nil {
-		logger.Info("create board", log.F{"message", err.Error()})
-		responseError(w, BadBodyCode, BadBodyMessage)
+	if contentType := w.Header().Get("Content-Type"); contentType != ApplicationJson {
+		code, message := getErrCodeMessage(ErrBadContentType)
+		responseError(w, code, message)
 		return
 	}
 
-	newBoard.AuthorID = r.Context().Value(auth.KeyCurrentUserID).(int)
+	var newBoardData BoardData
+	err := json.NewDecoder(r.Body).Decode(&newBoardData)
+	defer r.Body.Close()
+	if err != nil {
+		logger.Info("create board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadBody)
+		responseError(w, code, message)
+		return
+	}
+
+	err = newBoardData.Validate()
+	if err != nil {
+		logger.Info("create board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	tagTitles := make([]string, 0)
+	if newBoardData.Tags != nil {
+		tagTitles = append(tagTitles, newBoardData.Tags...)
+
+	}
+	authorID := r.Context().Value(auth.KeyCurrentUserID).(int)
+	newBoard := boardDTO.BoardData{
+		Title:       *newBoardData.Title,
+		Description: *newBoardData.Description,
+		Public:      *newBoardData.Public,
+		AuthorID:    authorID,
+		TagTitles:   tagTitles,
+	}
+
 	newBoardID, err := h.boardCase.CreateNewBoard(r.Context(), newBoard)
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
-		switch err {
-		case bCase.ErrInvalidBoardTitle:
-			responseError(w, "bad_boardTitle", err.Error())
-		default:
-			if errors.Is(err, bCase.ErrInvalidTagTitles) {
-				responseError(w, "bad_tagTitles", err.Error())
-				return
-			}
-			responseError(w, InternalErrorCode, InternalServerErrMessage)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
 		return
 	}
 
@@ -48,23 +142,26 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(InternalServerErrMessage))
+		w.Write([]byte(ErrInternalError.Error()))
 	}
 }
 
 func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 
-	userBoards, err := h.boardCase.GetBoardsByUsername(r.Context(), chi.URLParam(r, "username"))
+	username := chi.URLParam(r, "username")
+	if !isValidUsername(username) {
+		logger.Info("update board", log.F{"message", ErrInvalidUsername.Error()})
+		code, message := getErrCodeMessage(ErrInvalidUsername)
+		responseError(w, code, message)
+		return
+	}
+
+	userBoards, err := h.boardCase.GetBoardsByUsername(r.Context(), username)
 	if err != nil {
 		logger.Info("get user boards", log.F{"message", err.Error()})
-		switch err {
-		case bCase.ErrInvalidUsername:
-			responseError(w, "bad_username", err.Error())
-		default:
-			responseError(w, InternalErrorCode, InternalServerErrMessage)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
 		return
 	}
 
@@ -72,7 +169,7 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(InternalServerErrMessage))
+		w.Write([]byte(ErrInternalError.Error()))
 	}
 }
 
@@ -82,20 +179,16 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("get certain board", log.F{"message", err.Error()})
-		responseError(w, BadQueryParamCode, BadQueryParamMessage)
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
 		return
 	}
 
 	board, err := h.boardCase.GetCertainBoard(r.Context(), int(boardID))
 	if err != nil {
 		logger.Info("get certain board", log.F{"message", err.Error()})
-		switch err {
-		case bCase.ErrNoSuchBoard:
-			responseError(w, "no_board", err.Error())
-		default:
-			responseError(w, InternalErrorCode, InternalServerErrMessage)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
 		return
 	}
 
@@ -103,48 +196,88 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(InternalServerErrMessage))
+		w.Write([]byte(ErrInternalError.Error()))
+	}
+}
+
+func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Request) {
+	logger := h.getRequestLogger(r)
+
+	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
+	if err != nil {
+		logger.Info("get certain board info for update", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
+		return
+	}
+
+	board, tagTitles, err := h.boardCase.GetBoardInfoForUpdate(r.Context(), int(boardID))
+	if err != nil {
+		logger.Info("get certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	err = responseOk(http.StatusOK, w, "got certain board successfully", map[string]interface{}{"board": board, "tags": tagTitles})
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(ErrInternalError.Error()))
 	}
 }
 
 func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
+	if contentType := w.Header().Get("Content-Type"); contentType != ApplicationJson {
+		code, message := getErrCodeMessage(ErrBadContentType)
+		responseError(w, code, message)
+		return
+	}
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		responseError(w, BadQueryParamCode, BadQueryParamMessage)
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
 		return
 	}
 
-	var updatedBoard boardDTO.BoardData
-	err = json.NewDecoder(r.Body).Decode(&updatedBoard)
+	var updatedData BoardData
+	err = json.NewDecoder(r.Body).Decode(&updatedData)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		responseError(w, BadBodyCode, BadBodyMessage)
+		code, message := getErrCodeMessage(ErrBadBody)
+		responseError(w, code, message)
 		return
 	}
-	updatedBoard.ID = int(boardID)
 
+	err = updatedData.Validate()
+	if err != nil {
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	tagTitles := make([]string, 0)
+	if updatedData.Tags != nil {
+		tagTitles = append(tagTitles, updatedData.Tags...)
+	}
+
+	updatedBoard := boardDTO.BoardData{
+		ID:          int(boardID),
+		Title:       *updatedData.Title,
+		Description: *updatedData.Description,
+		Public:      *updatedData.Public,
+		TagTitles:   tagTitles,
+	}
 	err = h.boardCase.UpdateBoardInfo(r.Context(), updatedBoard)
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		switch err {
-		case bCase.ErrNoSuchBoard:
-			responseError(w, "no_board", err.Error())
-		case bCase.ErrNoAccess:
-			responseError(w, "no_access", err.Error())
-		case bCase.ErrInvalidBoardTitle:
-			responseError(w, "bad_boardTitle", err.Error())
-		default:
-			if errors.Is(err, bCase.ErrInvalidTagTitles) {
-				responseError(w, "bad_tagTitles", err.Error())
-				return
-			}
-			responseError(w, InternalErrorCode, InternalServerErrMessage)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
 		return
 	}
 
@@ -152,7 +285,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(InternalServerErrMessage))
+		w.Write([]byte(ErrInternalError.Error()))
 	}
 }
 
@@ -161,23 +294,17 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
-		logger.Info("delete board", log.F{"message", err.Error()})
-		responseError(w, BadQueryParamCode, BadQueryParamMessage)
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
 		return
 	}
 
 	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
 	if err != nil {
-		logger.Info("delete board", log.F{"message", err.Error()})
-		switch err {
-		case bCase.ErrNoSuchBoard:
-			responseError(w, "no_board", err.Error())
-		case bCase.ErrNoAccess:
-			responseError(w, "no_access", err.Error())
-		default:
-			responseError(w, InternalErrorCode, InternalServerErrMessage)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
 		return
 	}
 
@@ -185,7 +312,7 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(InternalServerErrMessage))
+		w.Write([]byte(ErrInternalError.Error()))
 	}
 }
 

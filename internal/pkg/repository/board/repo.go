@@ -16,6 +16,7 @@ type Repository interface {
 	GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error)
 	GetContributorsByBoardID(ctx context.Context, boardID int) ([]uEntity.User, error)
 	GetContributorBoardsIDs(ctx context.Context, contributorID int) ([]int, error)
+	GetBoardInfoForUpdate(ctx context.Context, boardID int, hasAccess bool) (entity.Board, []string, error)
 	UpdateBoard(ctx context.Context, newBoardData entity.Board, tagTitles []string) error
 	DeleteBoardByID(ctx context.Context, boardID int) error
 	RoleUserHaveOnThisBoard(ctx context.Context, boardID int, userID int) (UserRole, error)

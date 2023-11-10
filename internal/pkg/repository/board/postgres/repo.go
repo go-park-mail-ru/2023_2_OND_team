@@ -59,12 +59,16 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 		Select(
 			"board.id",
 			"board.title",
+			"COALESCE(board.description, '')",
 			"TO_CHAR(board.created_at, 'DD:MM:YYYY')",
 			"COUNT(pin.id) AS pins_number",
-			"ARRAY_REMOVE((ARRAY_AGG(pin.picture))[:3], NULL) AS pins").
+			"ARRAY_REMOVE((ARRAY_AGG(DISTINCT pin.picture))[:3], NULL) AS pins",
+			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
 		From("board").
 		LeftJoin("membership ON board.id = membership.board_id").
 		LeftJoin("pin ON membership.pin_id = pin.id").
+		LeftJoin("board_tag ON board.id = board_tag.board_id").
+		LeftJoin("tag ON board_tag.tag_id = tag.id").
 		Where(squirrel.Eq{"board.deleted_at": nil}).
 		Where(squirrel.Eq{"board.author": userID})
 
@@ -80,6 +84,7 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 		GroupBy(
 			"board.id",
 			"board.title",
+			"board.description",
 			"board.created_at",
 		).
 		OrderBy("board.id ASC")
@@ -98,7 +103,7 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	boards := make([]dto.UserBoard, 0)
 	for rows.Next() {
 		board := dto.UserBoard{}
-		err = rows.Scan(&board.BoardID, &board.Title, &board.CreatedAt, &board.PinsNumber, &board.Pins)
+		err = rows.Scan(&board.BoardID, &board.Title, &board.Description, &board.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
 		if err != nil {
 			return nil, fmt.Errorf("scanning the result of get boards by user id query: %w", err)
 		}
@@ -128,7 +133,6 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 
 	if !hasAccess {
 		getBoardByIdQuery = getBoardByIdQuery.Where(squirrel.Eq{"board.public": true})
-
 	}
 	getBoardByIdQuery = getBoardByIdQuery.GroupBy(
 		"board.id",
@@ -155,6 +159,50 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 	}
 
 	return board, nil
+}
+
+func (repo *boardRepoPG) GetBoardInfoForUpdate(ctx context.Context, boardID int, hasAccess bool) (entity.Board, []string, error) {
+	getBoardByIdQuery := repo.sqlBuilder.
+		Select(
+			"board.title",
+			"COALESCE(board.description, '')",
+			"board.public",
+			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
+		From("board").
+		LeftJoin("board_tag ON board.id = board_tag.board_id").
+		LeftJoin("tag ON board_tag.tag_id = tag.id").
+		Where(squirrel.Eq{"board.deleted_at": nil}).
+		Where(squirrel.Eq{"board.id": boardID})
+
+	if !hasAccess {
+		getBoardByIdQuery = getBoardByIdQuery.Where(squirrel.Eq{"board.public": true})
+	}
+	getBoardByIdQuery = getBoardByIdQuery.GroupBy(
+		"board.id",
+		"board.title",
+		"board.description",
+		"board.created_at").
+		OrderBy("board.id ASC")
+
+	sqlRow, args, err := getBoardByIdQuery.ToSql()
+	if err != nil {
+		return entity.Board{}, nil, fmt.Errorf("building get board info for update query: %w", err)
+	}
+
+	row := repo.db.QueryRow(ctx, sqlRow, args...)
+	board := entity.Board{}
+	tagTitles := make([]string, 0)
+	err = row.Scan(&board.Title, &board.Description, &board.Public, &tagTitles)
+	if err != nil {
+		switch err {
+		case pgx.ErrNoRows:
+			return entity.Board{}, nil, repository.ErrNoData
+		default:
+			return entity.Board{}, nil, fmt.Errorf("scan result of get board by id query: %w", err)
+		}
+	}
+
+	return board, tagTitles, nil
 }
 
 func (repo *boardRepoPG) GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error) {

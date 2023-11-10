@@ -93,21 +93,6 @@ func (mr *MockRepositoryMockRecorder) GetAllUserData(ctx, userID interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUserData", reflect.TypeOf((*MockRepository)(nil).GetAllUserData), ctx, userID)
 }
 
-// GetLastUserID mocks base method.
-func (m *MockRepository) GetLastUserID(ctx context.Context) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLastUserID", ctx)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLastUserID indicates an expected call of GetLastUserID.
-func (mr *MockRepositoryMockRecorder) GetLastUserID(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastUserID", reflect.TypeOf((*MockRepository)(nil).GetLastUserID), ctx)
-}
-
 // GetUserByUsername mocks base method.
 func (m *MockRepository) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
 	m.ctrl.T.Helper()

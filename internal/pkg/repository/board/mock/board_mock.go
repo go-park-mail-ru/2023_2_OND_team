@@ -111,6 +111,22 @@ func (mr *MockRepositoryMockRecorder) GetBoardByID(ctx, boardID, hasAccess inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBoardByID", reflect.TypeOf((*MockRepository)(nil).GetBoardByID), ctx, boardID, hasAccess)
 }
 
+// GetBoardInfoForUpdate mocks base method.
+func (m *MockRepository) GetBoardInfoForUpdate(ctx context.Context, boardID int, hasAccess bool) (board.Board, []string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBoardInfoForUpdate", ctx, boardID, hasAccess)
+	ret0, _ := ret[0].(board.Board)
+	ret1, _ := ret[1].([]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetBoardInfoForUpdate indicates an expected call of GetBoardInfoForUpdate.
+func (mr *MockRepositoryMockRecorder) GetBoardInfoForUpdate(ctx, boardID, hasAccess interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBoardInfoForUpdate", reflect.TypeOf((*MockRepository)(nil).GetBoardInfoForUpdate), ctx, boardID, hasAccess)
+}
+
 // GetBoardsByUserID mocks base method.
 func (m *MockRepository) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]board1.UserBoard, error) {
 	m.ctrl.T.Helper()

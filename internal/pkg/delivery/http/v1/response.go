@@ -2,20 +2,27 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
 
 var (
-	InternalServerErrMessage = "internal server error occured"
-	BadBodyMessage           = "can't parse body, JSON expected"
-	BadQueryParamMessage     = "invalid query parameters have been provided"
+	ErrBadBody        = errors.New("can't parse body, JSON with correct data types is expected")
+	ErrBadUrlParam    = errors.New("bad URL param has been provided")
+	ErrBadQueryParam  = errors.New("invalid query parameters have been provided")
+	ErrInternalError  = errors.New("internal server error occured")
+	ErrBadContentType = errors.New("application/json is expected")
 )
 
 var (
-	BadBodyCode       = "bad_body"
-	BadQueryParamCode = "bad_queryParam"
-	InternalErrorCode = "internal_error"
+	generalErrCodeCompability = map[error]string{
+		ErrBadBody:        "bad_body",
+		ErrBadQueryParam:  "bad_queryParams",
+		ErrInternalError:  "internal_error",
+		ErrBadContentType: "bad_contentType",
+		ErrBadUrlParam:    "bad_urlParam",
+	}
 )
 
 type JsonResponse struct {
