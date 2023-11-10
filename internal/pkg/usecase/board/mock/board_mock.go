@@ -8,7 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
+	board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
+	board0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,7 +37,7 @@ func (m *MockUsecase) EXPECT() *MockUsecaseMockRecorder {
 }
 
 // CreateNewBoard mocks base method.
-func (m *MockUsecase) CreateNewBoard(ctx context.Context, newBoard board.BoardData) (int, error) {
+func (m *MockUsecase) CreateNewBoard(ctx context.Context, newBoard board0.BoardData) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNewBoard", ctx, newBoard)
 	ret0, _ := ret[0].(int)
@@ -78,11 +79,27 @@ func (mr *MockUsecaseMockRecorder) FixPinsOnBoard(ctx, boardID, pinIds, userID i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FixPinsOnBoard", reflect.TypeOf((*MockUsecase)(nil).FixPinsOnBoard), ctx, boardID, pinIds, userID)
 }
 
+// GetBoardInfoForUpdate mocks base method.
+func (m *MockUsecase) GetBoardInfoForUpdate(ctx context.Context, boardID int) (board.Board, []string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBoardInfoForUpdate", ctx, boardID)
+	ret0, _ := ret[0].(board.Board)
+	ret1, _ := ret[1].([]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetBoardInfoForUpdate indicates an expected call of GetBoardInfoForUpdate.
+func (mr *MockUsecaseMockRecorder) GetBoardInfoForUpdate(ctx, boardID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBoardInfoForUpdate", reflect.TypeOf((*MockUsecase)(nil).GetBoardInfoForUpdate), ctx, boardID)
+}
+
 // GetBoardsByUsername mocks base method.
-func (m *MockUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]board.UserBoard, error) {
+func (m *MockUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]board0.UserBoard, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBoardsByUsername", ctx, username)
-	ret0, _ := ret[0].([]board.UserBoard)
+	ret0, _ := ret[0].([]board0.UserBoard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -94,10 +111,10 @@ func (mr *MockUsecaseMockRecorder) GetBoardsByUsername(ctx, username interface{}
 }
 
 // GetCertainBoard mocks base method.
-func (m *MockUsecase) GetCertainBoard(ctx context.Context, boardID int) (board.UserBoard, error) {
+func (m *MockUsecase) GetCertainBoard(ctx context.Context, boardID int) (board0.UserBoard, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCertainBoard", ctx, boardID)
-	ret0, _ := ret[0].(board.UserBoard)
+	ret0, _ := ret[0].(board0.UserBoard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -109,7 +126,7 @@ func (mr *MockUsecaseMockRecorder) GetCertainBoard(ctx, boardID interface{}) *go
 }
 
 // UpdateBoardInfo mocks base method.
-func (m *MockUsecase) UpdateBoardInfo(ctx context.Context, updatedData board.BoardData) error {
+func (m *MockUsecase) UpdateBoardInfo(ctx context.Context, updatedData board0.BoardData) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBoardInfo", ctx, updatedData)
 	ret0, _ := ret[0].(error)

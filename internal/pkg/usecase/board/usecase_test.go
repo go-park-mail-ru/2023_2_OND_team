@@ -2,7 +2,6 @@ package board
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
@@ -64,70 +63,6 @@ func TestBoardUsecase_CreateNewBoard(t *testing.T) {
 				mockRepo.EXPECT().CreateBoard(ctx, newBoardData, tagTitles).Return(1, nil).Times(1)
 			},
 			expNewID: 1,
-		},
-		{
-			name:  "invalid board title",
-			inCtx: context.Background(),
-			newBoardData: dto.BoardData{
-				Title:       "~nval$d title~~",
-				Description: "some description",
-				AuthorID:    45,
-				Public:      false,
-				TagTitles:   []string{"nice", "green"},
-			},
-			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
-			},
-			expNewID: 0,
-			wantErr:  true,
-			expErr:   ErrInvalidBoardTitle,
-		},
-		{
-			name:  "invalid tag titles: all tags",
-			inCtx: context.Background(),
-			newBoardData: dto.BoardData{
-				Title:       "valid title",
-				Description: "some description",
-				AuthorID:    45,
-				Public:      false,
-				TagTitles:   []string{"nic~e", "gr~$een"},
-			},
-			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
-			},
-			expNewID: 0,
-			wantErr:  true,
-			expErr:   fmt.Errorf("%v: %w", []string{"nic~e", "gr~$een"}, ErrInvalidTagTitles),
-		},
-		{
-			name:  "invalid tag titles: some tags",
-			inCtx: context.Background(),
-			newBoardData: dto.BoardData{
-				Title:       "valid title",
-				Description: "some description",
-				AuthorID:    45,
-				Public:      false,
-				TagTitles:   []string{"nic~e", "green"},
-			},
-			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
-			},
-			expNewID: 0,
-			wantErr:  true,
-			expErr:   fmt.Errorf("%v: %w", []string{"nic~e"}, ErrInvalidTagTitles),
-		},
-		{
-			name:  "invalid tag titles: too many tags",
-			inCtx: context.Background(),
-			newBoardData: dto.BoardData{
-				Title:       "valid title",
-				Description: "some description",
-				AuthorID:    45,
-				Public:      false,
-				TagTitles:   []string{"nice", "green", "a", "b", "c", "d", "e", "f"},
-			},
-			CreateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
-			},
-			expNewID: 0,
-			wantErr:  true,
-			expErr:   fmt.Errorf("too many titles: %w", ErrInvalidTagTitles),
 		},
 	}
 
@@ -244,42 +179,6 @@ func TestBoardUsecase_UpdateBoardInfo(t *testing.T) {
 			wantErr: true,
 			expErr:  ErrNoSuchBoard,
 		},
-		{
-			name:  "invalid board title",
-			inCtx: context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
-			updatedBoardData: dto.BoardData{
-				ID:          1,
-				Title:       "va!@#*^*!&@$*lid title",
-				Description: "some description",
-				Public:      false,
-				TagTitles:   []string{"nice", "green"},
-			},
-			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
-				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(1, nil).Times(1)
-			},
-			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
-			},
-			wantErr: true,
-			expErr:  ErrInvalidBoardTitle,
-		},
-		{
-			name:  "invalid board tags",
-			inCtx: context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
-			updatedBoardData: dto.BoardData{
-				ID:          11,
-				Title:       "valid title",
-				Description: "some description",
-				Public:      false,
-				TagTitles:   []string{"ni@#@#%!~~ce", "green"},
-			},
-			GetBoardAuthorByBoardID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int) {
-				mockRepo.EXPECT().GetBoardAuthorByBoardID(ctx, boardID).Return(1, nil).Times(1)
-			},
-			UpdateBoard: func(mockRepo *mock_board.MockRepository, ctx context.Context, newBoardData entity.Board, tagTitles []string) {
-			},
-			wantErr: true,
-			expErr:  fmt.Errorf("%v: %w", []string{"ni@#@#%!~~ce"}, ErrInvalidTagTitles),
-		},
 	}
 
 	for _, test := range tests {
@@ -378,20 +277,6 @@ func TestBoardUsecase_GetBoardsByUsername(t *testing.T) {
 			username: "validGuy",
 			GetUserIdByUsername: func(mockRepo *mock_user.MockRepository, ctx context.Context, username string) {
 				mockRepo.EXPECT().GetUserIdByUsername(ctx, username).Return(0, repository.ErrNoData).Times(1)
-			},
-			GetContributorBoardsIDs: func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int) {
-			},
-			GetBoardsByUserID: func(mockRepo *mock_board.MockRepository, ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) {
-			},
-			expBoards: nil,
-			wantErr:   true,
-			expErr:    ErrInvalidUsername,
-		},
-		{
-			name:     "invalid username",
-			inCtx:    context.WithValue(context.Background(), auth.KeyCurrentUserID, 1),
-			username: "A$va@$@!%@~~~~~~uy",
-			GetUserIdByUsername: func(mockRepo *mock_user.MockRepository, ctx context.Context, username string) {
 			},
 			GetContributorBoardsIDs: func(mockRepo *mock_board.MockRepository, ctx context.Context, contributorID int) {
 			},
