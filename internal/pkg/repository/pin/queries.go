@@ -35,4 +35,7 @@ var (
 
 	DeleteLikePinFromUser = "DELETE FROM like_pin WHERE pin_id = $1 AND user_id = $2  RETURNING (SELECT COUNT(*) FROM like_pin WHERE pin_id = $1);"
 	DeleteAllTagsFromPin  = "DELETE FROM pin_tag WHERE pin_id = $1;"
+
+	// unused
+	SelectUserLikedPinsLimit = "SELECT id, picture, public FROM pin INNER JOIN like_pin ON id = pin_id WHERE user_id = $1 AND author = $1 AND deleted_at IS NULL AND (id < $2 OR id > $3) ORDER BY id DESC LIMIT $4;"
 )

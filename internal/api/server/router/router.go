@@ -89,5 +89,9 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 				r.Delete("/delete/{boardID:\\d+}", handler.DeleteBoard)
 			})
 		})
+
+		r.Route("/feed", func(r chi.Router) {
+			r.Get("/pin", handler.FeedPins)
+		})
 	})
 }

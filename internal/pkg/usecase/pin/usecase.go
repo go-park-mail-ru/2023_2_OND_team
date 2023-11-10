@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
@@ -28,6 +29,9 @@ type Usecase interface {
 	ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error)
 	IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID int) error
 	IsAvailableBatchPinForFixOnBoard(ctx context.Context, pinID []int, userID int) error
+
+	SelectUserLikedPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
+	ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error)
 }
 
 type pinCase struct {
@@ -105,4 +109,8 @@ func (p *pinCase) ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin
 	}
 
 	return pin, nil
+}
+
+func (p *pinCase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error) {
+	return p.repo.GetFeedPins(ctx, cfg)
 }
