@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	pin "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
+	pin "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	board0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	gomock "github.com/golang/mock/gomock"
 )
