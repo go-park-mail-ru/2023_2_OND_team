@@ -156,6 +156,21 @@ func (mr *MockRepositoryMockRecorder) GetContributorsByBoardID(ctx, boardID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContributorsByBoardID", reflect.TypeOf((*MockRepository)(nil).GetContributorsByBoardID), ctx, boardID)
 }
 
+// GetProtectionStatusBoard mocks base method.
+func (m *MockRepository) GetProtectionStatusBoard(ctx context.Context, boardID int) (board0.ProtectionBoard, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProtectionStatusBoard", ctx, boardID)
+	ret0, _ := ret[0].(board0.ProtectionBoard)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProtectionStatusBoard indicates an expected call of GetProtectionStatusBoard.
+func (mr *MockRepositoryMockRecorder) GetProtectionStatusBoard(ctx, boardID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProtectionStatusBoard", reflect.TypeOf((*MockRepository)(nil).GetProtectionStatusBoard), ctx, boardID)
+}
+
 // RoleUserHaveOnThisBoard mocks base method.
 func (m *MockRepository) RoleUserHaveOnThisBoard(ctx context.Context, boardID, userID int) (board0.UserRole, error) {
 	m.ctrl.T.Helper()

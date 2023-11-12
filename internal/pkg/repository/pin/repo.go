@@ -17,8 +17,7 @@ type S map[string]any
 
 //go:generate mockgen -destination=./mock/pin_mock.go -package=mock -source=repo.go Repository
 type Repository interface {
-	GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]entity.Pin, error)
-	GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error)
+	GetFeedPins(ctx context.Context, cfg entity.FeedPinConfig) (entity.FeedPin, error)
 	GetAuthorPin(ctx context.Context, pinID int) (*user.User, error)
 	GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error)
 	GetBatchPinByID(ctx context.Context, pinID []int) ([]entity.Pin, error)
@@ -31,9 +30,6 @@ type Repository interface {
 	GetCountLikeByPinID(ctx context.Context, pinID int) (int, error)
 	GetTagsByPinID(ctx context.Context, pinID int) ([]entity.Tag, error)
 	IsAvailableToUserAsContributorBoard(ctx context.Context, pinID, userID int) (bool, error)
-
-	GetFeedPins(ctx context.Context, cfg entity.FeedPinConfig) (entity.FeedPin, error)
-	GetSortedUserLikedPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error)
 }
 
 type pinRepoPG struct {
@@ -50,113 +46,43 @@ func NewPinRepoPG(db pgtype.PgxPoolIface) *pinRepoPG {
 
 func (p *pinRepoPG) GetFeedPins(ctx context.Context, cfg entity.FeedPinConfig) (entity.FeedPin, error) {
 	queryBuild := p.sqlBuilder.Select("pin.id", "pin.picture").
-		From("pin").Limit(uint64(cfg.Count))
+		From("pin")
 
 	pin := entity.Pin{}
 	scanFields := []any{&pin.ID, &pin.Picture}
 
-	switch cfg.Protection {
-	case entity.FeedAll:
-		queryBuild = queryBuild.Columns("pin.public")
-		scanFields = append(scanFields, &pin.Public)
-	case entity.FeedProtectionPublic:
-		queryBuild = queryBuild.Where(sq.Eq{"pin.public": true})
-	case entity.FeedProtectionPrivate:
-		queryBuild = queryBuild.Where(sq.Eq{"pin.public": false})
-	}
-
-	if cfg.Deleted {
-		queryBuild = queryBuild.Where(sq.NotEq{"pin.deleted_at": nil})
-	} else {
-		queryBuild = queryBuild.Where(sq.Eq{"pin.deleted_at": nil})
-	}
-
-	if userID, ok := cfg.User(); ok && !cfg.Liked {
-		queryBuild = queryBuild.Where(sq.Eq{"pin.author": userID})
-	}
-
-	if userID, ok := cfg.User(); ok && cfg.Liked {
-		queryBuild = queryBuild.InnerJoin("like_pin ON like_pin.pin_id = pin.id").
-			Where(sq.Eq{"like_pin.user_id": userID}).
-			OrderBy("like_pin.created_at DESC")
-	}
-
-	if boardID, ok := cfg.Board(); ok {
-		queryBuild = queryBuild.InnerJoin("membership", "membership.pin_id = pin.id").
-			InnerJoin("board", "membership.board_id = board.id").
-			Where(sq.Eq{"board.id": boardID})
-	}
+	queryBuild, scanFields = addFilters(queryBuild, cfg, &pin, scanFields)
 
 	sqlRow, args, err := queryBuild.
 		Where(sq.Or{sq.Lt{"pin.id": cfg.MinID}, sq.Gt{"pin.id": cfg.MaxID}}).
 		OrderBy("pin.id DESC").
+		Limit(uint64(cfg.Count)).
 		ToSql()
-
 	if err != nil {
 		return entity.FeedPin{}, fmt.Errorf("query build error: %w", err)
 	}
-	fmt.Println(sqlRow, args)
 
 	rows, err := p.db.Query(ctx, sqlRow, args...)
 	if err != nil {
 		return entity.FeedPin{Pins: []entity.Pin{}, Condition: cfg.Condition}, fmt.Errorf("getting pins for feed from storage: %w", err)
 	}
 	feed := entity.FeedPin{Condition: cfg.Condition}
+
 	for rows.Next() {
-		fmt.Println("SCAN")
 		err = rows.Scan(scanFields...)
-		fmt.Println(pin)
 		if err != nil {
 			return feed, fmt.Errorf("scan feed pins: %w", err)
 		}
 		feed.Pins = append(feed.Pins, pin)
 	}
+
 	if len(feed.Pins) != 0 && feed.Pins[0].ID > cfg.MaxID {
 		feed.MaxID = feed.Pins[0].ID
 	}
 	if len(feed.Pins) != 0 && (feed.Pins[len(feed.Pins)-1].ID < cfg.MinID || cfg.MinID == 0) {
 		feed.MinID = feed.Pins[len(feed.Pins)-1].ID
 	}
-	fmt.Println(len(feed.Pins))
 	return feed, nil
-}
-
-func (p *pinRepoPG) GetSortedNewNPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, error) {
-	rows, err := p.db.Query(ctx, SelectWithExcludeLimit, minID, maxID, count)
-	if err != nil {
-		return nil, fmt.Errorf("select to receive %d pins: %w", count, err)
-	}
-
-	pins := make([]entity.Pin, 0, count)
-	pin := entity.Pin{Public: true}
-	for rows.Next() {
-		err := rows.Scan(&pin.ID, &pin.Picture)
-		if err != nil {
-			return pins, fmt.Errorf("scan to receive %d pins: %w", count, err)
-		}
-		pins = append(pins, pin)
-	}
-
-	return pins, nil
-}
-
-func (p *pinRepoPG) GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, error) {
-	rows, err := p.db.Query(ctx, SelectUserPinsLimit, userID, minID, maxID, count)
-	if err != nil {
-		return nil, fmt.Errorf("select to receive %d pins: %w", count, err)
-	}
-
-	pins := make([]entity.Pin, 0, count)
-	pin := entity.Pin{}
-	for rows.Next() {
-		err := rows.Scan(&pin.ID, &pin.Picture, &pin.Public)
-		if err != nil {
-			return pins, fmt.Errorf("scan to receive %d pins: %w", count, err)
-		}
-		pins = append(pins, pin)
-	}
-
-	return pins, nil
 }
 
 func (p *pinRepoPG) GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*entity.Pin, error) {

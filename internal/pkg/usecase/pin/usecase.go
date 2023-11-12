@@ -18,8 +18,7 @@ var ErrBadMIMEType = errors.New("bad mime type")
 
 //go:generate mockgen -destination=./mock/pin_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
-	SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int)
-	SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
+	ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error)
 	CreateNewPin(ctx context.Context, pin *entity.Pin, mimeTypePicture string, sizePicture int64, picture io.Reader) error
 	DeletePinFromUser(ctx context.Context, pinID, userID int) error
 	SetLikeFromUser(ctx context.Context, pinID, userID int) (int, error)
@@ -29,9 +28,6 @@ type Usecase interface {
 	ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin, error)
 	IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID int) error
 	IsAvailableBatchPinForFixOnBoard(ctx context.Context, pinID []int, userID int) error
-
-	SelectUserLikedPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int)
-	ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error)
 }
 
 type pinCase struct {
@@ -46,28 +42,6 @@ func New(log *log.Logger, imgCase image.Usecase, repo repo.Repository) *pinCase 
 		log:     log,
 		repo:    repo,
 	}
-}
-
-func (p *pinCase) SelectNewPins(ctx context.Context, count, minID, maxID int) ([]entity.Pin, int, int) {
-	pins, err := p.repo.GetSortedNewNPins(ctx, count, minID, maxID)
-	if err != nil {
-		p.log.Error(err.Error())
-	}
-	if len(pins) == 0 {
-		return []entity.Pin{}, minID, maxID
-	}
-	return pins, pins[len(pins)-1].ID, pins[0].ID
-}
-
-func (p *pinCase) SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]entity.Pin, int, int) {
-	pins, err := p.repo.GetSortedUserPins(ctx, userID, count, minID, maxID)
-	if err != nil {
-		p.log.Error(err.Error())
-	}
-	if len(pins) == 0 {
-		return []entity.Pin{}, minID, maxID
-	}
-	return pins, pins[len(pins)-1].ID, pins[0].ID
 }
 
 func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, mimeTypePicture string, sizePicture int64, picture io.Reader) error {
@@ -112,8 +86,16 @@ func (p *pinCase) ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin
 }
 
 func (p *pinCase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error) {
+	if cfg.Count > 1000 || cfg.Count <= 0 {
+		return pin.FeedPin{}, ErrForbiddenAction
+	}
+
 	_, hasBoard := cfg.Board()
 	user, hasUser := cfg.User()
+
+	if cfg.Liked && !hasUser {
+		return pin.FeedPin{}, ErrForbiddenAction
+	}
 
 	if !hasBoard && (userID == UserUnknown || !hasUser || userID != user) && cfg.Protection != pin.FeedProtectionPublic {
 		return pin.FeedPin{}, ErrForbiddenAction

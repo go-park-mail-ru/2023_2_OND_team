@@ -16,11 +16,19 @@ func (b *boardUsecase) CheckAvailabilityFeedPinCfgOnBoard(ctx context.Context, c
 		return nil
 	}
 
+	if cfg.Count > 1000 || cfg.Count <= 0 {
+		return ErrNoAccess
+	}
+
+	if _, ok := cfg.User(); cfg.Liked && !ok {
+		return ErrNoAccess
+	}
+
 	if !isAuth && cfg.Protection != pin.FeedProtectionPublic {
 		return ErrNoAccess
 	}
 
-	protection, err := b.boardRepo.GerProtectionStatusBoard(ctx, boardID)
+	protection, err := b.boardRepo.GetProtectionStatusBoard(ctx, boardID)
 	if err != nil {
 		return fmt.Errorf("get protection status board for check availability: %w", err)
 	}

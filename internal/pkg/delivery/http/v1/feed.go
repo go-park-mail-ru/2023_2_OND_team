@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,7 +13,6 @@ import (
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-// count, minID, maxID, liked{true,false}, protection{private,public,all}, board_id, user_id
 func (h *HandlerHTTP) FeedPins(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 	userID, isAuth := r.Context().Value(auth.KeyCurrentUserID).(int)
@@ -55,36 +56,68 @@ func (h *HandlerHTTP) FeedPins(w http.ResponseWriter, r *http.Request) {
 
 func parseFeedConfig(u *url.URL) (pin.FeedPinConfig, error) {
 	cfg := pin.FeedPinConfig{}
-	i, _ := strconv.ParseInt(u.Query().Get("minID"), 10, 64)
-	cfg.MinID = int(i)
+	var (
+		err      error
+		numInt64 int64
+		ok       bool
+	)
 
-	i, _ = strconv.ParseInt(u.Query().Get("maxID"), 10, 64)
-	cfg.MaxID = int(i)
+	if !u.Query().Has("count") {
+		return cfg, errors.New("parse feed config: require count")
+	}
+	numInt64, err = strconv.ParseInt(u.Query().Get("count"), 10, 64)
+	if err != nil {
+		return cfg, fmt.Errorf("pars feed config: %w", err)
+	}
+	cfg.Count = int(numInt64)
+
+	if u.Query().Has("minID") {
+		numInt64, err = strconv.ParseInt(u.Query().Get("minID"), 10, 64)
+		if err != nil {
+			return pin.FeedPinConfig{}, fmt.Errorf("pars feed config: %w", err)
+		}
+		cfg.MinID = int(numInt64)
+	}
+
+	if u.Query().Has("maxID") {
+		numInt64, err = strconv.ParseInt(u.Query().Get("maxID"), 10, 64)
+		if err != nil {
+			return pin.FeedPinConfig{}, fmt.Errorf("pars feed config: %w", err)
+		}
+		cfg.MaxID = int(numInt64)
+	}
 
 	if u.Query().Has("userID") {
-		i, err := strconv.ParseInt(u.Query().Get("userID"), 10, 64)
+		numInt64, err = strconv.ParseInt(u.Query().Get("userID"), 10, 64)
 		if err != nil {
-			return pin.FeedPinConfig{}, err
+			return pin.FeedPinConfig{}, fmt.Errorf("pars feed config: %w", err)
 		}
-		cfg.SetUser(int(i))
+		cfg.SetUser(int(numInt64))
 	}
 
 	if u.Query().Has("boardID") {
-		i, err := strconv.ParseInt(u.Query().Get("boardID"), 10, 64)
+		numInt64, err = strconv.ParseInt(u.Query().Get("boardID"), 10, 64)
 		if err != nil {
-			return pin.FeedPinConfig{}, err
+			return pin.FeedPinConfig{}, fmt.Errorf("pars feed config: %w", err)
 		}
-		cfg.SetBoard(int(i))
+		cfg.SetBoard(int(numInt64))
 	}
 
-	i, _ = strconv.ParseInt(u.Query().Get("count"), 10, 64)
-	cfg.Count = int(i)
+	if u.Query().Has("deleted") {
+		ok, err = strconv.ParseBool(u.Query().Get("deleted"))
+		if err != nil {
+			return cfg, fmt.Errorf("pars feed config: %w", err)
+		}
+		cfg.Deleted = ok
+	}
 
-	ok, _ := strconv.ParseBool(u.Query().Get("deleted"))
-	cfg.Deleted = ok
-
-	ok, _ = strconv.ParseBool(u.Query().Get("liked"))
-	cfg.Liked = ok
+	if u.Query().Has("liked") {
+		ok, err = strconv.ParseBool(u.Query().Get("liked"))
+		if err != nil {
+			return cfg, fmt.Errorf("pars feed config: %w", err)
+		}
+		cfg.Liked = ok
+	}
 
 	switch u.Query().Get("protection") {
 	case "all":

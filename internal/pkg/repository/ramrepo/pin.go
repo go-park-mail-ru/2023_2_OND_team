@@ -96,3 +96,7 @@ func (r *ramPinRepo) GetBatchPinByID(ctx context.Context, pinID []int) ([]pin.Pi
 func (r *ramPinRepo) GetSortedUserLikedPins(ctx context.Context, userID, count, minID, maxID int) ([]pin.Pin, error) {
 	return nil, ErrMethodUnimplemented
 }
+
+func (r *ramPinRepo) GetFeedPins(ctx context.Context, cfg pin.FeedPinConfig) (pin.FeedPin, error) {
+	return pin.FeedPin{}, ErrMethodUnimplemented
+}

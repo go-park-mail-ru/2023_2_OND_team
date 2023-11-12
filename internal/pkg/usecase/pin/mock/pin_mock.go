@@ -137,38 +137,6 @@ func (mr *MockUsecaseMockRecorder) IsAvailablePinForFixOnBoard(ctx, pinID, userI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAvailablePinForFixOnBoard", reflect.TypeOf((*MockUsecase)(nil).IsAvailablePinForFixOnBoard), ctx, pinID, userID)
 }
 
-// SelectNewPins mocks base method.
-func (m *MockUsecase) SelectNewPins(ctx context.Context, count, minID, maxID int) ([]pin.Pin, int, int) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectNewPins", ctx, count, minID, maxID)
-	ret0, _ := ret[0].([]pin.Pin)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(int)
-	return ret0, ret1, ret2
-}
-
-// SelectNewPins indicates an expected call of SelectNewPins.
-func (mr *MockUsecaseMockRecorder) SelectNewPins(ctx, count, minID, maxID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectNewPins", reflect.TypeOf((*MockUsecase)(nil).SelectNewPins), ctx, count, minID, maxID)
-}
-
-// SelectUserPins mocks base method.
-func (m *MockUsecase) SelectUserPins(ctx context.Context, userID, count, minID, maxID int) ([]pin.Pin, int, int) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectUserPins", ctx, userID, count, minID, maxID)
-	ret0, _ := ret[0].([]pin.Pin)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(int)
-	return ret0, ret1, ret2
-}
-
-// SelectUserPins indicates an expected call of SelectUserPins.
-func (mr *MockUsecaseMockRecorder) SelectUserPins(ctx, userID, count, minID, maxID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectUserPins", reflect.TypeOf((*MockUsecase)(nil).SelectUserPins), ctx, userID, count, minID, maxID)
-}
-
 // SetLikeFromUser mocks base method.
 func (m *MockUsecase) SetLikeFromUser(ctx context.Context, pinID, userID int) (int, error) {
 	m.ctrl.T.Helper()
@@ -197,4 +165,19 @@ func (m *MockUsecase) ViewAnPin(ctx context.Context, pinID, userID int) (*pin.Pi
 func (mr *MockUsecaseMockRecorder) ViewAnPin(ctx, pinID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ViewAnPin", reflect.TypeOf((*MockUsecase)(nil).ViewAnPin), ctx, pinID, userID)
+}
+
+// ViewFeedPin mocks base method.
+func (m *MockUsecase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ViewFeedPin", ctx, userID, cfg)
+	ret0, _ := ret[0].(pin.FeedPin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ViewFeedPin indicates an expected call of ViewFeedPin.
+func (mr *MockUsecaseMockRecorder) ViewFeedPin(ctx, userID, cfg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ViewFeedPin", reflect.TypeOf((*MockUsecase)(nil).ViewFeedPin), ctx, userID, cfg)
 }

@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	pin "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -33,6 +34,20 @@ func NewMockUsecase(ctrl *gomock.Controller) *MockUsecase {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUsecase) EXPECT() *MockUsecaseMockRecorder {
 	return m.recorder
+}
+
+// CheckAvailabilityFeedPinCfgOnBoard mocks base method.
+func (m *MockUsecase) CheckAvailabilityFeedPinCfgOnBoard(ctx context.Context, cfg pin.FeedPinConfig, userID int, isAuth bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckAvailabilityFeedPinCfgOnBoard", ctx, cfg, userID, isAuth)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckAvailabilityFeedPinCfgOnBoard indicates an expected call of CheckAvailabilityFeedPinCfgOnBoard.
+func (mr *MockUsecaseMockRecorder) CheckAvailabilityFeedPinCfgOnBoard(ctx, cfg, userID, isAuth interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAvailabilityFeedPinCfgOnBoard", reflect.TypeOf((*MockUsecase)(nil).CheckAvailabilityFeedPinCfgOnBoard), ctx, cfg, userID, isAuth)
 }
 
 // CreateNewBoard mocks base method.

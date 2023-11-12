@@ -291,9 +291,9 @@ func (repo *boardRepoPG) AddPinsOnBoard(ctx context.Context, boardID int, pinIds
 	return nil
 }
 
-func (b *boardRepoPG) GerProtectionStatusBoard(ctx context.Context, boardID int) (repoBoard.ProtectionBoard, error) {
+func (b *boardRepoPG) GetProtectionStatusBoard(ctx context.Context, boardID int) (repoBoard.ProtectionBoard, error) {
 	var isPublic bool
-	err := b.db.QueryRow(ctx, "", boardID).Scan(&isPublic)
+	err := b.db.QueryRow(ctx, SelectProtectionStatusBoard, boardID).Scan(&isPublic)
 	if err != nil {
 		return 0, fmt.Errorf("get status board in storage: %w", err)
 	}

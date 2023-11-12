@@ -1,6 +1,7 @@
 package board
 
 const (
+	SelectProtectionStatusBoard           = "SELECT public FROM board WHERE id = $1;"
 	InsertBoardQuery                      = "INSERT INTO board (author, title, description, public) VALUES ($1, $2, $3, $4) RETURNING id;"
 	SelectBoardAuthorByBoardIdQuery       = "SELECT author FROM board WHERE id = $1 AND deleted_at IS NULL;"
 	SelectBoardContributorsByBoardIdQuery = "SELECT user_id FROM contributor WHERE board_id = $1;"

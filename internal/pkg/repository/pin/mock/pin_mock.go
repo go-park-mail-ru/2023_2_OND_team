@@ -139,6 +139,21 @@ func (mr *MockRepositoryMockRecorder) GetCountLikeByPinID(ctx, pinID interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCountLikeByPinID", reflect.TypeOf((*MockRepository)(nil).GetCountLikeByPinID), ctx, pinID)
 }
 
+// GetFeedPins mocks base method.
+func (m *MockRepository) GetFeedPins(ctx context.Context, cfg pin.FeedPinConfig) (pin.FeedPin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFeedPins", ctx, cfg)
+	ret0, _ := ret[0].(pin.FeedPin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFeedPins indicates an expected call of GetFeedPins.
+func (mr *MockRepositoryMockRecorder) GetFeedPins(ctx, cfg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeedPins", reflect.TypeOf((*MockRepository)(nil).GetFeedPins), ctx, cfg)
+}
+
 // GetPinByID mocks base method.
 func (m *MockRepository) GetPinByID(ctx context.Context, pinID int, revealAuthor bool) (*pin.Pin, error) {
 	m.ctrl.T.Helper()
@@ -152,36 +167,6 @@ func (m *MockRepository) GetPinByID(ctx context.Context, pinID int, revealAuthor
 func (mr *MockRepositoryMockRecorder) GetPinByID(ctx, pinID, revealAuthor interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPinByID", reflect.TypeOf((*MockRepository)(nil).GetPinByID), ctx, pinID, revealAuthor)
-}
-
-// GetSortedNewNPins mocks base method.
-func (m *MockRepository) GetSortedNewNPins(ctx context.Context, count, midID, maxID int) ([]pin.Pin, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSortedNewNPins", ctx, count, midID, maxID)
-	ret0, _ := ret[0].([]pin.Pin)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSortedNewNPins indicates an expected call of GetSortedNewNPins.
-func (mr *MockRepositoryMockRecorder) GetSortedNewNPins(ctx, count, midID, maxID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSortedNewNPins", reflect.TypeOf((*MockRepository)(nil).GetSortedNewNPins), ctx, count, midID, maxID)
-}
-
-// GetSortedUserPins mocks base method.
-func (m *MockRepository) GetSortedUserPins(ctx context.Context, userID, count, minID, maxID int) ([]pin.Pin, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSortedUserPins", ctx, userID, count, minID, maxID)
-	ret0, _ := ret[0].([]pin.Pin)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSortedUserPins indicates an expected call of GetSortedUserPins.
-func (mr *MockRepositoryMockRecorder) GetSortedUserPins(ctx, userID, count, minID, maxID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSortedUserPins", reflect.TypeOf((*MockRepository)(nil).GetSortedUserPins), ctx, userID, count, minID, maxID)
 }
 
 // GetTagsByPinID mocks base method.
