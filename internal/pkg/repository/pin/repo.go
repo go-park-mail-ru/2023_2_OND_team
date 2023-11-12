@@ -71,20 +71,20 @@ func (p *pinRepoPG) GetFeedPins(ctx context.Context, cfg entity.FeedPinConfig) (
 		queryBuild = queryBuild.Where(sq.Eq{"pin.deleted_at": nil})
 	}
 
-	if cfg.UserID != 0 && !cfg.Liked {
-		queryBuild = queryBuild.Where(sq.Eq{"pin.author": cfg.UserID})
+	if userID, ok := cfg.User(); ok && !cfg.Liked {
+		queryBuild = queryBuild.Where(sq.Eq{"pin.author": userID})
 	}
 
-	if cfg.Liked {
+	if userID, ok := cfg.User(); ok && cfg.Liked {
 		queryBuild = queryBuild.InnerJoin("like_pin ON like_pin.pin_id = pin.id").
-			Where(sq.Eq{"like_pin.user_id": cfg.UserID}).
+			Where(sq.Eq{"like_pin.user_id": userID}).
 			OrderBy("like_pin.created_at DESC")
 	}
 
-	if cfg.BoardID != 0 {
+	if boardID, ok := cfg.Board(); ok {
 		queryBuild = queryBuild.InnerJoin("membership", "membership.pin_id = pin.id").
 			InnerJoin("board", "membership.board_id = board.id").
-			Where(sq.Eq{"board.id": cfg.BoardID})
+			Where(sq.Eq{"board.id": boardID})
 	}
 
 	sqlRow, args, err := queryBuild.

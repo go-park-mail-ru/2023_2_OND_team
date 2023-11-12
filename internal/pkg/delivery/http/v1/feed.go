@@ -21,13 +21,30 @@ func (h *HandlerHTTP) FeedPins(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("request on getting feed of pins", log.F{"rawQuery", r.URL.RawQuery})
 
-	cfg := parseFeedConfig(r.URL)
+	cfg, err := parseFeedConfig(r.URL)
+	if err != nil {
+		logger.Info("error parse query params", log.F{"parse_error", err.Error()})
+		err = responseError(w, "parse_params", "bad url params")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
 
+	err = h.boardCase.CheckAvailabilityFeedPinCfgOnBoard(r.Context(), cfg, userID, isAuth)
+	if err != nil {
+		logger.Info(err.Error())
+		err = responseError(w, "no_access", "there is no access to get board pins")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		return
+	}
 	feed, err := h.pinCase.ViewFeedPin(r.Context(), userID, cfg)
 	logger.Info("send feed pins", log.F{"count", len(feed.Pins)})
 
 	if err != nil {
-		err = responseError(w, "fsdf", "dsfsdf")
+		err = responseError(w, "no_access", "there is no access to get board pins")
 	} else {
 		err = responseOk(http.StatusOK, w, "ok", feed)
 	}
@@ -36,7 +53,7 @@ func (h *HandlerHTTP) FeedPins(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func parseFeedConfig(u *url.URL) pin.FeedPinConfig {
+func parseFeedConfig(u *url.URL) (pin.FeedPinConfig, error) {
 	cfg := pin.FeedPinConfig{}
 	i, _ := strconv.ParseInt(u.Query().Get("minID"), 10, 64)
 	cfg.MinID = int(i)
@@ -44,11 +61,21 @@ func parseFeedConfig(u *url.URL) pin.FeedPinConfig {
 	i, _ = strconv.ParseInt(u.Query().Get("maxID"), 10, 64)
 	cfg.MaxID = int(i)
 
-	i, _ = strconv.ParseInt(u.Query().Get("userID"), 10, 64)
-	cfg.UserID = int(i)
+	if u.Query().Has("userID") {
+		i, err := strconv.ParseInt(u.Query().Get("userID"), 10, 64)
+		if err != nil {
+			return pin.FeedPinConfig{}, err
+		}
+		cfg.SetUser(int(i))
+	}
 
-	i, _ = strconv.ParseInt(u.Query().Get("boardID"), 10, 64)
-	cfg.BoardID = int(i)
+	if u.Query().Has("boardID") {
+		i, err := strconv.ParseInt(u.Query().Get("boardID"), 10, 64)
+		if err != nil {
+			return pin.FeedPinConfig{}, err
+		}
+		cfg.SetBoard(int(i))
+	}
 
 	i, _ = strconv.ParseInt(u.Query().Get("count"), 10, 64)
 	cfg.Count = int(i)
@@ -60,13 +87,13 @@ func parseFeedConfig(u *url.URL) pin.FeedPinConfig {
 	cfg.Liked = ok
 
 	switch u.Query().Get("protection") {
-	case "public":
-		cfg.Protection = pin.FeedProtectionPublic
+	case "all":
+		cfg.Protection = pin.FeedAll
 	case "private":
 		cfg.Protection = pin.FeedProtectionPrivate
 	default:
-		cfg.Protection = pin.FeedAll
+		cfg.Protection = pin.FeedProtectionPublic
 	}
 
-	return cfg
+	return cfg, nil
 }

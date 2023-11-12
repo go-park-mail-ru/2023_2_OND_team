@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
+
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 	uEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
+	repoBoard "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
-	"github.com/jackc/pgx/v5"
 )
 
 type boardRepoPG struct {
@@ -287,4 +289,16 @@ func (repo *boardRepoPG) AddPinsOnBoard(ctx context.Context, boardID int, pinIds
 		return fmt.Errorf("insert membership for add pins on board: %w", err)
 	}
 	return nil
+}
+
+func (b *boardRepoPG) GerProtectionStatusBoard(ctx context.Context, boardID int) (repoBoard.ProtectionBoard, error) {
+	var isPublic bool
+	err := b.db.QueryRow(ctx, "", boardID).Scan(&isPublic)
+	if err != nil {
+		return 0, fmt.Errorf("get status board in storage: %w", err)
+	}
+	if isPublic {
+		return repoBoard.ProtectionPublic, nil
+	}
+	return repoBoard.ProtectionPrivate, nil
 }

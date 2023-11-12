@@ -112,5 +112,12 @@ func (p *pinCase) ViewAnPin(ctx context.Context, pinID, userID int) (*entity.Pin
 }
 
 func (p *pinCase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinConfig) (pin.FeedPin, error) {
+	_, hasBoard := cfg.Board()
+	user, hasUser := cfg.User()
+
+	if !hasBoard && (userID == UserUnknown || !hasUser || userID != user) && cfg.Protection != pin.FeedProtectionPublic {
+		return pin.FeedPin{}, ErrForbiddenAction
+	}
+
 	return p.repo.GetFeedPins(ctx, cfg)
 }
