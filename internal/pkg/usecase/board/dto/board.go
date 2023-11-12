@@ -13,6 +13,7 @@ type BoardData struct {
 
 type UserBoard struct {
 	BoardID     int      `json:"board_id" example:"15"`
+	AuthorID    int      `json:"author_id,omitempty" example:"15"`
 	Title       string   `json:"title" example:"Sunny places"`
 	Description string   `json:"description" example:"Sunny places"`
 	CreatedAt   string   `json:"created_at" example:"08.10.2020"`

@@ -117,6 +117,7 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 	getBoardByIdQuery := repo.sqlBuilder.
 		Select(
 			"board.id",
+			"board.author",
 			"board.title",
 			"COALESCE(board.description, '')",
 			"TO_CHAR(board.created_at, 'DD:MM:YYYY')",
@@ -136,6 +137,7 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 	}
 	getBoardByIdQuery = getBoardByIdQuery.GroupBy(
 		"board.id",
+		"board.author",
 		"board.title",
 		"board.description",
 		"board.created_at").
@@ -148,7 +150,7 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 
 	row := repo.db.QueryRow(ctx, sqlRow, args...)
 	board = dto.UserBoard{}
-	err = row.Scan(&board.BoardID, &board.Title, &board.Description, &board.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
+	err = row.Scan(&board.BoardID, &board.AuthorID,&board.Title, &board.Description, &board.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
