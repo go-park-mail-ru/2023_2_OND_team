@@ -31,7 +31,7 @@ func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "no_auth", "no user was found for this session")
 	} else {
-		err = responseOk(http.StatusOK, w, "user found", map[string]string{"username": username, "avatar": avatar})
+		err = responseOk(http.StatusOK, w, "user found", map[string]any{"username": username, "avatar": avatar, "id": userID})
 	}
 	if err != nil {
 		logger.Error(err.Error())

@@ -21,6 +21,7 @@ type Repository interface {
 	DeleteBoardByID(ctx context.Context, boardID int) error
 	RoleUserHaveOnThisBoard(ctx context.Context, boardID int, userID int) (UserRole, error)
 	AddPinsOnBoard(ctx context.Context, boardID int, pinIds []int) error
+	GerProtectionStatusBoard(ctx context.Context, boardID int) (ProtectionBoard, error)
 }
 
 type UserRole uint8
@@ -31,4 +32,12 @@ const (
 	ContributorForReading
 	ContributorForAdding
 	Author
+)
+
+type ProtectionBoard uint8
+
+const (
+	_ ProtectionBoard = iota
+	ProtectionPublic
+	ProtectionPrivate
 )
