@@ -12,46 +12,9 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
-	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 const MaxMemoryParseFormData = 12 * 1 << 20
-
-// GetPins godoc
-//
-//	@Description	Get pin collection
-//	@Tags			Pin
-//	@Accept			json
-//	@Produce		json
-//	@Param			lastID	path		string	false	"ID of the pin that will be just before the first pin in the requested collection, 0 by default"	example(2)
-//
-// @Param			count	path		string	true	"Pins quantity after last pin specified in lastID"													example(5)
-// @Success		200		{object}	JsonResponse{body=[]Pin}
-// @Failure		400		{object}	JsonErrResponse
-// @Failure		404		{object}	JsonErrResponse
-// @Failure		500		{object}	JsonErrResponse
-// @Router			/api/v1/pin [get]
-func (h *HandlerHTTP) GetPins(w http.ResponseWriter, r *http.Request) {
-	logger := h.getRequestLogger(r)
-
-	count, minID, maxID, err := FetchValidParamForLoadTape(r.URL)
-	if err != nil {
-		logger.Info("parse url query params", log.F{"error", err.Error()})
-		err = responseError(w, "bad_params",
-			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
-	} else {
-		logger.Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
-		pins, minID, maxID := h.pinCase.SelectNewPins(r.Context(), count, minID, maxID)
-		err = responseOk(http.StatusOK, w, "pins received are sorted by id", map[string]any{
-			"pins":  pins,
-			"minID": minID,
-			"maxID": maxID,
-		})
-	}
-	if err != nil {
-		logger.Error(err.Error())
-	}
-}
 
 func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
@@ -213,30 +176,6 @@ func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
 		err = responseError(w, "edit_pin", "internal error")
 	} else {
 		err = responseOk(http.StatusOK, w, "pin was successfully received", pin)
-	}
-	if err != nil {
-		logger.Error(err.Error())
-	}
-}
-
-func (h *HandlerHTTP) GetUserPins(w http.ResponseWriter, r *http.Request) {
-	logger := h.getRequestLogger(r)
-
-	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
-
-	count, minID, maxID, err := FetchValidParamForLoadTape(r.URL)
-	if err != nil {
-		logger.Info("parse url query params", log.F{"error", err.Error()})
-		err = responseError(w, "bad_params",
-			"expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)")
-	} else {
-		logger.Infof("param: count=%d, minID=%d, maxID=%d", count, minID, maxID)
-		pins, minID, maxID := h.pinCase.SelectUserPins(r.Context(), userID, count, minID, maxID)
-		err = responseOk(http.StatusOK, w, "pins received are sorted by id", map[string]any{
-			"pins":  pins,
-			"minID": minID,
-			"maxID": maxID,
-		})
 	}
 	if err != nil {
 		logger.Error(err.Error())
