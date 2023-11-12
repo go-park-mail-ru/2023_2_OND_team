@@ -25,7 +25,7 @@ func (p *pinCase) EditPinByID(ctx context.Context, pinID, userID int, updateData
 	if updateData.Public != nil {
 		data["public"] = *updateData.Public
 	}
-	err := p.repo.EditPin(ctx, pinID, data, updateData.Tags)
+	err := p.repo.EditPin(ctx, pinID, userID, data, updateData.Tags)
 	if err != nil {
 		return fmt.Errorf("edit pin by id: %w", err)
 	}

@@ -61,7 +61,7 @@ func (r *ramPinRepo) EditPinTags(ctx context.Context, pinID, userID int, titlePi
 	return ErrMethodUnimplemented
 }
 
-func (r *ramPinRepo) EditPin(ctx context.Context, pinID int, updateData repository.S, titleTags []string) error {
+func (r *ramPinRepo) EditPin(ctx context.Context, pinID, userID int, updateData repository.S, titleTags []string) error {
 	return ErrMethodUnimplemented
 }
 

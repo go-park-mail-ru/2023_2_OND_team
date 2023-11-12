@@ -26,7 +26,7 @@ type Repository interface {
 	SetLike(ctx context.Context, pinID, userID int) (int, error)
 	IsSetLike(ctx context.Context, pinID, userID int) (bool, error)
 	DelLike(ctx context.Context, pinID, userID int) (int, error)
-	EditPin(ctx context.Context, pinID int, updateData S, titleTags []string) error
+	EditPin(ctx context.Context, pinID, userID int, updateData S, titleTags []string) error
 	GetCountLikeByPinID(ctx context.Context, pinID int) (int, error)
 	GetTagsByPinID(ctx context.Context, pinID int) ([]entity.Tag, error)
 	IsAvailableToUserAsContributorBoard(ctx context.Context, pinID, userID int) (bool, error)
@@ -181,7 +181,7 @@ func (p *pinRepoPG) DeletePin(ctx context.Context, pinID, userID int) error {
 	return nil
 }
 
-func (p *pinRepoPG) EditPin(ctx context.Context, pinID int, updateData S, titleTags []string) error {
+func (p *pinRepoPG) EditPin(ctx context.Context, pinID, userID int, updateData S, titleTags []string) error {
 	if len(updateData) == 0 && titleTags == nil {
 		return nil
 	}
@@ -192,7 +192,7 @@ func (p *pinRepoPG) EditPin(ctx context.Context, pinID int, updateData S, titleT
 	}
 
 	if len(updateData) != 0 {
-		err = p.updateHeaderPin(ctx, tx, pinID, updateData)
+		err = p.updateHeaderPin(ctx, tx, pinID, userID, updateData)
 	}
 	if err != nil {
 		tx.Rollback(ctx)
@@ -214,10 +214,11 @@ func (p *pinRepoPG) EditPin(ctx context.Context, pinID int, updateData S, titleT
 	return nil
 }
 
-func (p *pinRepoPG) updateHeaderPin(ctx context.Context, tx pgx.Tx, pinID int, newHeader S) error {
+func (p *pinRepoPG) updateHeaderPin(ctx context.Context, tx pgx.Tx, pinID, userID int, newHeader S) error {
 	sqlRow, args, err := p.sqlBuilder.Update("pin").
 		SetMap(newHeader).
 		Where(sq.Eq{"id": pinID}).
+		Where(sq.Eq{"author": userID}).
 		ToSql()
 	if err != nil {
 		return fmt.Errorf("build sql row for update header pin: %w", err)
