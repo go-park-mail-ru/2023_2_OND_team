@@ -48,7 +48,7 @@ func Run(ctx context.Context, log *log.Logger, configFile string) {
 
 	status := redisCl.Ping(ctxApp)
 	if status.Err() != nil {
-		log.Error(err.Error())
+		log.Error(status.Err().Error())
 		return
 	}
 
