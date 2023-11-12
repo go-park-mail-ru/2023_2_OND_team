@@ -9,13 +9,6 @@ import (
 )
 
 func (bCase *boardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error) {
-	if !bCase.isValidBoardTitle(newBoard.Title) {
-		return 0, ErrInvalidBoardTitle
-	}
-	if err := bCase.checkIsValidTagTitles(newBoard.TagTitles); err != nil {
-		return 0, fmt.Errorf("%s: %w", err.Error(), ErrInvalidTagTitles)
-	}
-	bCase.sanitizer.Sanitize(newBoard.Description)
 
 	newBoardID, err := bCase.boardRepo.CreateBoard(ctx, entity.Board{
 		AuthorID:    newBoard.AuthorID,

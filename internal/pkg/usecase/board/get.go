@@ -10,10 +10,6 @@ import (
 )
 
 func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error) {
-	if !bCase.isValidUsername(username) {
-		return nil, ErrInvalidUsername
-	}
-
 	userID, err := bCase.userRepo.GetUserIdByUsername(ctx, username)
 	if err != nil {
 		switch err {
@@ -40,6 +36,9 @@ func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username str
 		return nil, fmt.Errorf("get boards by user id usecase: %w", err)
 	}
 
+	for _, board := range boards {
+		board.Sanitize(bCase.sanitizer)
+	}
 	return boards, nil
 }
 
@@ -51,7 +50,7 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dt
 			return dto.UserBoard{}, ErrNoSuchBoard
 		default:
 			return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
-		}		
+		}
 	}
 
 	boardContributors, err := bCase.boardRepo.GetContributorsByBoardID(ctx, boardID)
@@ -81,6 +80,7 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dt
 		}
 	}
 
+	board.Sanitize(bCase.sanitizer)
 	return board, nil
 }
 
