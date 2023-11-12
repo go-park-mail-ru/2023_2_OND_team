@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/microcosm-cc/bluemonday"
-	redis "github.com/redis/go-redis/v9"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
@@ -24,42 +23,50 @@ import (
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-func Run(ctx context.Context, log *log.Logger, configFile string) {
-	ctxApp, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
+var (
+	timeoutForConnPG    = 5 * time.Second
+	timeoutForConnRedis = 5 * time.Second
+)
 
-	pool, err := pgxpool.New(ctxApp, "postgres://ond_team:love@localhost:5432/pinspire?search_path=pinspire")
+const uploadFiles = "upload/"
+
+func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
+	godotenv.Load()
+
+	ctx, cancelCtxPG := context.WithTimeout(ctx, timeoutForConnPG)
+	defer cancelCtxPG()
+
+	pool, err := NewPoolPG(ctx)
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
 	defer pool.Close()
 
-	err = pool.Ping(ctxApp)
+	ctx, cancelCtxRedis := context.WithTimeout(ctx, timeoutForConnRedis)
+	defer cancelCtxRedis()
+
+	redisCfg, err := NewConfig(cfg.RedisConfigFile)
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
 
-	redisCl := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "love",
-	})
-
-	status := redisCl.Ping(ctxApp)
-	if status.Err() != nil {
-		log.Error(status.Err().Error())
+	redisCl, err := NewRedisClient(ctx, redisCfg)
+	if err != nil {
+		log.Error(err.Error())
 		return
 	}
+	defer redisCl.Close()
 
 	sm := session.New(log, sessionRepo.NewSessionRepo(redisCl))
-	imgCase := image.New(log, imgRepo.NewImageRepoFS("upload/"))
+	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
 	userCase := user.New(log, imgCase, userRepo.NewUserRepoPG(pool))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 	boardCase := board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy())
 
 	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase)
-	cfgServ, err := server.NewConfig(configFile)
+	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
 	if err != nil {
 		log.Error(err.Error())
 		return

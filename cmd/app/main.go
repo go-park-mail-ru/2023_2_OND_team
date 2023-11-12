@@ -8,8 +8,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-const configFile = "configs/config.yml"
-
 //	@title			Pinspire API
 //	@version		1.0
 //	@description	API for Pinspire project
@@ -33,5 +31,5 @@ func main() {
 	}
 	defer log.Sync()
 
-	app.Run(ctxBase, log, configFile)
+	app.Run(ctxBase, log, configFiles)
 }
