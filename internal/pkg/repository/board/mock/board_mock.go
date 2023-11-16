@@ -11,7 +11,6 @@ import (
 	board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 	user "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	board0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board"
-	board1 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -97,10 +96,10 @@ func (mr *MockRepositoryMockRecorder) GetBoardAuthorByBoardID(ctx, boardID inter
 }
 
 // GetBoardByID mocks base method.
-func (m *MockRepository) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board1.UserBoard, error) {
+func (m *MockRepository) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board.BoardWithContent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBoardByID", ctx, boardID, hasAccess)
-	ret0, _ := ret[0].(board1.UserBoard)
+	ret0, _ := ret[0].(board.BoardWithContent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -128,10 +127,10 @@ func (mr *MockRepositoryMockRecorder) GetBoardInfoForUpdate(ctx, boardID, hasAcc
 }
 
 // GetBoardsByUserID mocks base method.
-func (m *MockRepository) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]board1.UserBoard, error) {
+func (m *MockRepository) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]board.BoardWithContent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBoardsByUserID", ctx, userID, isAuthor, accessableBoardsIDs)
-	ret0, _ := ret[0].([]board1.UserBoard)
+	ret0, _ := ret[0].([]board.BoardWithContent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

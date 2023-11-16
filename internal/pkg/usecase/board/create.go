@@ -5,17 +5,15 @@ import (
 	"fmt"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
-	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *boardUsecase) CreateNewBoard(ctx context.Context, newBoard dto.BoardData) (int, error) {
-
+func (bCase *boardUsecase) CreateNewBoard(ctx context.Context, newBoard entity.Board, tagTitles []string) (int, error) {
 	newBoardID, err := bCase.boardRepo.CreateBoard(ctx, entity.Board{
 		AuthorID:    newBoard.AuthorID,
 		Title:       newBoard.Title,
 		Description: newBoard.Description,
 		Public:      newBoard.Public,
-	}, newBoard.TagTitles)
+	}, tagTitles)
 
 	if err != nil {
 		return 0, fmt.Errorf("create new board: %w", err)

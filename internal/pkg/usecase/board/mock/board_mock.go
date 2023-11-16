@@ -10,7 +10,6 @@ import (
 
 	board "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 	pin "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
-	board0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -52,18 +51,18 @@ func (mr *MockUsecaseMockRecorder) CheckAvailabilityFeedPinCfgOnBoard(ctx, cfg, 
 }
 
 // CreateNewBoard mocks base method.
-func (m *MockUsecase) CreateNewBoard(ctx context.Context, newBoard board0.BoardData) (int, error) {
+func (m *MockUsecase) CreateNewBoard(ctx context.Context, newBoard board.Board, tagTitles []string) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateNewBoard", ctx, newBoard)
+	ret := m.ctrl.Call(m, "CreateNewBoard", ctx, newBoard, tagTitles)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateNewBoard indicates an expected call of CreateNewBoard.
-func (mr *MockUsecaseMockRecorder) CreateNewBoard(ctx, newBoard interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) CreateNewBoard(ctx, newBoard, tagTitles interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewBoard", reflect.TypeOf((*MockUsecase)(nil).CreateNewBoard), ctx, newBoard)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewBoard", reflect.TypeOf((*MockUsecase)(nil).CreateNewBoard), ctx, newBoard, tagTitles)
 }
 
 // DeleteCertainBoard mocks base method.
@@ -111,10 +110,10 @@ func (mr *MockUsecaseMockRecorder) GetBoardInfoForUpdate(ctx, boardID interface{
 }
 
 // GetBoardsByUsername mocks base method.
-func (m *MockUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]board0.UserBoard, error) {
+func (m *MockUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]board.BoardWithContent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBoardsByUsername", ctx, username)
-	ret0, _ := ret[0].([]board0.UserBoard)
+	ret0, _ := ret[0].([]board.BoardWithContent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -126,10 +125,10 @@ func (mr *MockUsecaseMockRecorder) GetBoardsByUsername(ctx, username interface{}
 }
 
 // GetCertainBoard mocks base method.
-func (m *MockUsecase) GetCertainBoard(ctx context.Context, boardID int) (board0.UserBoard, error) {
+func (m *MockUsecase) GetCertainBoard(ctx context.Context, boardID int) (board.BoardWithContent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCertainBoard", ctx, boardID)
-	ret0, _ := ret[0].(board0.UserBoard)
+	ret0, _ := ret[0].(board.BoardWithContent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -141,15 +140,15 @@ func (mr *MockUsecaseMockRecorder) GetCertainBoard(ctx, boardID interface{}) *go
 }
 
 // UpdateBoardInfo mocks base method.
-func (m *MockUsecase) UpdateBoardInfo(ctx context.Context, updatedData board0.BoardData) error {
+func (m *MockUsecase) UpdateBoardInfo(ctx context.Context, updatedBoard board.Board, tagTitles []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBoardInfo", ctx, updatedData)
+	ret := m.ctrl.Call(m, "UpdateBoardInfo", ctx, updatedBoard, tagTitles)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateBoardInfo indicates an expected call of UpdateBoardInfo.
-func (mr *MockUsecaseMockRecorder) UpdateBoardInfo(ctx, updatedData interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) UpdateBoardInfo(ctx, updatedBoard, tagTitles interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBoardInfo", reflect.TypeOf((*MockUsecase)(nil).UpdateBoardInfo), ctx, updatedData)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBoardInfo", reflect.TypeOf((*MockUsecase)(nil).UpdateBoardInfo), ctx, updatedBoard, tagTitles)
 }

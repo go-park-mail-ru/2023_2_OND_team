@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
-	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
-func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]dto.UserBoard, error) {
+func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username string) ([]entity.BoardWithContent, error) {
 	userID, err := bCase.userRepo.GetUserIdByUsername(ctx, username)
 	if err != nil {
 		switch err {
@@ -42,20 +42,20 @@ func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username str
 	return boards, nil
 }
 
-func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dto.UserBoard, error) {
+func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (entity.BoardWithContent, error) {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
-			return dto.UserBoard{}, ErrNoSuchBoard
+			return entity.BoardWithContent{}, ErrNoSuchBoard
 		default:
-			return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
+			return entity.BoardWithContent{}, fmt.Errorf("get certain board: %w", err)
 		}
 	}
 
 	boardContributors, err := bCase.boardRepo.GetContributorsByBoardID(ctx, boardID)
 	if err != nil {
-		return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
+		return entity.BoardWithContent{}, fmt.Errorf("get certain board: %w", err)
 	}
 
 	boardContributorsIDs := make([]int, 0, len(boardContributors))
@@ -74,9 +74,9 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (dt
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
-			return dto.UserBoard{}, ErrNoSuchBoard
+			return entity.BoardWithContent{}, ErrNoSuchBoard
 		default:
-			return dto.UserBoard{}, fmt.Errorf("get certain board: %w", err)
+			return entity.BoardWithContent{}, fmt.Errorf("get certain board: %w", err)
 		}
 	}
 

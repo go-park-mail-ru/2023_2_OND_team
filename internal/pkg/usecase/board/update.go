@@ -9,7 +9,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 	repoBoard "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board"
-	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
 func (bCase *boardUsecase) GetBoardInfoForUpdate(ctx context.Context, boardID int) (entity.Board, []string, error) {
@@ -57,8 +56,8 @@ func (bCase *boardUsecase) GetBoardInfoForUpdate(ctx context.Context, boardID in
 	return board, tagTitles, nil
 }
 
-func (bCase *boardUsecase) UpdateBoardInfo(ctx context.Context, updatedData dto.BoardData) error {
-	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, updatedData.ID)
+func (bCase *boardUsecase) UpdateBoardInfo(ctx context.Context, updatedBoard entity.Board, tagTitles []string) error {
+	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, updatedBoard.ID)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
@@ -74,11 +73,11 @@ func (bCase *boardUsecase) UpdateBoardInfo(ctx context.Context, updatedData dto.
 	}
 
 	err = bCase.boardRepo.UpdateBoard(ctx, board.Board{
-		ID:          updatedData.ID,
-		Title:       updatedData.Title,
-		Description: updatedData.Description,
-		Public:      updatedData.Public,
-	}, updatedData.TagTitles)
+		ID:          updatedBoard.ID,
+		Title:       updatedBoard.Title,
+		Description: updatedBoard.Description,
+		Public:      updatedBoard.Public,
+	}, tagTitles)
 	if err != nil {
 		return fmt.Errorf("update certain board: %w", err)
 	}

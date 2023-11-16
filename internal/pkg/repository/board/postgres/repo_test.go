@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
-	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v2"
 	"github.com/stretchr/testify/require"
@@ -182,7 +182,7 @@ func TestBoardRepo_GetBoardsByUserID(t *testing.T) {
 		setMock             func()
 		wantErr             bool
 		expErr              error
-		expBoards           []dto.UserBoard
+		expBoards           []entity.BoardWithContent
 	}{
 		{
 			name:                "valid user ID, author",
@@ -192,32 +192,36 @@ func TestBoardRepo_GetBoardsByUserID(t *testing.T) {
 			setMock: func() {
 
 				rows := mockDB.NewRows([]string{"board.id", "board.title", "board.description", "board.created_at", "pins_number", "pins", "tags"}).
-					AddRow(4, "title", "desc", "12:12:2022", 1, []string{"/pic1"}, []string{"blue"}).
-					AddRow(5, "title_", "desc", "12:11:2022", 0, []string{}, []string{})
+					AddRow(4, "title", "desc", &time.Time{}, 1, []string{"/pic1"}, []string{"blue"}).
+					AddRow(5, "title_", "desc", &time.Time{}, 0, []string{}, []string{})
 
 				mockDB.ExpectQuery(
 					`SELECT (.+) FROM board LEFT JOIN membership ON (.+) WHERE (.+) GROUP BY (.+) ORDER BY (.+)`,
 				).WithArgs(2).WillReturnRows(rows)
 
 			},
-			expBoards: []dto.UserBoard{
+			expBoards: []entity.BoardWithContent{
 				{
-					BoardID:     4,
-					Title:       "title",
-					Description: "desc",
-					CreatedAt:   "12:12:2022",
-					PinsNumber:  1,
-					Pins:        []string{"/pic1"},
-					TagTitles:   []string{"blue"},
+					BoardInfo: entity.Board{
+						ID:          4,
+						Title:       "title",
+						Description: "desc",
+						CreatedAt:   &time.Time{},
+					},
+					PinsNumber: 1,
+					Pins:       []string{"/pic1"},
+					TagTitles:  []string{"blue"},
 				},
 				{
-					BoardID:     5,
-					Title:       "title_",
-					Description: "desc",
-					CreatedAt:   "12:11:2022",
-					PinsNumber:  0,
-					Pins:        []string{},
-					TagTitles:   []string{},
+					BoardInfo: entity.Board{
+						ID:          5,
+						Title:       "title_",
+						Description: "desc",
+						CreatedAt:   &time.Time{},
+					},
+					PinsNumber: 0,
+					Pins:       []string{},
+					TagTitles:  []string{},
 				},
 			},
 		},
@@ -229,22 +233,24 @@ func TestBoardRepo_GetBoardsByUserID(t *testing.T) {
 			setMock: func() {
 
 				rows := mockDB.NewRows([]string{"board.id", "board.title", "board.description", "board.created_at", "pins_number", "pins", "tags"}).
-					AddRow(4, "title", "desc", "12:12:2022", 1, []string{"/pic1"}, []string{"sun"})
+					AddRow(4, "title", "desc", &time.Time{}, 1, []string{"/pic1"}, []string{"sun"})
 
 				mockDB.ExpectQuery(
 					`SELECT (.+) FROM board LEFT JOIN membership ON (.+) WHERE (.+) GROUP BY (.+) ORDER BY (.+)`,
 				).WithArgs(3, true, 3, 4).WillReturnRows(rows)
 
 			},
-			expBoards: []dto.UserBoard{
+			expBoards: []entity.BoardWithContent{
 				{
-					BoardID:     4,
-					Title:       "title",
-					Description: "desc",
-					CreatedAt:   "12:12:2022",
-					PinsNumber:  1,
-					Pins:        []string{"/pic1"},
-					TagTitles:   []string{"sun"},
+					BoardInfo: entity.Board{
+						ID:          4,
+						Title:       "title",
+						Description: "desc",
+						CreatedAt:   &time.Time{},
+					},
+					PinsNumber: 1,
+					Pins:       []string{"/pic1"},
+					TagTitles:  []string{"sun"},
 				},
 			},
 		},
