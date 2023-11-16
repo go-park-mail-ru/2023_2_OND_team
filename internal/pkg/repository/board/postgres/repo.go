@@ -13,7 +13,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 	repoBoard "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
-	dto "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
 )
 
 type boardRepoPG struct {
@@ -56,13 +55,13 @@ func (repo *boardRepoPG) CreateBoard(ctx context.Context, board entity.Board, ta
 	return newBoardId, nil
 }
 
-func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]dto.UserBoard, error) {
+func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]entity.BoardWithContent, error) {
 	getBoardsQuery := boardRepo.sqlBuilder.
 		Select(
 			"board.id",
 			"board.title",
 			"COALESCE(board.description, '')",
-			"TO_CHAR(board.created_at, 'DD:MM:YYYY')",
+			"board.created_at",
 			"COUNT(DISTINCT pin.id) AS pins_number",
 			"ARRAY_REMOVE((ARRAY_AGG(DISTINCT pin.picture))[:3], NULL) AS pins",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
@@ -102,10 +101,10 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	}
 	defer rows.Close()
 
-	boards := make([]dto.UserBoard, 0)
+	boards := make([]entity.BoardWithContent, 0)
 	for rows.Next() {
-		board := dto.UserBoard{}
-		err = rows.Scan(&board.BoardID, &board.Title, &board.Description, &board.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
+		board := entity.BoardWithContent{}
+		err = rows.Scan(&board.BoardInfo.ID, &board.BoardInfo.Title, &board.BoardInfo.Description, &board.BoardInfo.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
 		if err != nil {
 			return nil, fmt.Errorf("scanning the result of get boards by user id query: %w", err)
 		}
@@ -115,14 +114,14 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	return boards, nil
 }
 
-func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board dto.UserBoard, err error) {
+func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board entity.BoardWithContent, err error) {
 	getBoardByIdQuery := repo.sqlBuilder.
 		Select(
 			"board.id",
 			"board.author",
 			"board.title",
 			"COALESCE(board.description, '')",
-			"TO_CHAR(board.created_at, 'DD:MM:YYYY')",
+			"board.created_at",
 			"COUNT(DISTINCT pin.id) AS pins_number",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT pin.picture), NULL) AS pins",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
@@ -147,18 +146,18 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 
 	sqlRow, args, err := getBoardByIdQuery.ToSql()
 	if err != nil {
-		return dto.UserBoard{}, fmt.Errorf("building get board by id query: %w", err)
+		return entity.BoardWithContent{}, fmt.Errorf("building get board by id query: %w", err)
 	}
 
 	row := repo.db.QueryRow(ctx, sqlRow, args...)
-	board = dto.UserBoard{}
-	err = row.Scan(&board.BoardID, &board.AuthorID,&board.Title, &board.Description, &board.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
+	board = entity.BoardWithContent{}
+	err = row.Scan(&board.BoardInfo.ID, &board.BoardInfo.AuthorID, &board.BoardInfo.Title, &board.BoardInfo.Description, &board.BoardInfo.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			return dto.UserBoard{}, repository.ErrNoData
+			return entity.BoardWithContent{}, repository.ErrNoData
 		default:
-			return dto.UserBoard{}, fmt.Errorf("scan result of get board by id query: %w", err)
+			return entity.BoardWithContent{}, fmt.Errorf("scan result of get board by id query: %w", err)
 		}
 	}
 
@@ -184,8 +183,7 @@ func (repo *boardRepoPG) GetBoardInfoForUpdate(ctx context.Context, boardID int,
 	getBoardByIdQuery = getBoardByIdQuery.GroupBy(
 		"board.id",
 		"board.title",
-		"board.description",
-		"board.created_at").
+		"board.description").
 		OrderBy("board.id ASC")
 
 	sqlRow, args, err := getBoardByIdQuery.ToSql()

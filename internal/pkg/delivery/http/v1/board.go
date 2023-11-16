@@ -8,12 +8,14 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	boardDTO "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board/dto"
+	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	bCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
+
+var TimeFormat = "2006-01-02"
 
 var (
 	ErrEmptyTitle        = errors.New("empty or null board title has been provided")
@@ -36,11 +38,35 @@ var (
 	}
 )
 
+// data for board creation/update
 type BoardData struct {
 	Title       *string  `json:"title" example:"new board"`
 	Description *string  `json:"description" example:"long desc"`
 	Public      *bool    `json:"public" example:"true"`
 	Tags        []string `json:"tags" example:"['blue', 'car']"`
+}
+
+// board view for delivery layer
+type CertainBoard struct {
+	ID          int      `json:"board_id" example:"22"`
+	Title       string   `json:"title" example:"new board"`
+	Description string   `json:"description" example:"long desc"`
+	CreatedAt   string   `json:"created_at" example:"07-11-2023"`
+	PinsNumber  int      `json:"pins_number" example:"12"`
+	Pins        []string `json:"pins" example:"['/pic1', '/pic2']"`
+	Tags        []string `json:"tags" example:"['love', 'green']"`
+}
+
+func ToCertainBoardFromService(board entity.BoardWithContent) CertainBoard {
+	return CertainBoard{
+		ID:          board.BoardInfo.ID,
+		Title:       board.BoardInfo.Title,
+		Description: board.BoardInfo.Description,
+		CreatedAt:   board.BoardInfo.CreatedAt.Format(TimeFormat),
+		PinsNumber:  board.PinsNumber,
+		Pins:        board.Pins,
+		Tags:        board.TagTitles,
+	}
 }
 
 func (data *BoardData) Validate() error {
@@ -98,8 +124,8 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newBoardData BoardData
-	err := json.NewDecoder(r.Body).Decode(&newBoardData)
+	var newBoard BoardData
+	err := json.NewDecoder(r.Body).Decode(&newBoard)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
@@ -108,7 +134,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = newBoardData.Validate()
+	err = newBoard.Validate()
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
 		code, message := getErrCodeMessage(err)
@@ -117,20 +143,19 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tagTitles := make([]string, 0)
-	if newBoardData.Tags != nil {
-		tagTitles = append(tagTitles, newBoardData.Tags...)
+	if newBoard.Tags != nil {
+		tagTitles = append(tagTitles, newBoard.Tags...)
 
 	}
 	authorID := r.Context().Value(auth.KeyCurrentUserID).(int)
-	newBoard := boardDTO.BoardData{
-		Title:       *newBoardData.Title,
-		Description: *newBoardData.Description,
-		Public:      *newBoardData.Public,
-		AuthorID:    authorID,
-		TagTitles:   tagTitles,
-	}
 
-	newBoardID, err := h.boardCase.CreateNewBoard(r.Context(), newBoard)
+	newBoardID, err := h.boardCase.CreateNewBoard(r.Context(), entity.Board{
+		Title:       *newBoard.Title,
+		Description: *newBoard.Description,
+		Public:      *newBoard.Public,
+		AuthorID:    authorID,
+	}, tagTitles)
+
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
 		code, message := getErrCodeMessage(err)
@@ -157,7 +182,7 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userBoards, err := h.boardCase.GetBoardsByUsername(r.Context(), username)
+	boards, err := h.boardCase.GetBoardsByUsername(r.Context(), username)
 	if err != nil {
 		logger.Info("get user boards", log.F{"message", err.Error()})
 		code, message := getErrCodeMessage(err)
@@ -165,6 +190,10 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userBoards := make([]CertainBoard, 0, len(boards))
+	for _, board := range boards {
+		userBoards = append(userBoards, ToCertainBoardFromService(board))
+	}
 	err = responseOk(http.StatusOK, w, "got user boards successfully", userBoards)
 	if err != nil {
 		logger.Error(err.Error())
@@ -192,7 +221,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(http.StatusOK, w, "got certain board successfully", board)
+	err = responseOk(http.StatusOK, w, "got certain board successfully", ToCertainBoardFromService(board))
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -266,14 +295,13 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 		tagTitles = append(tagTitles, updatedData.Tags...)
 	}
 
-	updatedBoard := boardDTO.BoardData{
+	updatedBoard := entity.Board{
 		ID:          int(boardID),
 		Title:       *updatedData.Title,
 		Description: *updatedData.Description,
 		Public:      *updatedData.Public,
-		TagTitles:   tagTitles,
 	}
-	err = h.boardCase.UpdateBoardInfo(r.Context(), updatedBoard)
+	err = h.boardCase.UpdateBoardInfo(r.Context(), updatedBoard, tagTitles)
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
 		code, message := getErrCodeMessage(err)
