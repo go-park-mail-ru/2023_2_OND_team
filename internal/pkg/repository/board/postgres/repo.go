@@ -62,8 +62,8 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 			"board.title",
 			"COALESCE(board.description, '')",
 			"board.created_at",
-			"COUNT(DISTINCT pin.id) AS pins_number",
-			"ARRAY_REMOVE((ARRAY_AGG(DISTINCT pin.picture))[:3], NULL) AS pins",
+			"COUNT(DISTINCT pin.id) FILTER (WHERE pin.deleted_at IS NULL) AS pins_number",
+			"COALESCE(ARRAY_REMOVE((ARRAY_AGG(DISTINCT pin.picture) FILTER (WHERE pin.deleted_at IS NULL))[:3], NULL), array[]::text[]) AS pins",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
 		From("board").
 		LeftJoin("membership ON board.id = membership.board_id").
@@ -122,8 +122,8 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 			"board.title",
 			"COALESCE(board.description, '')",
 			"board.created_at",
-			"COUNT(DISTINCT pin.id) AS pins_number",
-			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT pin.picture), NULL) AS pins",
+			"COUNT(DISTINCT pin.id) FILTER (WHERE pin.deleted_at IS NULL) AS pins_number",
+			"COALESCE(ARRAY_REMOVE(ARRAY_AGG(DISTINCT pin.picture) FILTER (WHERE pin.deleted_at IS NULL), NULL), array[]::text[]) AS pins",
 			"ARRAY_REMOVE(ARRAY_AGG(DISTINCT tag.title), NULL) AS tag_titles").
 		From("board").
 		LeftJoin("board_tag ON board.id = board_tag.board_id").
