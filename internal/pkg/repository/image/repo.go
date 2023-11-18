@@ -39,7 +39,7 @@ func (img *imageRepoFS) SaveImage(prefixPath, extension string, image io.Reader)
 	filename = id.String()
 
 	dir := img.basePath + prefixPath + img.directoryToSave()
-	err = os.MkdirAll(dir, 0750)
+	err = os.MkdirAll(dir, 0777)
 	if err != nil {
 		return "", 0, fmt.Errorf("mkdir %s to save file: %w", dir, err)
 	}
