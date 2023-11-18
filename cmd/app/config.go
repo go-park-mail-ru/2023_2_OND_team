@@ -1,7 +1,8 @@
 package main
 
-import "go.uber.org/config"
+import "github.com/go-park-mail-ru/2023_2_OND_team/internal/app"
 
-func newConfig(filename string) (*config.YAML, error) {
-	return config.NewYAML(config.File(filename))
+var configFiles = app.ConfigFiles{
+	ServerConfigFile: "configs/config.yml",
+	RedisConfigFile:  "redis.conf",
 }

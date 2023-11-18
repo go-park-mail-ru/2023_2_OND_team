@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	rp "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 )
 
 type ramUserRepo struct {
@@ -41,4 +42,24 @@ func (r *ramUserRepo) GetUsernameAndAvatarByID(ctx context.Context, userID int) 
 		return "", "", fmt.Errorf("getting a username from storage by id: %w", err)
 	}
 	return
+}
+
+func (r *ramUserRepo) EditUserAvatar(ctx context.Context, userID int, avatar string) error {
+	return ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) GetAllUserData(ctx context.Context, userID int) (*entity.User, error) {
+	return nil, ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) EditUserInfo(ctx context.Context, userID int, s rp.S) error {
+	return ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) GetUserIdByUsername(ctx context.Context, username string) (int, error) {
+	return 0, ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) GetLastUserID(ctx context.Context) (int, error) {
+	return 0, ErrMethodUnimplemented
 }
