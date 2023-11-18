@@ -56,10 +56,14 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			})
 		})
 
-		r.With(auth.RequireAuth).Route("/profile", func(r chi.Router) {
-			r.Get("/info", handler.GetProfileInfo)
-			r.Put("/edit", handler.ProfileEditInfo)
-			r.Put("/avatar", handler.ProfileEditAvatar)
+		r.Route("/profile", func(r chi.Router) {
+			r.Get("/user/{userID:\\d+}", handler.AddPinsToBoard)
+
+			r.With(auth.RequireAuth).Group(func(r chi.Router) {
+				r.Get("/info", handler.GetProfileInfo)
+				r.Put("/edit", handler.ProfileEditInfo)
+				r.Put("/avatar", handler.ProfileEditAvatar)
+			})
 		})
 
 		r.Route("/pin", func(r chi.Router) {
@@ -91,6 +95,13 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 
 		r.Route("/feed", func(r chi.Router) {
 			r.Get("/pin", handler.FeedPins)
+		})
+
+		r.With(auth.RequireAuth).Route("/message", func(r chi.Router) {
+			r.Get("/get/{userID:\\d+}", handler.GetMessagesFromChat)
+			r.Post("/send/{userID:\\d+}", handler.SendMessageToUser)
+			r.Put("/update/{messageID:\\d+}", handler.UpdateMessage)
+			r.Delete("/delete/{messageID:\\d+}", handler.DeleteMessage)
 		})
 	})
 }
