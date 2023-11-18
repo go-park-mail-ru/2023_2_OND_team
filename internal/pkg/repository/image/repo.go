@@ -27,7 +27,7 @@ func NewImageRepoFS(basePath string) *imageRepoFS {
 	return &imageRepoFS{
 		basePath:        basePath,
 		m:               sync.Mutex{},
-		directoryToSave: dirTosave,
+		directoryToSave: dirToSave,
 	}
 }
 
@@ -67,6 +67,6 @@ func (img *imageRepoFS) SetDirToSave(fn func() string) {
 	img.m.Unlock()
 }
 
-func dirTosave() string {
+func dirToSave() string {
 	return time.Now().UTC().Format("2006/01/02/")
 }
