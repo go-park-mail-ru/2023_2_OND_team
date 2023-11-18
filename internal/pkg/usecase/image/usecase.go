@@ -12,7 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validator/image/check"
 )
 
-const PrefixURLImage = "httsp://pinspire.online:8081/"
+const PrefixURLImage = "https://pinspire.online:8081/"
 
 var ErrInvalidImage = errors.New("invalid images")
 var ErrUploadFile = errors.New("file upload failed")
@@ -48,5 +48,5 @@ func (img *imageCase) UploadImage(path string, mimeType string, size int64, imag
 	if written != size {
 		return "", ErrUploadFile
 	}
-	return "https://pinspire.online:8081/" + filename, nil
+	return PrefixURLImage + filename, nil
 }
