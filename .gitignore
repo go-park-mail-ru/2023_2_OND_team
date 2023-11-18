@@ -23,6 +23,5 @@ go.work
 bin/
 testdata/
 cert/
-
 .env
 redis.conf
