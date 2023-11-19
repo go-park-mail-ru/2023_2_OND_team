@@ -13,11 +13,25 @@ import (
 )
 
 type HandlerWebSocket struct {
-	log *log.Logger
+	originPatterns []string
+	log            *log.Logger
 }
 
-func New(log *log.Logger) *HandlerWebSocket {
-	return &HandlerWebSocket{log}
+type Option func(h *HandlerWebSocket)
+
+func SetOriginPatterns(patterns []string) Option {
+	return func(h *HandlerWebSocket) {
+		h.originPatterns = patterns
+	}
+}
+
+func New(log *log.Logger, opts ...Option) *HandlerWebSocket {
+	handlerWS := &HandlerWebSocket{log: log}
+	for _, opt := range opts {
+		opt(handlerWS)
+	}
+
+	return handlerWS
 }
 
 type Event struct {
@@ -35,7 +49,7 @@ var mes [3]Event = [3]Event{
 
 func (h *HandlerWebSocket) WebSocketConnect(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	conn, err := ws.Accept(w, r, &ws.AcceptOptions{})
+	conn, err := ws.Accept(w, r, &ws.AcceptOptions{OriginPatterns: h.originPatterns})
 	if err != nil {
 		h.log.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -51,7 +65,7 @@ func (h *HandlerWebSocket) WebSocketConnect(w http.ResponseWriter, r *http.Reque
 			closeStatus := ws.CloseStatus(err)
 			if closeStatus != ws.StatusNormalClosure {
 				fmt.Println(closeStatus)
-				h.log.Error(err.Error())
+				h.log.Warn(err.Error())
 			}
 			if closeStatus == -1 {
 				conn.Close(ws.StatusAbnormalClosure, "error write")

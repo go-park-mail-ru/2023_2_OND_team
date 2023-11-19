@@ -73,7 +73,8 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 		SM:          sm,
 	})
 
-	wsHandler := deliveryWS.New(log)
+	wsHandler := deliveryWS.New(log,
+		deliveryWS.SetOriginPatterns([]string{"pinspire.online", "pinspire.online:*"}))
 
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
 	if err != nil {
