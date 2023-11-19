@@ -1,9 +1,14 @@
 package middleware
 
 import (
+	"bufio"
+	"errors"
 	"io"
+	"net"
 	"net/http"
 )
+
+var ErrUnimplementedMethod = errors.New("unimplemented method")
 
 type wrapResponseWriter struct {
 	http.ResponseWriter
@@ -32,4 +37,11 @@ func (w *wrapResponseWriter) WriteString(data string) (written int, err error) {
 	written, err = io.WriteString(w.ResponseWriter, data)
 	w.written += written
 	return
+}
+
+func (w *wrapResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacker, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return hijacker.Hijack()
+	}
+	return nil, nil, ErrUnimplementedMethod
 }

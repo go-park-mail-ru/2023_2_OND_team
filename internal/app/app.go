@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	mesCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
@@ -72,6 +73,8 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 		SM:          sm,
 	})
 
+	wsHandler := deliveryWS.New(log)
+
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
 	if err != nil {
 		log.Error(err.Error())
@@ -79,7 +82,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	server := server.New(log, cfgServ)
 	router := router.New()
-	router.RegisterRoute(handler, sm, log)
+	router.RegisterRoute(handler, wsHandler, sm, log)
 
 	if err := server.Run(router.Mux); err != nil {
 		log.Error(err.Error())

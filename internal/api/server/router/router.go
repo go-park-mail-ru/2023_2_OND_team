@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
 	mw "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/security"
@@ -24,7 +25,7 @@ func New() Router {
 	return Router{chi.NewMux()}
 }
 
-func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.SessionManager, log *logger.Logger) {
+func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deliveryWS.HandlerWebSocket, sm session.SessionManager, log *logger.Logger) {
 	cfgCSRF := security.DefaultCSRFConfig()
 	cfgCSRF.PathToGet = "/api/v1/csrf"
 
@@ -99,5 +100,9 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			r.Put("/update/{messageID:\\d+}", handler.UpdateMessage)
 			r.Delete("/delete/{messageID:\\d+}", handler.DeleteMessage)
 		})
+	})
+
+	r.Mux.With(auth.RequireAuth).Route("/websocket/connect", func(r chi.Router) {
+		r.Get("/chat/{userID:\\d+}", wsHandler.WebSocketConnect)
 	})
 }
