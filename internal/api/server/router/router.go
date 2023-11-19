@@ -56,14 +56,10 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			})
 		})
 
-		r.Route("/profile", func(r chi.Router) {
-			r.Get("/user/{userID:\\d+}", handler.AddPinsToBoard)
-
-			r.With(auth.RequireAuth).Group(func(r chi.Router) {
-				r.Get("/info", handler.GetProfileInfo)
-				r.Put("/edit", handler.ProfileEditInfo)
-				r.Put("/avatar", handler.ProfileEditAvatar)
-			})
+		r.With(auth.RequireAuth).Route("/profile", func(r chi.Router) {
+			r.Get("/info", handler.GetProfileInfo)
+			r.Put("/edit", handler.ProfileEditInfo)
+			r.Put("/avatar", handler.ProfileEditAvatar)
 		})
 
 		r.Route("/pin", func(r chi.Router) {

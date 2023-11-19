@@ -35,32 +35,25 @@ func (b *errorFields) Err() error {
 	return b
 }
 
-func FetchValidParamForLoadTape(u *url.URL) (count int, minID int, maxID int, err error) {
+func FetchValidParamForLoadFeed(u *url.URL) (count, lastID int, err error) {
 	if param := u.Query().Get("count"); len(param) > 0 {
 		c, err := strconv.ParseInt(param, 10, 64)
 		if err != nil {
-			return 0, 0, 0, fmt.Errorf("fetch count param for load tape: %w", err)
+			return 0, 0, fmt.Errorf("fetch count param for load tape: %w", err)
 		}
 		count = int(c)
 	} else {
-		return 0, 0, 0, ErrCountParameterMissing
+		return 0, 0, ErrCountParameterMissing
 	}
-	if param := u.Query().Get("minID"); len(param) > 0 {
+	if param := u.Query().Get("lastID"); len(param) > 0 {
 		id, err := strconv.ParseInt(param, 10, 64)
 		if err != nil {
-			return 0, 0, 0, fmt.Errorf("fetch lastID param for load tape: %w", err)
+			return 0, 0, fmt.Errorf("fetch lastID param for load tape: %w", err)
 		}
-		minID = int(id)
+		lastID = int(id)
 	}
-	if param := u.Query().Get("maxID"); len(param) > 0 {
-		id, err := strconv.ParseInt(param, 10, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("fetch lastID param for load tape: %w", err)
-		}
-		maxID = int(id)
-	}
-	if count <= 0 || count > 1000 || minID < 0 || maxID < 0 {
-		return 0, 0, 0, ErrBadParams
+	if count <= 0 || count > 1000 || lastID < 0 {
+		return 0, 0, ErrBadParams
 	}
 	return
 }

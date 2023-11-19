@@ -12,11 +12,13 @@ import (
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
+	mesCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -61,11 +63,15 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 
 	sm := session.New(log, sessionRepo.NewSessionRepo(redisCl))
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
-	userCase := user.New(log, imgCase, userRepo.NewUserRepoPG(pool))
-	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
-	boardCase := board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy())
 
-	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase)
+	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
+		UserCase:    user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
+		PinCase:     pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
+		BoardCase:   board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
+		MessageCase: message.New(mesCase.NewMessageRepo(pool)),
+		SM:          sm,
+	})
+
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
 	if err != nil {
 		log.Error(err.Error())
