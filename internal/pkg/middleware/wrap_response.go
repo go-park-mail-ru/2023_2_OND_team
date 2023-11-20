@@ -45,3 +45,9 @@ func (w *wrapResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	}
 	return nil, nil, ErrUnimplementedMethod
 }
+
+func (w *wrapResponseWriter) Flush() {
+	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
