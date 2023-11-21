@@ -64,6 +64,11 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			r.Get("/info", handler.GetProfileInfo)
 			r.Put("/edit", handler.ProfileEditInfo)
 			r.Put("/avatar", handler.ProfileEditAvatar)
+			r.Get("/header", handler.GetProfileHeaderInfo)
+		})
+
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/info/{userID:\\d+}", handler.GetUserInfo)
 		})
 
 		r.Route("/subscription", func(r chi.Router) {

@@ -12,21 +12,14 @@ func (u *subscriptionUsecase) GetSubscriptionInfoForUser(ctx context.Context, su
 		return nil, err
 	}
 
-	var (
-		currUserID, _ = ctx.Value(auth.KeyCurrentUserID).(int)
-		users         = make([]userEntity.SubscriptionUser, 0)
-		err           error
-	)
+	currUserID, _ := ctx.Value(auth.KeyCurrentUserID).(int)
 
 	switch subOpts.Filter {
 	case "subscriptions":
-		users, err = u.subRepo.GetUserSubscriptions(ctx, subOpts.UserID, subOpts.Count, subOpts.LastID, currUserID)
+		return u.subRepo.GetUserSubscriptions(ctx, subOpts.UserID, subOpts.Count, subOpts.LastID, currUserID)
 	case "subscribers":
-		users, err = u.subRepo.GetUserSubscribers(ctx, subOpts.UserID, subOpts.Count, subOpts.LastID, currUserID)
+		return u.subRepo.GetUserSubscribers(ctx, subOpts.UserID, subOpts.Count, subOpts.LastID, currUserID)
+	default:
+		return nil, &ErrInvalidFilter{subOpts.Filter}
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	return users, nil
 }

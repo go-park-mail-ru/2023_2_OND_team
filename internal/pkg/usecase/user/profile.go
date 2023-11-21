@@ -7,6 +7,7 @@ import (
 	"io"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	repository "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/crypto"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/validator/image/check"
@@ -25,6 +26,15 @@ func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, mimeTypeAva
 	}
 
 	return nil
+}
+
+func (u *userCase) GetUserInfo(ctx context.Context, userID int) (user *entity.User, isSubscribed bool, subsCount int, err error) {
+	currUserID, _ := ctx.Value(auth.KeyCurrentUserID).(int)
+	return u.repo.GetUserData(ctx, userID, currUserID)
+}
+
+func (u *userCase) GetProfileInfo(ctx context.Context) (user *entity.User, subsCount int, err error) {
+	return u.repo.GetProfileData(ctx, ctx.Value(auth.KeyCurrentUserID).(int))
 }
 
 func (u *userCase) GetAllProfileInfo(ctx context.Context, userID int) (*entity.User, error) {

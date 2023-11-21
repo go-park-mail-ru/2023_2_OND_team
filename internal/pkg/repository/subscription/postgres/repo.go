@@ -88,38 +88,16 @@ func (r *subscriptionRepoPG) DeleteSubscriptionUser(ctx context.Context, from, t
 
 func (r *subscriptionRepoPG) GetUserSubscriptions(ctx context.Context, userID, count, offset int, currUserID int) ([]userEntity.SubscriptionUser, error) {
 
-	var getUserSubscriptions squirrel.SelectBuilder
-	if currUserID != 0 {
-		getUserSubscriptions = r.sqlBuilder.Select(
-			"p.username, p.avatar, s.who IS NOT NULL AS is_subscribed",
-		)
-	} else {
-		getUserSubscriptions = r.sqlBuilder.Select(
-			"p.username, p.avatar, false AS is_subscribed",
-		)
-	}
-	getUserSubscriptions = getUserSubscriptions.
-		From("subscription_user f").
-		LeftJoin("profile p ON f.whom = p.id").
-		LeftJoin("subscription_user s ON f.whom = s.whom AND s.who = $1", currUserID).
-		Where("f.who = $2", userID).
-		Where("p.deleted_at IS NULL").
-		OrderBy("f.whom ASC").
-		Limit(uint64(count)).
-		Offset(uint64(offset))
-
-	sqlRow, args, err := getUserSubscriptions.ToSql()
+	rows, err := r.db.Query(ctx, GetUserSubscriptions, currUserID, userID, count, offset)
 	if err != nil {
 		return nil, convertErrorPostgres(ctx, err)
 	}
-
-	rows, err := r.db.Query(ctx, sqlRow, args...)
 	defer rows.Close()
 
 	subscriptions := make([]userEntity.SubscriptionUser, 0)
 	for rows.Next() {
 		var subscription userEntity.SubscriptionUser
-		if err = rows.Scan(&subscription.Username, &subscription.Avatar, &subscription.HasSubscribeFromCurUser); err != nil {
+		if err = rows.Scan(&subscription.ID, &subscription.Username, &subscription.Avatar, &subscription.HasSubscribeFromCurUser); err != nil {
 			return nil, convertErrorPostgres(ctx, err)
 		}
 		subscriptions = append(subscriptions, subscription)
@@ -129,32 +107,7 @@ func (r *subscriptionRepoPG) GetUserSubscriptions(ctx context.Context, userID, c
 
 func (r *subscriptionRepoPG) GetUserSubscribers(ctx context.Context, userID, count, offset int, currUserID int) ([]userEntity.SubscriptionUser, error) {
 
-	var getUserSubscribers squirrel.SelectBuilder
-	if currUserID != 0 {
-		getUserSubscribers = r.sqlBuilder.Select(
-			"p.username, p.avatar, s.who IS NOT NULL AS is_subscribed",
-		)
-	} else {
-		getUserSubscribers = r.sqlBuilder.Select(
-			"p.username, p.avatar, false AS is_subscribed",
-		)
-	}
-	getUserSubscribers = getUserSubscribers.
-		From("subscription_user f").
-		LeftJoin("profile p ON f.who = p.id").
-		LeftJoin("subscription_user s ON f.who = s.whom AND s.who = $1", currUserID).
-		Where("f.whom = $2", userID).
-		Where("p.deleted_at IS NULL").
-		OrderBy("f.who ASC").
-		Limit(uint64(count)).
-		Offset(uint64(offset))
-
-	sqlRow, args, err := getUserSubscribers.ToSql()
-	if err != nil {
-		return nil, convertErrorPostgres(ctx, err)
-	}
-
-	rows, err := r.db.Query(ctx, sqlRow, args...)
+	rows, err := r.db.Query(ctx, GetUserSubscribers, currUserID, userID, count, offset)
 	if err != nil {
 		return nil, convertErrorPostgres(ctx, err)
 	}
@@ -163,7 +116,7 @@ func (r *subscriptionRepoPG) GetUserSubscribers(ctx context.Context, userID, cou
 	subscribers := make([]userEntity.SubscriptionUser, 0)
 	for rows.Next() {
 		var subscriber userEntity.SubscriptionUser
-		if err = rows.Scan(&subscriber.Username, &subscriber.Avatar, &subscriber.HasSubscribeFromCurUser); err != nil {
+		if err = rows.Scan(&subscriber.ID, &subscriber.Username, &subscriber.Avatar, &subscriber.HasSubscribeFromCurUser); err != nil {
 			return nil, convertErrorPostgres(ctx, err)
 		}
 		subscribers = append(subscribers, subscriber)

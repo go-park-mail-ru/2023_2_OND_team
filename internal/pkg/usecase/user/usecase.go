@@ -25,6 +25,8 @@ type Usecase interface {
 	FindOutUsernameAndAvatar(ctx context.Context, userID int) (username string, avatar string, err error)
 	UpdateUserAvatar(ctx context.Context, userID int, mimeTypeAvatar string, sizeAvatar int64, avatar io.Reader) error
 	GetAllProfileInfo(ctx context.Context, userID int) (*entity.User, error)
+	GetUserInfo(ctx context.Context, userID int) (user *entity.User, isSubscribed bool, subsCount int, err error)
+	GetProfileInfo(ctx context.Context) (user *entity.User, subsCount int, err error)
 	EditProfileInfo(ctx context.Context, userID int, updateData *ProfileUpdateData) error
 }
 

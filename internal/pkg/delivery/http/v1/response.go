@@ -63,13 +63,15 @@ func (e *ErrInvalidContentType) Type() errPkg.Type {
 	return errPkg.ErrInvalidInput
 }
 
-type ErrInvalidUrlParam struct{}
-
-func (e *ErrInvalidUrlParam) Error() string {
-	return "invalid URL param"
+type ErrInvalidUrlParams struct {
+	params map[string]string
 }
 
-func (e *ErrInvalidUrlParam) Type() errPkg.Type {
+func (e *ErrInvalidUrlParams) Error() string {
+	return fmt.Sprintf("invalid URL params: %v", e.params)
+}
+
+func (e *ErrInvalidUrlParams) Type() errPkg.Type {
 	return errPkg.ErrInvalidInput
 }
 

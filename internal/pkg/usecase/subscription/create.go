@@ -11,9 +11,5 @@ func (u *subscriptionUsecase) SubscribeToUser(ctx context.Context, from, to int)
 		return err
 	}
 
-	if err := u.subRepo.CreateSubscriptionUser(ctx, from, to); err != nil {
-		return err
-	}
-
-	return nil
+	return u.subRepo.CreateSubscriptionUser(ctx, from, to)
 }

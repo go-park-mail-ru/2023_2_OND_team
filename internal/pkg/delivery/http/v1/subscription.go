@@ -14,6 +14,7 @@ var (
 	defaultSubLastID  = 0
 	subscriptionsView = "subscriptions"
 	subscribersView   = "subscribers"
+	maxCount          = 50
 )
 
 type SubscriptionAction struct {
@@ -47,12 +48,10 @@ func (h *HandlerHTTP) Subscribe(w http.ResponseWriter, r *http.Request) {
 	from := r.Context().Value(auth.KeyCurrentUserID).(int)
 	if err := h.subCase.SubscribeToUser(r.Context(), from, *sub.To); err != nil {
 		h.responseErr(w, r, err)
-		return
-	}
-
-	if err := responseOk(http.StatusOK, w, "subscribed successfully", nil); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "subscribed successfully", nil); err != nil {
 		h.responseErr(w, r, err)
 	}
+
 }
 
 func (h *HandlerHTTP) Unsubscribe(w http.ResponseWriter, r *http.Request) {
@@ -75,10 +74,7 @@ func (h *HandlerHTTP) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	from := r.Context().Value(auth.KeyCurrentUserID).(int)
 	if err := h.subCase.UnsubscribeFromUser(r.Context(), from, *sub.To); err != nil {
 		h.responseErr(w, r, err)
-		return
-	}
-
-	if err := responseOk(http.StatusOK, w, "unsubscribed successfully", nil); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "unsubscribed successfully", nil); err != nil {
 		h.responseErr(w, r, err)
 	}
 }
@@ -90,13 +86,9 @@ func (h *HandlerHTTP) GetSubscriptionInfoForUser(w http.ResponseWriter, r *http.
 		return
 	}
 
-	users, err := h.subCase.GetSubscriptionInfoForUser(r.Context(), opts)
-	if err != nil {
+	if users, err := h.subCase.GetSubscriptionInfoForUser(r.Context(), opts); err != nil {
 		h.responseErr(w, r, err)
-		return
-	}
-
-	if err := responseOk(http.StatusOK, w, "got subscription info successfully", users); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got subscription info successfully", users); err != nil {
 		h.responseErr(w, r, err)
 	}
 }
@@ -137,7 +129,7 @@ func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 			opts.LastID = int(lastID)
 		}
 	} else {
-		opts.LastID = 0
+		opts.LastID = defaultSubLastID
 	}
 
 	if filter = r.URL.Query().Get("view"); filter != "" {
@@ -150,6 +142,9 @@ func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 		invalidParams["view"] = filter
 	}
 
+	if opts.Count > maxCount {
+		opts.Count = maxCount
+	}
 	if len(invalidParams) > 0 {
 		return nil, &ErrInvalidQueryParam{invalidParams}
 	}

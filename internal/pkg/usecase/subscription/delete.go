@@ -11,9 +11,5 @@ func (u *subscriptionUsecase) UnsubscribeFromUser(ctx context.Context, from, to 
 		return err
 	}
 
-	if err := u.subRepo.DeleteSubscriptionUser(ctx, from, to); err != nil {
-		return err
-	}
-
-	return nil
+	return u.subRepo.DeleteSubscriptionUser(ctx, from, to)
 }
