@@ -10,4 +10,5 @@ var (
 	UpdateAvatarProfile    = "UPDATE profile SET avatar = $1 WHERE id = $2;"
 	SelectUserIdByUsername = "SELECT id FROM profile WHERE username = $1;"
 	SelectLastUserID       = "SELECT id FROM profile ORDER BY id DESC LIMIT 1;"
+	CheckUserExistence     = "SELECT username FROM profile WHERE id = $1 AND deleted_at IS NULL;"
 )

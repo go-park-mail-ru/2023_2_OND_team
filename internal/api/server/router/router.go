@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/cors"
@@ -15,6 +16,8 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
+
+const requestTimeout = 10 * time.Second
 
 type Router struct {
 	Mux *chi.Mux
@@ -37,8 +40,9 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		ExposedHeaders:   []string{cfgCSRF.HeaderSet},
 	})
 
-	r.Mux.Use(mw.RequestID(log), mw.Logger(log), c.Handler,
-		security.CSRF(cfgCSRF), mw.SetResponseHeaders(map[string]string{
+	r.Mux.Use(mw.SetRequestTimeout(requestTimeout), mw.RequestID(log), mw.Logger(log), c.Handler,
+		security.CSRF(cfgCSRF),
+		mw.SetResponseHeaders(map[string]string{
 			"Content-Type": "application/json",
 		}),
 		auth.NewAuthMiddleware(sm).ContextWithUserID)
@@ -58,6 +62,20 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 
 		r.With(auth.RequireAuth).Route("/profile", func(r chi.Router) {
 			r.Get("/info", handler.GetProfileInfo)
+			r.Put("/edit", handler.ProfileEditInfo)
+			r.Put("/avatar", handler.ProfileEditAvatar)
+		})
+
+		r.Route("/subscription", func(r chi.Router) {
+			r.Route("/user", func(r chi.Router) {
+				r.With(auth.RequireAuth).Group(func(r chi.Router) {
+					r.Post("/create", handler.Subscribe)
+					r.Delete("/delete", handler.Unsubscribe)
+				})
+				r.Get("/get", handler.GetSubscriptionInfoForUser)
+			})
+
+			r.Get("/", handler.GetProfileInfo)
 			r.Put("/edit", handler.ProfileEditInfo)
 			r.Put("/avatar", handler.ProfileEditAvatar)
 		})

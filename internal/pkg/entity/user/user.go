@@ -12,3 +12,18 @@ type User struct {
 	AboutMe  pgtype.Text `json:"about_me"`
 	Password string      `json:"password,omitempty" example:"pass123"`
 } // @name User
+
+// UserInfo
+
+type SubscriptionUser struct {
+	Username                string `json:"username"`
+	Avatar                  string `json:"avatar"`
+	HasSubscribeFromCurUser bool   `json:"is_subscribed"`
+}
+
+type SubscriptionOpts struct {
+	UserID int
+	Count  int
+	LastID int
+	Filter string
+}

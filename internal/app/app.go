@@ -14,11 +14,13 @@ import (
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
+	subRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/subscription/postgres"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
@@ -64,8 +66,9 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	userCase := user.New(log, imgCase, userRepo.NewUserRepoPG(pool))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 	boardCase := board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy())
+	subCase := subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool))
 
-	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase)
+	handler := deliveryHTTP.New(log, sm, userCase, pinCase, boardCase, subCase)
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
 	if err != nil {
 		log.Error(err.Error())
