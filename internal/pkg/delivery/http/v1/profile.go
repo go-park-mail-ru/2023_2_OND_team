@@ -25,6 +25,7 @@ type UserInfo struct {
 }
 
 type ProfileInfo struct {
+	ID        int    `json:"id" example:"1"`
 	Username  string `json:"username" example:"baobab"`
 	Avatar    string `json:"avatar" example:"/pic1"`
 	SubsCount int    `json:"subscribers" example:"12"`
@@ -45,6 +46,7 @@ func ToUserInfoFromService(user *userEntity.User, isSubscribed bool, subsCount i
 
 func ToProfileInfoFromService(user *userEntity.User, subsCount int) ProfileInfo {
 	return ProfileInfo{
+		ID:        user.ID,
 		Username:  user.Username,
 		Avatar:    user.Avatar,
 		SubsCount: subsCount,

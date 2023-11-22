@@ -116,7 +116,7 @@ func (u *userRepoPG) GetUserData(ctx context.Context, userID, currUserID int) (u
 func (u *userRepoPG) GetProfileData(ctx context.Context, userID int) (user_ *user.User, subsCount int, err error) {
 	user_ = &user.User{}
 	if err := u.db.QueryRow(ctx, GetProfileInfo, userID).Scan(
-		&user_.Username, &user_.Avatar, &subsCount,
+		&user_.ID, &user_.Username, &user_.Avatar, &subsCount,
 	); err != nil {
 		return nil, 0, convertErrorPostgres(ctx, err)
 	}

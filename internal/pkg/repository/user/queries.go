@@ -29,7 +29,7 @@ var (
 		`
 	GetProfileInfo = `
 		SELECT
-			p1.username, p1.avatar, COUNT(s.who) subscribers
+			p1.id, p1.username, p1.avatar, COUNT(s.who) subscribers
 		FROM
 			profile p1
 		LEFT JOIN 
@@ -39,6 +39,6 @@ var (
 		WHERE
 			p1.id = $1 AND p1.deleted_at IS NULL AND p2.deleted_at IS NULL
 		GROUP BY
-			p1.username, p1.avatar;
+			p1.id, p1.username, p1.avatar;
 	`
 )
