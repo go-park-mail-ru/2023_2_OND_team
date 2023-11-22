@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,32 +10,10 @@ import (
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
-	bCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 var TimeFormat = "2006-01-02"
-
-var (
-	ErrEmptyTitle        = errors.New("empty or null board title has been provided")
-	ErrEmptyPubOpt       = errors.New("null public option has been provided")
-	ErrInvalidBoardTitle = errors.New("invalid or empty board title has been provided")
-	ErrInvalidTagTitles  = errors.New("invalid tag titles have been provided")
-	ErrInvalidUsername   = errors.New("invalid username has been provided")
-)
-
-var (
-	wrappedErrors      = map[error]string{ErrInvalidTagTitles: "bad_Tagtitles"}
-	errCodeCompability = map[error]string{
-		ErrInvalidBoardTitle:     "bad_boardTitle",
-		ErrEmptyTitle:            "empty_boardTitle",
-		ErrEmptyPubOpt:           "bad_pubOpt",
-		ErrInvalidUsername:       "bad_username",
-		bCase.ErrInvalidUsername: "non_existingUser",
-		bCase.ErrNoSuchBoard:     "no_board",
-		bCase.ErrNoAccess:        "no_access",
-	}
-)
 
 // data for board creation/update
 type BoardData struct {
@@ -89,36 +66,10 @@ func (data *BoardData) Validate() error {
 	return nil
 }
 
-func getErrCodeMessage(err error) (string, string) {
-	var (
-		code              string
-		general, specific bool
-	)
-
-	code, general = generalErrCodeCompability[err]
-	if general {
-		return code, err.Error()
-	}
-
-	code, specific = errCodeCompability[err]
-	if !specific {
-		for wrappedErr, code_ := range wrappedErrors {
-			if errors.Is(err, wrappedErr) {
-				specific = true
-				code = code_
-			}
-		}
-	}
-	if specific {
-		return code, err.Error()
-	}
-
-	return ErrInternalError.Error(), generalErrCodeCompability[ErrInternalError]
-}
 
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
-	if contentType := w.Header().Get("Content-Type"); contentType != ApplicationJson {
+	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
 		code, message := getErrCodeMessage(ErrBadContentType)
 		responseError(w, code, message)
 		return
@@ -258,7 +209,7 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 
 func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
-	if contentType := w.Header().Get("Content-Type"); contentType != ApplicationJson {
+	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
 		code, message := getErrCodeMessage(ErrBadContentType)
 		responseError(w, code, message)
 		return

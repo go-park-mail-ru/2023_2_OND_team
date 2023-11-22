@@ -81,17 +81,17 @@ func (mr *MockRepositoryMockRecorder) DeletePin(ctx, pinID, userID interface{}) 
 }
 
 // EditPin mocks base method.
-func (m *MockRepository) EditPin(ctx context.Context, pinID int, updateData pin0.S, titleTags []string) error {
+func (m *MockRepository) EditPin(ctx context.Context, pinID, userID int, updateData pin0.S, titleTags []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EditPin", ctx, pinID, updateData, titleTags)
+	ret := m.ctrl.Call(m, "EditPin", ctx, pinID, userID, updateData, titleTags)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // EditPin indicates an expected call of EditPin.
-func (mr *MockRepositoryMockRecorder) EditPin(ctx, pinID, updateData, titleTags interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) EditPin(ctx, pinID, userID, updateData, titleTags interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditPin", reflect.TypeOf((*MockRepository)(nil).EditPin), ctx, pinID, updateData, titleTags)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditPin", reflect.TypeOf((*MockRepository)(nil).EditPin), ctx, pinID, userID, updateData, titleTags)
 }
 
 // GetAuthorPin mocks base method.

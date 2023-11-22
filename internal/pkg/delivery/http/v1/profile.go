@@ -4,11 +4,77 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
+	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
+
+type UserInfo struct {
+	ID           int    `json:"id" example:"123"`
+	Username     string `json:"username" example:"Snapshot"`
+	Avatar       string `json:"avatar" example:"/pic1"`
+	Name         string `json:"name" example:"Bob"`
+	Surname      string `json:"surname" example:"Dylan"`
+	About        string `json:"about" example:"Cool guy"`
+	IsSubscribed bool   `json:"is_subscribed" example:"true"`
+	SubsCount    int    `json:"subscribers" example:"23"`
+}
+
+type ProfileInfo struct {
+	ID        int    `json:"id" example:"1"`
+	Username  string `json:"username" example:"baobab"`
+	Avatar    string `json:"avatar" example:"/pic1"`
+	SubsCount int    `json:"subscribers" example:"12"`
+}
+
+func ToUserInfoFromService(user *userEntity.User, isSubscribed bool, subsCount int) UserInfo {
+	return UserInfo{
+		ID:           user.ID,
+		Username:     user.Username,
+		Avatar:       user.Avatar,
+		Name:         user.Name.String,
+		Surname:      user.Surname.String,
+		About:        user.AboutMe.String,
+		IsSubscribed: isSubscribed,
+		SubsCount:    subsCount,
+	}
+}
+
+func ToProfileInfoFromService(user *userEntity.User, subsCount int) ProfileInfo {
+	return ProfileInfo{
+		ID:        user.ID,
+		Username:  user.Username,
+		Avatar:    user.Avatar,
+		SubsCount: subsCount,
+	}
+}
+
+func (h *HandlerHTTP) GetUserInfo(w http.ResponseWriter, r *http.Request) {
+	userIdParam := chi.URLParam(r, "userID")
+	userID, err := strconv.ParseInt(userIdParam, 10, 64)
+	if err != nil {
+		h.responseErr(w, r, &ErrInvalidUrlParams{map[string]string{"userID": userIdParam}})
+		return
+	}
+
+	if user, isSubscribed, subsCount, err := h.userCase.GetUserInfo(r.Context(), int(userID)); err != nil {
+		h.responseErr(w, r, err)
+	} else if err := responseOk(http.StatusOK, w, "got user info successfully", ToUserInfoFromService(user, isSubscribed, subsCount)); err != nil {
+		h.responseErr(w, r, err)
+	}
+}
+
+func (h *HandlerHTTP) GetProfileHeaderInfo(w http.ResponseWriter, r *http.Request) {
+	if user, subsCount, err := h.userCase.GetProfileInfo(r.Context()); err != nil {
+		h.responseErr(w, r, err)
+	} else if err := responseOk(http.StatusOK, w, "got profile info successfully", ToProfileInfoFromService(user, subsCount)); err != nil {
+		h.responseErr(w, r, err)
+	}
+}
 
 func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)

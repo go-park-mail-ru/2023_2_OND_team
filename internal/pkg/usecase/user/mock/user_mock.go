@@ -97,6 +97,39 @@ func (mr *MockUsecaseMockRecorder) GetAllProfileInfo(ctx, userID interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllProfileInfo", reflect.TypeOf((*MockUsecase)(nil).GetAllProfileInfo), ctx, userID)
 }
 
+// GetProfileInfo mocks base method.
+func (m *MockUsecase) GetProfileInfo(ctx context.Context) (*user.User, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProfileInfo", ctx)
+	ret0, _ := ret[0].(*user.User)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetProfileInfo indicates an expected call of GetProfileInfo.
+func (mr *MockUsecaseMockRecorder) GetProfileInfo(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfileInfo", reflect.TypeOf((*MockUsecase)(nil).GetProfileInfo), ctx)
+}
+
+// GetUserInfo mocks base method.
+func (m *MockUsecase) GetUserInfo(ctx context.Context, userID int) (*user.User, bool, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserInfo", ctx, userID)
+	ret0, _ := ret[0].(*user.User)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetUserInfo indicates an expected call of GetUserInfo.
+func (mr *MockUsecaseMockRecorder) GetUserInfo(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockUsecase)(nil).GetUserInfo), ctx, userID)
+}
+
 // Register mocks base method.
 func (m *MockUsecase) Register(ctx context.Context, user *user.User) error {
 	m.ctrl.T.Helper()

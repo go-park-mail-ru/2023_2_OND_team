@@ -50,6 +50,20 @@ func (mr *MockRepositoryMockRecorder) AddNewUser(ctx, user interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewUser", reflect.TypeOf((*MockRepository)(nil).AddNewUser), ctx, user)
 }
 
+// CheckUserExistence mocks base method.
+func (m *MockRepository) CheckUserExistence(ctx context.Context, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckUserExistence", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckUserExistence indicates an expected call of CheckUserExistence.
+func (mr *MockRepositoryMockRecorder) CheckUserExistence(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserExistence", reflect.TypeOf((*MockRepository)(nil).CheckUserExistence), ctx, userID)
+}
+
 // EditUserAvatar mocks base method.
 func (m *MockRepository) EditUserAvatar(ctx context.Context, userID int, avatar string) error {
 	m.ctrl.T.Helper()
@@ -93,6 +107,22 @@ func (mr *MockRepositoryMockRecorder) GetAllUserData(ctx, userID interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUserData", reflect.TypeOf((*MockRepository)(nil).GetAllUserData), ctx, userID)
 }
 
+// GetProfileData mocks base method.
+func (m *MockRepository) GetProfileData(ctx context.Context, userID int) (*user.User, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProfileData", ctx, userID)
+	ret0, _ := ret[0].(*user.User)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetProfileData indicates an expected call of GetProfileData.
+func (mr *MockRepositoryMockRecorder) GetProfileData(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfileData", reflect.TypeOf((*MockRepository)(nil).GetProfileData), ctx, userID)
+}
+
 // GetUserByUsername mocks base method.
 func (m *MockRepository) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
 	m.ctrl.T.Helper()
@@ -106,6 +136,23 @@ func (m *MockRepository) GetUserByUsername(ctx context.Context, username string)
 func (mr *MockRepositoryMockRecorder) GetUserByUsername(ctx, username interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUsername", reflect.TypeOf((*MockRepository)(nil).GetUserByUsername), ctx, username)
+}
+
+// GetUserData mocks base method.
+func (m *MockRepository) GetUserData(ctx context.Context, userID, currUserID int) (*user.User, bool, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserData", ctx, userID, currUserID)
+	ret0, _ := ret[0].(*user.User)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetUserData indicates an expected call of GetUserData.
+func (mr *MockRepositoryMockRecorder) GetUserData(ctx, userID, currUserID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserData", reflect.TypeOf((*MockRepository)(nil).GetUserData), ctx, userID, currUserID)
 }
 
 // GetUserIdByUsername mocks base method.

@@ -5,7 +5,6 @@ COV_OUT=coverage.out
 COV_HTML=coverage.html
 CURRCOVER=github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1
 
-
 build:
 	go build -o bin/app cmd/app/*.go
 
@@ -40,3 +39,4 @@ cover_all:
 currcover:
 	go test -cover -v -coverprofile=cover.out ${CURRCOVER}
 	go tool cover -html=cover.out -o cover.html
+
