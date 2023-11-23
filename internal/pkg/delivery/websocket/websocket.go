@@ -31,8 +31,8 @@ func SetOriginPatterns(patterns []string) Option {
 	}
 }
 
-func New(log *log.Logger, opts ...Option) *HandlerWebSocket {
-	handlerWS := &HandlerWebSocket{log: log}
+func New(log *log.Logger, mesCase usecase.Usecase, opts ...Option) *HandlerWebSocket {
+	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase}
 	for _, opt := range opts {
 		opt(handlerWS)
 	}

@@ -17,6 +17,7 @@ type Usecase interface {
 	GetMessagesFromChat(ctx context.Context, chat entity.Chat, count, lastID int) (feed []entity.Message, newLastID int, err error)
 	UpdateContentMessage(ctx context.Context, userID int, mes *entity.Message) error
 	DeleteMessage(ctx context.Context, userID, mesID int) error
+	GetMessage(ctx context.Context, messageID int) (*entity.Message, error)
 }
 
 type messageCase struct {
@@ -58,4 +59,8 @@ func (m *messageCase) DeleteMessage(ctx context.Context, userID, mesID int) erro
 		return ErrNoAccess
 	}
 	return m.repo.DelMessage(ctx, mesID)
+}
+
+func (m *messageCase) GetMessage(ctx context.Context, messageID int) (*entity.Message, error) {
+	return m.repo.GetMessageByID(ctx, messageID)
 }

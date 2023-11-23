@@ -13,7 +13,7 @@ import (
 	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
-	mesCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
+	mesRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
@@ -64,16 +64,17 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 
 	sm := session.New(log, sessionRepo.NewSessionRepo(redisCl))
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
+	messageCase := message.New(mesRepo.NewMessageRepo(pool))
 
 	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
 		UserCase:    user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
 		PinCase:     pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
 		BoardCase:   board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
-		MessageCase: message.New(mesCase.NewMessageRepo(pool)),
+		MessageCase: messageCase,
 		SM:          sm,
 	})
 
-	wsHandler := deliveryWS.New(log,
+	wsHandler := deliveryWS.New(log, messageCase,
 		deliveryWS.SetOriginPatterns([]string{"pinspire.online", "pinspire.online:*"}))
 
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
