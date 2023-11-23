@@ -82,6 +82,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 			case "create":
 				mesCopy := &message.Message{}
 				*mesCopy = request.Message.Message
+				mesCopy.From = userID
 				id, err := h.messageCase.SendMessage(ctx, mesCopy)
 				if err != nil {
 					h.log.Warn(err.Error())
@@ -102,7 +103,9 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 						},
 					},
 				})
-				h.log.Error(err.Error())
+				if err != nil {
+					h.log.Error(err.Error())
+				}
 			case "update":
 				mesCopy := &message.Message{}
 				*mesCopy = request.Message.Message
@@ -126,7 +129,9 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 						},
 					},
 				})
-				h.log.Error(err.Error())
+				if err != nil {
+					h.log.Error(err.Error())
+				}
 
 			case "delete":
 				err = h.messageCase.DeleteMessage(ctx, userID, request.Message.Message.ID)
@@ -149,7 +154,9 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 						},
 					},
 				})
-				h.log.Error(err.Error())
+				if err != nil {
+					h.log.Error(err.Error())
+				}
 			default:
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "error", "unsupported", "unsupported eventType", nil))
 			}
@@ -183,10 +190,15 @@ func (h *HandlerWebSocket) subscribe(ctx context.Context, client rt.RealTimeClie
 			}
 			mes, ok := obj.Body.(*rt.Message_Object)
 			if ok {
-				message, err := h.messageCase.GetMessage(ctx, int(mes.Object.Id))
-				if err != nil {
-					h.log.Error(err.Error())
-					return
+				var msg *message.Message
+				if mes.Object.Type == rt.EventType_EV_DELETE {
+					msg = &message.Message{ID: int(mes.Object.Id)}
+				} else {
+					msg, err = h.messageCase.GetMessage(ctx, int(mes.Object.Id))
+					if err != nil {
+						h.log.Error(err.Error())
+						return
+					}
 				}
 				objType := ""
 				switch mes.Object.Type {
@@ -199,7 +211,7 @@ func (h *HandlerWebSocket) subscribe(ctx context.Context, client rt.RealTimeClie
 				}
 				err = wsjson.Write(ctx, conn, newMessageFromChannel(req.Channel, "ok", "", Object{
 					Type:    objType,
-					Message: *message,
+					Message: *msg,
 				}))
 				if err != nil {
 					h.log.Error(err.Error())

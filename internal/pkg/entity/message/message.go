@@ -8,7 +8,7 @@ type Message struct {
 	ID      int
 	From    int         `json:"from"`
 	To      int         `json:"to"`
-	Content pgtype.Text `json:"context"`
+	Content pgtype.Text `json:"content"`
 }
 
 func (m Message) WhatChat() Chat {
