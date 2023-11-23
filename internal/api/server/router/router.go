@@ -103,6 +103,6 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 	})
 
 	r.Mux.With(auth.RequireAuth).Route("/websocket/connect", func(r chi.Router) {
-		r.Get("/chat/{userID:\\d+}", wsHandler.WebSocketConnect)
+		r.Get("/chat", wsHandler.WebSocketConnect)
 	})
 }
