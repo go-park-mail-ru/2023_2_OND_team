@@ -50,10 +50,8 @@ func convertErrorPostgres(err error) error {
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
+		switch pgErr.SQLState() {
 		// add SQL states if necessary
-		default:
-			return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}
 		}
 	}
 	return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}

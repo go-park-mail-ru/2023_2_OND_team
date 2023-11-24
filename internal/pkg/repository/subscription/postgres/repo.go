@@ -34,8 +34,6 @@ func convertErrorPostgres(err error) error {
 		switch pgErr.SQLState() {
 		case strconv.Itoa(23505):
 			return &subRepo.ErrSubscriptionAlreadyExist{}
-		default:
-			return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}
 		}
 	}
 	return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}
