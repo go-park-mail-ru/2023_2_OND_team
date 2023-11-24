@@ -13,12 +13,10 @@ var (
 		LEFT JOIN
 			subscription_user s ON f.whom = s.whom AND s.who = $1
 		WHERE
-			f.who = $2 AND p.deleted_at IS NULL
+			f.who = $2 AND p.deleted_at IS NULL AND f.whom < $3
 		ORDER BY
-			f.whom ASC
+			f.whom DESC
 		LIMIT
-			$3
-		OFFSET
 			$4;`
 	GetUserSubscribers = `	
 		SELECT
@@ -30,11 +28,9 @@ var (
 		LEFT JOIN
 			subscription_user s ON f.who = s.whom AND s.who = $1
 		WHERE
-			f.whom = $2 AND p.deleted_at IS NULL
+			f.whom = $2 AND p.deleted_at IS NULL AND f.who < $3
 		ORDER BY
-			f.who ASC
+			f.who DESC
 		LIMIT
-			$3
-		OFFSET
 			$4;`
 )

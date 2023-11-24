@@ -11,7 +11,7 @@ import (
 
 var (
 	defaultSubCount   = 20
-	defaultSubLastID  = 0
+	defaultSubLastID  = 1 << 30
 	subscriptionsView = "subscriptions"
 	subscribersView   = "subscribers"
 	maxCount          = 50
@@ -30,7 +30,7 @@ func (s *SubscriptionAction) Validate() error {
 
 func (h *HandlerHTTP) Subscribe(w http.ResponseWriter, r *http.Request) {
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		h.responseErr(w, r, &ErrInvalidContentType{})
+		h.responseErr(w, r, &ErrInvalidContentType{preferredType: ApplicationJson})
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *HandlerHTTP) Subscribe(w http.ResponseWriter, r *http.Request) {
 
 func (h *HandlerHTTP) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		h.responseErr(w, r, &ErrInvalidContentType{})
+		h.responseErr(w, r, &ErrInvalidContentType{preferredType: ApplicationJson})
 		return
 	}
 

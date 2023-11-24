@@ -1,6 +1,16 @@
 package errors
 
+import "fmt"
+
 type Type uint8
+
+type Layer string
+
+const (
+	Repo     Layer = "Repository"
+	Usecase  Layer = "Usecase"
+	Delivery Layer = "Delivery"
+)
 
 const (
 	_ Type = iota
@@ -29,10 +39,12 @@ func (e *ErrNotAuthenticated) Type() Type {
 }
 
 type InternalError struct {
+	Message string
+	Layer   string
 }
 
 func (e *InternalError) Error() string {
-	return "Internal error occured"
+	return fmt.Sprintf("Internal error occured. Message: '%s'. Layer: %s", e.Message, e.Layer)
 }
 
 type ErrorNotImplemented struct {

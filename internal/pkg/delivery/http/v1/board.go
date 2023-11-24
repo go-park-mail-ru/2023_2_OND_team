@@ -66,7 +66,6 @@ func (data *BoardData) Validate() error {
 	return nil
 }
 
-
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {

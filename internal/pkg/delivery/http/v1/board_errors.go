@@ -6,6 +6,7 @@ import (
 	bCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 )
 
+// for backward compatibility
 var (
 	ErrEmptyTitle        = errors.New("empty or null board title has been provided")
 	ErrEmptyPubOpt       = errors.New("null public option has been provided")

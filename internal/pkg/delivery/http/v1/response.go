@@ -53,10 +53,12 @@ func (e *ErrInvalidQueryParam) Type() errPkg.Type {
 	return errPkg.ErrInvalidInput
 }
 
-type ErrInvalidContentType struct{}
+type ErrInvalidContentType struct {
+	preferredType string
+}
 
 func (e *ErrInvalidContentType) Error() string {
-	return "invalid content type"
+	return fmt.Sprintf("invalid content type, should be %s", e.preferredType)
 }
 
 func (e *ErrInvalidContentType) Type() errPkg.Type {
@@ -163,9 +165,8 @@ func (h *HandlerHTTP) responseErr(w http.ResponseWriter, r *http.Request, err er
 	code, status := getCodeStatusHttp(err)
 	var msg string
 	if status == http.StatusInternalServerError {
-		log.Warnf("unexpected error on the delivery http: %s\n", err.Error())
-		err := &errPkg.InternalError{}
-		msg = err.Error()
+		log.Warnf("unexpected application error: %s", err.Error())
+		msg = "internal error occured"
 	} else {
 		msg = err.Error()
 	}

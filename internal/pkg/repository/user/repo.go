@@ -13,7 +13,6 @@ import (
 	errPkg "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
-	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 //go:generate mockgen -destination=./mock/user_mock.go -package=mock -source=repo.go Repository
@@ -40,16 +39,13 @@ func NewUserRepoPG(db pgtype.PgxPoolIface) *userRepoPG {
 	return &userRepoPG{db}
 }
 
-func convertErrorPostgres(ctx context.Context, err error) error {
-	logger := logger.GetLoggerFromCtx(ctx)
-
-	if errors.Is(err, context.DeadlineExceeded) {
-		return &errPkg.ErrTimeoutExceeded{}
-	}
+func convertErrorPostgres(err error) error {
 
 	switch err {
 	case pgx.ErrNoRows:
 		return &ErrNonExistingUser{}
+	case context.DeadlineExceeded:
+		return &errPkg.ErrTimeoutExceeded{}
 	}
 
 	var pgErr *pgconn.PgError
@@ -57,19 +53,17 @@ func convertErrorPostgres(ctx context.Context, err error) error {
 		switch pgErr.Code {
 		// add SQL states if necessary
 		default:
-			logger.Warnf("Unexpected error from user repo - postgres: %s\n", err.Error())
-			return &errPkg.InternalError{}
+			return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}
 		}
 	}
-	logger.Warnf("Unexpected error from user repo: %s\n", err.Error())
-	return &errPkg.InternalError{}
+	return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}
 }
 
 func (u *userRepoPG) CheckUserExistence(ctx context.Context, userID int) error {
 	row := u.db.QueryRow(ctx, CheckUserExistence, userID)
 	var dummy string
 	if err := row.Scan(&dummy); err != nil {
-		return convertErrorPostgres(ctx, err)
+		return convertErrorPostgres(err)
 	}
 
 	return nil
@@ -108,7 +102,7 @@ func (u *userRepoPG) GetUserData(ctx context.Context, userID, currUserID int) (u
 		&user_.ID, &user_.Username, &user_.Avatar, &user_.Name, &user_.Surname,
 		&user_.AboutMe, &isSubscribed, &subsCount,
 	); err != nil {
-		return nil, false, 0, convertErrorPostgres(ctx, err)
+		return nil, false, 0, convertErrorPostgres(err)
 	}
 	return user_, isSubscribed, subsCount, nil
 }
@@ -118,7 +112,7 @@ func (u *userRepoPG) GetProfileData(ctx context.Context, userID int) (user_ *use
 	if err := u.db.QueryRow(ctx, GetProfileInfo, userID).Scan(
 		&user_.ID, &user_.Username, &user_.Avatar, &subsCount,
 	); err != nil {
-		return nil, 0, convertErrorPostgres(ctx, err)
+		return nil, 0, convertErrorPostgres(err)
 	}
 	return user_, subsCount, nil
 }
