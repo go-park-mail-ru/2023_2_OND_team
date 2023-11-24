@@ -15,6 +15,7 @@ type Repository interface {
 	GetMessages(ctx context.Context, chat entity.Chat, count, lastID int) ([]entity.Message, error)
 	UpdateContentMessage(ctx context.Context, messageID int, newContent string) error
 	DelMessage(ctx context.Context, messageID int) error
+	GetUserChats(ctx context.Context, userID, count, lastID int) (entity.FeedUserChats, error)
 }
 
 type messageRepo struct {
@@ -74,4 +75,24 @@ func (m *messageRepo) DelMessage(ctx context.Context, messageID int) error {
 		return fmt.Errorf("delete message from storage: %w", err)
 	}
 	return nil
+}
+
+func (m *messageRepo) GetUserChats(ctx context.Context, userID, count, lastID int) (entity.FeedUserChats, error) {
+	rows, err := m.db.Query(ctx, SelectUserChats, userID, lastID, count)
+	if err != nil {
+		return nil, fmt.Errorf("get user chats in storage: %w", err)
+	}
+	defer rows.Close()
+
+	feed := make(entity.FeedUserChats, 0, count)
+	chat := entity.ChatWithUser{}
+	for rows.Next() {
+		if err = rows.Scan(&chat.MessageLastID, &chat.WichWhomChat.ID,
+			&chat.WichWhomChat.Username, &chat.WichWhomChat.Avatar); err != nil {
+
+			return feed, fmt.Errorf("scan chat with user for feed: %w", err)
+		}
+		feed = append(feed, chat)
+	}
+	return feed, nil
 }

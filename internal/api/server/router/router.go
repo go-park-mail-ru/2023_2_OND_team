@@ -94,7 +94,8 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 			r.Get("/pin", handler.FeedPins)
 		})
 
-		r.With(auth.RequireAuth).Route("/message", func(r chi.Router) {
+		r.With(auth.RequireAuth).Route("/chat", func(r chi.Router) {
+			r.Get("/personal", handler.FeedChats)
 			r.Get("/get/{userID:\\d+}", handler.GetMessagesFromChat)
 			r.Post("/send/{userID:\\d+}", handler.SendMessageToUser)
 			r.Put("/update/{messageID:\\d+}", handler.UpdateMessage)

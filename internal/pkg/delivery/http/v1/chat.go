@@ -7,6 +7,32 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 )
 
+func (h *HandlerHTTP) FeedChats(w http.ResponseWriter, r *http.Request) {
+	log := h.getRequestLogger(r)
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+
+	count, lastID, err := FetchValidParamForLoadFeed(r.URL)
+	if err != nil {
+		log.Info(err.Error())
+		err = responseError(w, "parse_url", "bad request url for getting feed chat")
+		if err != nil {
+			log.Error(err.Error())
+		}
+	}
+
+	chats, newLastID, err := h.messageCase.GetUserChatsWithOtherUsers(r.Context(), userID, count, lastID)
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	err = responseOk(http.StatusOK, w, "success get feed user chats", map[string]any{
+		"chats":  chats,
+		"lastID": newLastID,
+	})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
 func (h *HandlerHTTP) SendMessageToUser(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 
