@@ -15,6 +15,7 @@ import (
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	mesCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
+	searchRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/search/postgres"
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
 	subRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/subscription/postgres"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
@@ -22,6 +23,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/search"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -68,17 +70,17 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
 
 	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
-		UserCase:    user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
-		PinCase:     pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
-		BoardCase:   board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
+		UserCase:         user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
+		PinCase:          pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
+		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SubscriptionCase: subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool)),
-		MessageCase: message.New(mesCase.NewMessageRepo(pool)),
-		SM:          sm,
+		SearchCase:       search.New(log, searchRepo.NewSearchRepoPG(pool), ),
+		MessageCase:      message.New(mesCase.NewMessageRepo(pool)),
+		SM:               sm,
 	})
 
 	wsHandler := deliveryWS.New(log,
 		deliveryWS.SetOriginPatterns([]string{"pinspire.online", "pinspire.online:*"}))
-
 
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
 	if err != nil {

@@ -82,6 +82,10 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 			})
 		})
 
+		// r.Route("/search", func(r chi.Router) {
+		// 	r.Get("/users", handler.SearchUsers)
+		// })
+
 		r.Route("/pin", func(r chi.Router) {
 			r.Get("/{pinID:\\d+}", handler.ViewPin)
 

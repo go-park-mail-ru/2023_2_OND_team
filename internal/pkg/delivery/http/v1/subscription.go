@@ -93,17 +93,13 @@ func (h *HandlerHTTP) GetSubscriptionInfoForUser(w http.ResponseWriter, r *http.
 	}
 }
 
+// new opts
 func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 	opts := &userEntity.SubscriptionOpts{}
 	invalidParams := map[string]string{}
 
-	var (
-		userID, count, lastID int64
-		filter                string
-		err                   error
-	)
 	if userIdParam := r.URL.Query().Get("userID"); userIdParam != "" {
-		if userID, err = strconv.ParseInt(userIdParam, 10, 64); err != nil || userID < 0 {
+		if userID, err := strconv.ParseInt(userIdParam, 10, 64); err != nil || userID < 0 {
 			invalidParams["userID"] = userIdParam
 		} else {
 			opts.UserID = int(userID)
@@ -113,7 +109,7 @@ func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 	}
 
 	if countParam := r.URL.Query().Get("count"); countParam != "" {
-		if count, err = strconv.ParseInt(countParam, 10, 64); err != nil || count < 0 {
+		if count, err := strconv.ParseInt(countParam, 10, 64); err != nil || count < 0 {
 			invalidParams["count"] = countParam
 		} else {
 			opts.Count = int(count)
@@ -123,7 +119,7 @@ func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 	}
 
 	if lastIdParam := r.URL.Query().Get("lastID"); lastIdParam != "" {
-		if lastID, err = strconv.ParseInt(lastIdParam, 10, 64); err != nil || lastID < 0 {
+		if lastID, err := strconv.ParseInt(lastIdParam, 10, 64); err != nil || lastID < 0 {
 			invalidParams["lastID"] = lastIdParam
 		} else {
 			opts.LastID = int(lastID)
@@ -132,7 +128,7 @@ func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 		opts.LastID = defaultSubLastID
 	}
 
-	if filter = r.URL.Query().Get("view"); filter != "" {
+	if filter := r.URL.Query().Get("view"); filter != "" {
 		if filter != subscriptionsView && filter != subscribersView {
 			invalidParams["view"] = filter
 		} else {

@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package roll;
+option go_package = "../pkg;roll";
+
+// formId -> from url
+// answerid -> from answers idx
+// answer -> from answers[idx]
+
+// rest: {rollID} + ['yes', null] -> []{rollID, 0, 'yes'} 
+
+message RollAnswer {
+    int32 RollID = 1;
+    int32 QuestionID = 2;
+    string Answer = 3;
+}
+
+message RollAnswers {
+    repeated RollAnswer Answers = 1;
+}
+
+message RollStatHist {
+    string Answer = 1;
+    int32 Frequency = 2;
+}
+
+message RollUserData {
+    int32 RollID = 1;
+    int32 UserID = 2;
+}
+
+message HasAnswered {
+    bool HasAnswered = 1;
+}
+
+message Nothing {
+    bool dummy = 1;
+}
+
+message HisStatRequest {
+    int32 RollId = 1;
+    int32 QuestionID = 2;
+}
+
+service RollService {
+    rpc FillRoll(RollAnswers) returns (Nothing) {}
+    rpc HasUserFilledRoll(RollUserData) returns (HasAnswered) {}
+    rpc GetHistStat(HisStatRequest) returns (RollStatHist) {}
+}
