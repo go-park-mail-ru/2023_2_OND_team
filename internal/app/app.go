@@ -6,11 +6,15 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/microcosm-cc/bluemonday"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
 	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
+	authRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/auth"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	mesRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
@@ -18,6 +22,7 @@ import (
 	sessionRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
 	subRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/subscription/postgres"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
@@ -68,7 +73,15 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
 	messageCase := message.New(mesRepo.NewMessageRepo(pool))
 
+	conn, err := grpc.Dial("localhost:8085", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	ac := auth.New(authRepo.NewAuthRepo(authProto.NewAuthClient(conn)))
+
 	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
+		AuhtCase:         ac,
 		UserCase:         user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
 		PinCase:          pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
 		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
@@ -87,7 +100,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	server := server.New(log, cfgServ)
 	router := router.New()
-	router.RegisterRoute(handler, wsHandler, sm, log)
+	router.RegisterRoute(handler, wsHandler, ac, log)
 
 	if err := server.Run(router.Mux); err != nil {
 		log.Error(err.Error())

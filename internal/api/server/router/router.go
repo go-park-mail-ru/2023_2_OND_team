@@ -14,7 +14,7 @@ import (
 	mw "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/security"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
+	authCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -28,7 +28,7 @@ func New() Router {
 	return Router{chi.NewMux()}
 }
 
-func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deliveryWS.HandlerWebSocket, sm session.SessionManager, log *logger.Logger) {
+func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deliveryWS.HandlerWebSocket, ac authCase.Usecase, log *logger.Logger) {
 	cfgCSRF := security.DefaultCSRFConfig()
 	cfgCSRF.PathToGet = "/api/v1/csrf"
 
@@ -46,7 +46,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 		mw.SetResponseHeaders(map[string]string{
 			"Content-Type": "application/json",
 		}),
-		auth.NewAuthMiddleware(sm).ContextWithUserID)
+		auth.NewAuthMiddleware(ac).ContextWithUserID)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)

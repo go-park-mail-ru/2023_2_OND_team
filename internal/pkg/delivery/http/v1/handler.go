@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
@@ -12,6 +13,7 @@ import (
 
 type HandlerHTTP struct {
 	log         *logger.Logger
+	authCase    auth.Usecase
 	userCase    user.Usecase
 	pinCase     pin.Usecase
 	boardCase   board.Usecase
@@ -23,6 +25,7 @@ type HandlerHTTP struct {
 func New(log *logger.Logger, hub UsecaseHub) *HandlerHTTP {
 	return &HandlerHTTP{
 		log:         log,
+		authCase:    hub.AuhtCase,
 		userCase:    hub.UserCase,
 		pinCase:     hub.PinCase,
 		boardCase:   hub.BoardCase,
@@ -33,6 +36,7 @@ func New(log *logger.Logger, hub UsecaseHub) *HandlerHTTP {
 }
 
 type UsecaseHub struct {
+	AuhtCase         auth.Usecase
 	UserCase         user.Usecase
 	PinCase          pin.Usecase
 	BoardCase        board.Usecase
