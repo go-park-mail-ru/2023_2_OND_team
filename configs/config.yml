@@ -1,6 +1,6 @@
 app:
   server:
-    host: 0.0.0.0
+    host: 127.0.0.1
     port: 8080
     https: false
     certFile: /home/ond_team/cert/fullchain.pem
