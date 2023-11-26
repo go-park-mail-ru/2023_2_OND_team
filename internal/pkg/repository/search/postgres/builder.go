@@ -104,7 +104,7 @@ func (r *searchRepoPG) SelectPinsForSearch(opts *search.SearchOpts) (string, []i
 		"p.id",
 		"p.title",
 		"p.picture",
-		"COUNT(*) AS likes",
+		"COUNT(pin_id) AS likes",
 	).From(
 		"pin p",
 	).LeftJoin(
