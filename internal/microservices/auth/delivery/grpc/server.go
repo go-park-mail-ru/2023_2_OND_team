@@ -15,15 +15,20 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
+type Usecase interface {
+	Register(ctx context.Context, user *user.User) error
+	Authentication(ctx context.Context, credentials userUsecase.UserCredentials) (*user.User, error)
+}
+
 type AuthServer struct {
 	authProto.UnimplementedAuthServer
 
 	log      *logger.Logger
 	sm       session.SessionManager
-	userCase userUsecase.Usecase
+	userCase Usecase
 }
 
-func New(log *logger.Logger, sm session.SessionManager, userCase userUsecase.Usecase) AuthServer {
+func New(log *logger.Logger, sm session.SessionManager, userCase Usecase) AuthServer {
 	return AuthServer{
 		UnimplementedAuthServer: authProto.UnimplementedAuthServer{},
 		log:                     log,
@@ -54,13 +59,13 @@ func (as AuthServer) Login(ctx context.Context, cred *authProto.Credentials) (*a
 	})
 	if err != nil {
 		as.log.Error(err.Error())
-		return nil, status.Error(codes.PermissionDenied, "")
+		return nil, status.Error(codes.Unauthenticated, "failed authentication")
 	}
 
 	session, err := as.sm.CreateNewSessionForUser(ctx, user.ID)
 	if err != nil {
 		as.log.Error(err.Error())
-		return nil, status.Error(codes.Internal, "")
+		return nil, status.Error(codes.Internal, "failed to create a session for the user")
 	}
 
 	return &authProto.Session{
@@ -80,9 +85,10 @@ func (as AuthServer) Logout(ctx context.Context, sess *authProto.Session) (*empt
 }
 
 func (as AuthServer) GetUserID(ctx context.Context, sess *authProto.Session) (*authProto.UserID, error) {
-	if userID, err := as.sm.GetUserIDBySessionKey(ctx, sess.Key); err != nil {
-		return nil, status.Error(codes.Internal, "")
-	} else {
-		return &authProto.UserID{Id: int64(userID)}, nil
+	userID, err := as.sm.GetUserIDBySessionKey(ctx, sess.Key)
+	if err != nil {
+		as.log.Error(err.Error())
+		return nil, status.Error(codes.NotFound, "session not found")
 	}
+	return &authProto.UserID{Id: int64(userID)}, nil
 }

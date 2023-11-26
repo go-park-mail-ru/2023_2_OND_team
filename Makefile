@@ -1,4 +1,4 @@
-.PHONY: build run test test_with_coverage cleantest retest doc generate cover_all currcover
+.PHONY: build run test test_with_coverage cleantest retest doc generate cover_all currcover build_auth
 ENTRYPOINT=cmd/app/main.go
 DOC_DIR=./docs
 COV_OUT=coverage.out
@@ -7,6 +7,9 @@ CURRCOVER=github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/
 
 build:
 	go build -o bin/app cmd/app/*.go
+
+build_auth:
+	go build -o bin/auth cmd/auth/*.go
 
 run: build
 	./bin/app

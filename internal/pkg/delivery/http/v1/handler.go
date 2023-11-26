@@ -5,7 +5,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -19,7 +18,6 @@ type HandlerHTTP struct {
 	boardCase   board.Usecase
 	subCase     subscription.Usecase
 	messageCase message.Usecase
-	sm          session.SessionManager
 }
 
 func New(log *logger.Logger, hub UsecaseHub) *HandlerHTTP {
@@ -31,7 +29,6 @@ func New(log *logger.Logger, hub UsecaseHub) *HandlerHTTP {
 		boardCase:   hub.BoardCase,
 		subCase:     hub.SubscriptionCase,
 		messageCase: hub.MessageCase,
-		sm:          hub.SM,
 	}
 }
 
@@ -42,5 +39,4 @@ type UsecaseHub struct {
 	BoardCase        board.Usecase
 	SubscriptionCase subscription.Usecase
 	MessageCase      message.Usecase
-	SM               session.SessionManager
 }

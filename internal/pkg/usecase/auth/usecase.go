@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/session"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
-	authRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/auth"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Usecase interface {
@@ -16,25 +18,62 @@ type Usecase interface {
 }
 
 type authCase struct {
-	repo authRepo.Repository
+	client authProto.AuthClient
 }
 
-func New(repo authRepo.Repository) *authCase {
-	return &authCase{repo}
+func New(client authProto.AuthClient) *authCase {
+	return &authCase{client}
 }
 
 func (ac *authCase) Register(ctx context.Context, user *entity.User) error {
-	return ac.repo.Register(ctx, user)
+	_, err := ac.client.Register(ctx, &authProto.RegisterData{
+		Cred: &authProto.Credentials{
+			Username: user.Username,
+			Password: user.Password,
+		},
+		Email: user.Email,
+	})
+	if err != nil {
+		return fmt.Errorf("register: %w", err)
+	}
+	return nil
 }
 
 func (ac *authCase) Logout(ctx context.Context, sess *session.Session) error {
-	return ac.repo.Logout(ctx, sess)
+	_, err := ac.client.Logout(ctx, &authProto.Session{
+		Key:    sess.Key,
+		UserID: int64(sess.UserID),
+		Expire: timestamppb.New(sess.Expire),
+	})
+	if err != nil {
+		return fmt.Errorf("logout: %w", err)
+	}
+	return nil
 }
 
 func (ac *authCase) Login(ctx context.Context, username, password string) (*session.Session, error) {
-	return ac.repo.Login(ctx, username, password)
+	sess, err := ac.client.Login(ctx, &authProto.Credentials{
+		Username: username,
+		Password: password,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("login: %w", err)
+	}
+	return &session.Session{
+		Key:    sess.Key,
+		UserID: int(sess.UserID),
+		Expire: sess.Expire.AsTime(),
+	}, nil
 }
 
 func (ac *authCase) GetUserIDBySession(ctx context.Context, sess *session.Session) (int, error) {
-	return ac.repo.GetUserID(ctx, sess)
+	userID, err := ac.client.GetUserID(ctx, &authProto.Session{
+		Key:    sess.Key,
+		UserID: int64(sess.UserID),
+		Expire: timestamppb.New(sess.Expire),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("get user id by session: %w", err)
+	}
+	return int(userID.Id), nil
 }
