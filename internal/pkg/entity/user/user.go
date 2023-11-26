@@ -1,6 +1,9 @@
 package user
 
-import "github.com/jackc/pgx/v5/pgtype"
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/microcosm-cc/bluemonday"
+)
 
 type User struct {
 	ID       int         `json:"id,omitempty" example:"123"`
@@ -18,6 +21,10 @@ type SubscriptionUser struct {
 	Username                string `json:"username"`
 	Avatar                  string `json:"avatar"`
 	HasSubscribeFromCurUser bool   `json:"is_subscribed"`
+}
+
+func (u *SubscriptionUser) Sanitize(sanitizer *bluemonday.Policy) {
+	sanitizer.Sanitize(u.Username)
 }
 
 type SubscriptionOpts struct {
