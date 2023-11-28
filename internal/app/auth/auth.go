@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 
-	"github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/app"
 	authMS "github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/auth/delivery/grpc"
 	sessRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/session"
@@ -63,7 +63,7 @@ func Run(ctx context.Context, log *logger.Logger, cfg Config) {
 	u := user.New(log, nil, userRepo.NewUserRepoPG(pool))
 
 	s := grpc.NewServer()
-	auth.RegisterAuthServer(s, authMS.New(log, sm, u))
+	authProto.RegisterAuthServer(s, authMS.New(log, sm, u))
 
 	log.Info("service auht start", logger.F{"addr", cfg.Addr})
 	if err = s.Serve(l); err != nil {

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	authProto "github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	userUsecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"

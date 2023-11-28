@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	authProto "github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"

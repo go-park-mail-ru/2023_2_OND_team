@@ -1,4 +1,6 @@
-.PHONY: build run test test_with_coverage cleantest retest doc generate cover_all currcover build_auth
+.PHONY: build run test test_with_coverage cleantest retest doc generate cover_all currcover
+.PHONY: build_auth  build_realtime
+
 ENTRYPOINT=cmd/app/main.go
 DOC_DIR=./docs
 COV_OUT=coverage.out
@@ -10,6 +12,9 @@ build:
 
 build_auth:
 	go build -o bin/auth cmd/auth/*.go
+
+build_realtime:
+	go build -o bin/realtime cmd/realtime/*.go
 
 run: build
 	./bin/app

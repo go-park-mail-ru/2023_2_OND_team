@@ -64,13 +64,17 @@ services:
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: pinspireNodeExporter
+    user: root
+    privileged: true
     command:
-      - '--path.rootfs=/host'
-    network_mode: host
-    pid: host
-    restart: unless-stopped
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
     volumes:
-      - '/:/host:ro,rslave'
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+     - "9100:9100"
 
 
 volumes:

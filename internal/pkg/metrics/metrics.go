@@ -30,8 +30,8 @@ func (m metrics) AddRequest(method, path string, statusResponse int, executed ti
 	}
 
 	m.totalHits.Inc()
-	m.hitsDetail.WithLabelValues(method, path, labelStatus).Inc()
-	m.timeMeasurement.WithLabelValues(method, path, labelStatus).Observe(float64(executed.Milliseconds()))
+	m.hitsDetail.WithLabelValues(method+" "+path, labelStatus).Inc()
+	m.timeMeasurement.WithLabelValues(method+" "+path, labelStatus).Observe(float64(executed.Milliseconds()))
 }
 
 func New(prefix string) metrics {
@@ -44,12 +44,12 @@ func New(prefix string) metrics {
 		hitsDetail: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: prefix + "_hits_detail",
 			Help: "the number of requests indicating its method, path, and response status",
-		}, []string{"method", "path", "status"}),
+		}, []string{"handler", "status"}),
 		timeMeasurement: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name:    prefix + "_request_time_execution",
 			Help:    "time of request execution with indication of its method, path and response status",
 			Buckets: []float64{10, 100, 500, 1000, 5000},
-		}, []string{"method", "path", "status"}),
+		}, []string{"handler", "status"}),
 	}
 }
 
