@@ -9,8 +9,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
-//ctx context.Context, template string, currUserID, lastID, count int
-
 type Usecase interface {
 	GetUsers(ctx context.Context, opts *search.SearchOpts) ([]search.UserForSearch, error)
 	GetBoards(ctx context.Context, opts *search.SearchOpts) ([]search.BoardForSearch, error)
