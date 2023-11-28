@@ -82,6 +82,12 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 			})
 		})
 
+		r.Route("/search", func(r chi.Router) {
+			r.Get("/users", handler.SearchUsers)
+			r.Get("/boards", handler.SearchBoards)
+			r.Get("/pins", handler.SearchPins)
+		})
+
 		r.Route("/pin", func(r chi.Router) {
 			r.Get("/{pinID:\\d+}", handler.ViewPin)
 
@@ -103,6 +109,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 			})
 			r.With(auth.RequireAuth).Group(func(r chi.Router) {
 				r.Post("/add/pins/{boardID:\\d+}", handler.AddPinsToBoard)
+				r.Delete("/delete/pin/{boardID:\\d+}", handler.DeletePinFromBoard)
 				r.Post("/create", handler.CreateNewBoard)
 				r.Put("/update/{boardID:\\d+}", handler.UpdateBoardInfo)
 				r.Delete("/delete/{boardID:\\d+}", handler.DeleteBoard)

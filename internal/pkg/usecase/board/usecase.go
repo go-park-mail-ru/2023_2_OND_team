@@ -20,6 +20,7 @@ type Usecase interface {
 	UpdateBoardInfo(ctx context.Context, updatedBoard entity.Board, tagTitles []string) error
 	DeleteCertainBoard(ctx context.Context, boardID int) error
 	FixPinsOnBoard(ctx context.Context, boardID int, pinIds []int, userID int) error
+	DeletePinFromBoard(ctx context.Context, boardID, pinID int) error
 	CheckAvailabilityFeedPinCfgOnBoard(ctx context.Context, cfg pin.FeedPinConfig, userID int, isAuth bool) error
 }
 
