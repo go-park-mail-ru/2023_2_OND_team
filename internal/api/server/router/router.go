@@ -13,6 +13,7 @@ import (
 	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
 	mw "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/monitoring"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/security"
 	authCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -28,7 +29,7 @@ func New() Router {
 	return Router{chi.NewMux()}
 }
 
-func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deliveryWS.HandlerWebSocket, ac authCase.Usecase, log *logger.Logger) {
+func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deliveryWS.HandlerWebSocket, ac authCase.Usecase, metrics monitoring.Metrics, log *logger.Logger) {
 	cfgCSRF := security.DefaultCSRFConfig()
 	cfgCSRF.PathToGet = "/api/v1/csrf"
 
@@ -41,7 +42,8 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 		ExposedHeaders:   []string{cfgCSRF.HeaderSet},
 	})
 
-	r.Mux.Use(mw.SetRequestTimeout(requestTimeout), mw.RequestID(log), mw.Logger(log), c.Handler,
+	r.Mux.Use(mw.SetRequestTimeout(requestTimeout), mw.RequestID(log), mw.Logger(log),
+		monitoring.Monitoring("/metrics", metrics), c.Handler,
 		security.CSRF(cfgCSRF),
 		mw.SetResponseHeaders(map[string]string{
 			"Content-Type": "application/json",

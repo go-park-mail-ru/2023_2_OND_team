@@ -3,7 +3,7 @@ package realtime
 import (
 	"context"
 
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/api/realtime"
+	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"

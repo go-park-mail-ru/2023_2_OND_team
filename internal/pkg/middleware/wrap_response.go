@@ -51,3 +51,11 @@ func (w *wrapResponseWriter) Flush() {
 		flusher.Flush()
 	}
 }
+
+func (w *wrapResponseWriter) StatusCode() int {
+	return w.statusCode
+}
+
+func (w *wrapResponseWriter) Written() int {
+	return w.written
+}

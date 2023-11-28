@@ -9,11 +9,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	authProto "github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
 	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/metrics"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	mesRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
@@ -38,6 +39,13 @@ const uploadFiles = "upload/"
 
 func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	godotenv.Load()
+
+	metrics := metrics.New("pinspire")
+	err := metrics.Registry()
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
 
 	ctx, cancelCtxPG := context.WithTimeout(ctx, _timeoutForConnPG)
 	defer cancelCtxPG()
@@ -80,7 +88,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	server := server.New(log, cfgServ)
 	router := router.New()
-	router.RegisterRoute(handler, wsHandler, ac, log)
+	router.RegisterRoute(handler, wsHandler, ac, metrics, log)
 
 	if err := server.Run(router.Mux); err != nil {
 		log.Error(err.Error())

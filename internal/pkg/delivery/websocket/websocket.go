@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	ws "nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/api/realtime"
+	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
@@ -21,9 +22,12 @@ type HandlerWebSocket struct {
 	originPatterns []string
 	log            *log.Logger
 	messageCase    usecase.Usecase
+	client         rt.RealTimeClient
 }
 
 type Option func(h *HandlerWebSocket)
+
+const _ctxOnServeConnect = 24 * time.Hour
 
 func SetOriginPatterns(patterns []string) Option {
 	return func(h *HandlerWebSocket) {
@@ -32,7 +36,14 @@ func SetOriginPatterns(patterns []string) Option {
 }
 
 func New(log *log.Logger, mesCase usecase.Usecase, opts ...Option) *HandlerWebSocket {
-	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase}
+	gRPCConn, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(fmt.Errorf("grpc dial: %w", err).Error())
+	}
+	defer gRPCConn.Close()
+
+	client := rt.NewRealTimeClient(gRPCConn)
+	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase, client: client}
 	for _, opt := range opts {
 		opt(handlerWS)
 	}
@@ -50,26 +61,19 @@ func (h *HandlerWebSocket) WebSocketConnect(w http.ResponseWriter, r *http.Reque
 	}
 	defer conn.CloseNow()
 
-	err = h.serveWebSocketConn(r.Context(), conn)
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
+	ctx, cancel := context.WithTimeout(context.Background(), _ctxOnServeConnect)
+	defer cancel()
+
+	err = h.serveWebSocketConn(ctx, conn, userID)
 	if err != nil {
 		h.log.Error(err.Error())
 	}
 }
 
-func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn) error {
-	userID, ok := ctx.Value(auth.KeyCurrentUserID).(int)
-	if !ok {
-		userID = 0
-	}
-	gRPCConn, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return fmt.Errorf("grpc dial: %w", err)
-	}
-	defer gRPCConn.Close()
-
-	client := rt.NewRealTimeClient(gRPCConn)
+func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn, userID int) error {
 	request := &Request{}
-
+	var err error
 	for {
 		err = wsjson.Read(ctx, conn, request)
 		if err != nil {
@@ -89,7 +93,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 					continue
 				}
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]int{"id": id}))
-				_, err = client.Publish(ctx, &rt.PublishMessage{
+				_, err = h.client.Publish(ctx, &rt.PublishMessage{
 					Channel: &rt.Channel{
 						Name:  request.Channel.Name,
 						Topic: request.Channel.Topic,
@@ -115,7 +119,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 					continue
 				}
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", nil))
-				_, err = client.Publish(ctx, &rt.PublishMessage{
+				_, err = h.client.Publish(ctx, &rt.PublishMessage{
 					Channel: &rt.Channel{
 						Name:  request.Channel.Name,
 						Topic: request.Channel.Topic,
@@ -140,7 +144,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 					continue
 				}
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", nil))
-				_, err = client.Publish(ctx, &rt.PublishMessage{
+				_, err = h.client.Publish(ctx, &rt.PublishMessage{
 					Channel: &rt.Channel{
 						Name:  request.Channel.Name,
 						Topic: request.Channel.Topic,
@@ -161,7 +165,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "error", "unsupported", "unsupported eventType", nil))
 			}
 		case "Subscribe":
-			err = h.subscribe(ctx, client, request, conn)
+			err = h.subscribe(ctx, h.client, request, conn)
 			if err != nil {
 				h.log.Warn(err.Error())
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "error", "subscribe_fail", "failed to subscribe to the channel", nil))

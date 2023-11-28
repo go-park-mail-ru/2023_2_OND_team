@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/api/realtime"
+	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 )
 
 type Channel struct {

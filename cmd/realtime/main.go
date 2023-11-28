@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/api/realtime"
+	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/realtime"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )

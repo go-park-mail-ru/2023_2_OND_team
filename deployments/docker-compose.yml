@@ -44,9 +44,42 @@ services:
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
     depends_on:
       - zookeeper
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pinspirePrometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - "../configs/prometheus.yml:/etc/prometheus/prometheus.yml"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pinspireGrafana
+    ports:
+      - 3000:3000
+    volumes:
+     - 'grafana_storage:/var/lib/grafana'
+  
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: pinspireNodeExporter
+    user: root
+    privileged: true
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+     - "9100:9100"
+
 
 volumes:
   zookeeper_data:
     driver: local
   kafka_data:
     driver: local
+  grafana_storage: {}

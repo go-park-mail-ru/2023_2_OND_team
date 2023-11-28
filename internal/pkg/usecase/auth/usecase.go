@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	authProto "github.com/go-park-mail-ru/2023_2_OND_team/api/auth"
+	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/session"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"google.golang.org/protobuf/types/known/timestamppb"
