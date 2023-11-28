@@ -339,6 +339,31 @@ func (repo *boardRepoPG) AddPinsOnBoard(ctx context.Context, boardID int, pinIds
 	return nil
 }
 
+func (repo *boardRepoPG) DeletePinFromBoard(ctx context.Context, boardID, pinID int) error {
+	tx, err := repo.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("delete pin from board - start tx: %w", err)
+	}
+
+	status, err := tx.Exec(ctx, DeletePinFromBoard, boardID, pinID)
+	if err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return fmt.Errorf("delete pin from board - rollback tx: %w", err)
+		}
+		return fmt.Errorf("delete pin from board - exec: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("delete pin from board - commit tx: %w", err)
+	}
+
+	if status.RowsAffected() == 0 {
+		return repository.ErrNoDataAffected
+	}
+
+	return nil
+}
+
 func (b *boardRepoPG) GetProtectionStatusBoard(ctx context.Context, boardID int) (repoBoard.ProtectionBoard, error) {
 	var isPublic bool
 	err := b.db.QueryRow(ctx, SelectProtectionStatusBoard, boardID).Scan(&isPublic)

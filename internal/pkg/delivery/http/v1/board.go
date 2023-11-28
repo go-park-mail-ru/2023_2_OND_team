@@ -34,6 +34,10 @@ type CertainBoard struct {
 	Tags        []string `json:"tags" example:"['love', 'green']"`
 }
 
+type DeletePinFromBoard struct {
+	PinID int `json:"pin_id" example:"22"`
+}
+
 func ToCertainBoardFromService(board entity.BoardWithContent) CertainBoard {
 	return CertainBoard{
 		ID:          board.BoardInfo.ID,
@@ -351,3 +355,72 @@ func (h *HandlerHTTP) AddPinsToBoard(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 	}
 }
+
+func (h *HandlerHTTP) DeletePinFromBoard(w http.ResponseWriter, r *http.Request) {
+	logger := h.getRequestLogger(r)
+
+	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
+	if err != nil {
+		logger.Info("delete pin from board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
+		return
+	}
+
+	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
+		code, message := getErrCodeMessage(ErrBadContentType)
+		responseError(w, code, message)
+		return
+	}
+
+	delPinFromBoard := DeletePinFromBoard{}
+	err = json.NewDecoder(r.Body).Decode(&delPinFromBoard)
+	if err != nil {
+		code, message := getErrCodeMessage(ErrBadBody)
+		responseError(w, code, message)
+		return
+	}
+	defer r.Body.Close()
+
+	err = h.boardCase.DeletePinFromBoard(r.Context(), int(boardID), delPinFromBoard.PinID)
+	if err != nil {
+		logger.Info("delete pin from board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	err = responseOk(http.StatusOK, w, "deleted pin from board successfully", nil)
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(ErrInternalError.Error()))
+	}
+}
+
+/*
+logger := h.getRequestLogger(r)
+
+	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
+	if err != nil {
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
+		return
+	}
+
+	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
+	if err != nil {
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	err = responseOk(http.StatusOK, w, "deleted board successfully", nil)
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(ErrInternalError.Error()))
+	}
+*/

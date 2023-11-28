@@ -25,6 +25,7 @@ var (
 		bCase.ErrInvalidUsername: "non_existingUser",
 		bCase.ErrNoSuchBoard:     "no_board",
 		bCase.ErrNoAccess:        "no_access",
+		bCase.ErrNoPinOnBoard:    "no_pin",
 	}
 )
 
