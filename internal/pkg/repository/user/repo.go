@@ -2,12 +2,15 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
+	errPkg "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/internal/pgtype"
 )
@@ -18,6 +21,9 @@ type Repository interface {
 	GetUserByUsername(ctx context.Context, username string) (*user.User, error)
 	GetUsernameAndAvatarByID(ctx context.Context, userID int) (username string, avatar string, err error)
 	GetUserIdByUsername(ctx context.Context, username string) (int, error)
+	GetUserData(ctx context.Context, userID, currUserID int) (user_ *user.User, isSubscribed bool, subsCount int, err error)
+	GetProfileData(ctx context.Context, userID int) (user_ *user.User, subsCount int, err error)
+	CheckUserExistence(ctx context.Context, userID int) error
 	EditUserAvatar(ctx context.Context, userID int, avatar string) error
 	GetAllUserData(ctx context.Context, userID int) (*user.User, error)
 	EditUserInfo(ctx context.Context, userID int, updateFields S) error
@@ -31,6 +37,34 @@ type userRepoPG struct {
 
 func NewUserRepoPG(db pgtype.PgxPoolIface) *userRepoPG {
 	return &userRepoPG{db}
+}
+
+func convertErrorPostgres(err error) error {
+
+	switch err {
+	case pgx.ErrNoRows:
+		return &ErrNonExistingUser{}
+	case context.DeadlineExceeded:
+		return &errPkg.ErrTimeoutExceeded{}
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.SQLState() {
+		// add SQL states if necessary
+		}
+	}
+	return &errPkg.InternalError{Message: err.Error(), Layer: string(errPkg.Repo)}
+}
+
+func (u *userRepoPG) CheckUserExistence(ctx context.Context, userID int) error {
+	row := u.db.QueryRow(ctx, CheckUserExistence, userID)
+	var dummy string
+	if err := row.Scan(&dummy); err != nil {
+		return convertErrorPostgres(err)
+	}
+
+	return nil
 }
 
 func (u *userRepoPG) AddNewUser(ctx context.Context, user *user.User) error {
@@ -58,6 +92,27 @@ func (u *userRepoPG) GetUsernameAndAvatarByID(ctx context.Context, userID int) (
 		return "", "", fmt.Errorf("getting a username from storage by id: %w", err)
 	}
 	return
+}
+
+func (u *userRepoPG) GetUserData(ctx context.Context, userID, currUserID int) (user_ *user.User, isSubscribed bool, subsCount int, err error) {
+	user_ = &user.User{}
+	if err := u.db.QueryRow(ctx, GetUserInfo, currUserID, userID).Scan(
+		&user_.ID, &user_.Username, &user_.Avatar, &user_.Name, &user_.Surname,
+		&user_.AboutMe, &isSubscribed, &subsCount,
+	); err != nil {
+		return nil, false, 0, convertErrorPostgres(err)
+	}
+	return user_, isSubscribed, subsCount, nil
+}
+
+func (u *userRepoPG) GetProfileData(ctx context.Context, userID int) (user_ *user.User, subsCount int, err error) {
+	user_ = &user.User{}
+	if err := u.db.QueryRow(ctx, GetProfileInfo, userID).Scan(
+		&user_.ID, &user_.Username, &user_.Avatar, &subsCount,
+	); err != nil {
+		return nil, 0, convertErrorPostgres(err)
+	}
+	return user_, subsCount, nil
 }
 
 func (u *userRepoPG) EditUserAvatar(ctx context.Context, userID int, avatar string) error {

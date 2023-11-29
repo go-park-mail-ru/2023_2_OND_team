@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,32 +10,10 @@ import (
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
-	bCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 var TimeFormat = "2006-01-02"
-
-var (
-	ErrEmptyTitle        = errors.New("empty or null board title has been provided")
-	ErrEmptyPubOpt       = errors.New("null public option has been provided")
-	ErrInvalidBoardTitle = errors.New("invalid or empty board title has been provided")
-	ErrInvalidTagTitles  = errors.New("invalid tag titles have been provided")
-	ErrInvalidUsername   = errors.New("invalid username has been provided")
-)
-
-var (
-	wrappedErrors      = map[error]string{ErrInvalidTagTitles: "bad_Tagtitles"}
-	errCodeCompability = map[error]string{
-		ErrInvalidBoardTitle:     "bad_boardTitle",
-		ErrEmptyTitle:            "empty_boardTitle",
-		ErrEmptyPubOpt:           "bad_pubOpt",
-		ErrInvalidUsername:       "bad_username",
-		bCase.ErrInvalidUsername: "non_existingUser",
-		bCase.ErrNoSuchBoard:     "no_board",
-		bCase.ErrNoAccess:        "no_access",
-	}
-)
 
 // data for board creation/update
 type BoardData struct {
@@ -55,6 +32,10 @@ type CertainBoard struct {
 	PinsNumber  int      `json:"pins_number" example:"12"`
 	Pins        []string `json:"pins" example:"['/pic1', '/pic2']"`
 	Tags        []string `json:"tags" example:"['love', 'green']"`
+}
+
+type DeletePinFromBoard struct {
+	PinID int `json:"pin_id" example:"22"`
 }
 
 func ToCertainBoardFromService(board entity.BoardWithContent) CertainBoard {
@@ -89,36 +70,9 @@ func (data *BoardData) Validate() error {
 	return nil
 }
 
-func getErrCodeMessage(err error) (string, string) {
-	var (
-		code              string
-		general, specific bool
-	)
-
-	code, general = generalErrCodeCompability[err]
-	if general {
-		return code, err.Error()
-	}
-
-	code, specific = errCodeCompability[err]
-	if !specific {
-		for wrappedErr, code_ := range wrappedErrors {
-			if errors.Is(err, wrappedErr) {
-				specific = true
-				code = code_
-			}
-		}
-	}
-	if specific {
-		return code, err.Error()
-	}
-
-	return ErrInternalError.Error(), generalErrCodeCompability[ErrInternalError]
-}
-
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
-	if contentType := w.Header().Get("Content-Type"); contentType != ApplicationJson {
+	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
 		code, message := getErrCodeMessage(ErrBadContentType)
 		responseError(w, code, message)
 		return
@@ -258,7 +212,7 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 
 func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
-	if contentType := w.Header().Get("Content-Type"); contentType != ApplicationJson {
+	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
 		code, message := getErrCodeMessage(ErrBadContentType)
 		responseError(w, code, message)
 		return
@@ -401,3 +355,72 @@ func (h *HandlerHTTP) AddPinsToBoard(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 	}
 }
+
+func (h *HandlerHTTP) DeletePinFromBoard(w http.ResponseWriter, r *http.Request) {
+	logger := h.getRequestLogger(r)
+
+	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
+	if err != nil {
+		logger.Info("delete pin from board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
+		return
+	}
+
+	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
+		code, message := getErrCodeMessage(ErrBadContentType)
+		responseError(w, code, message)
+		return
+	}
+
+	delPinFromBoard := DeletePinFromBoard{}
+	err = json.NewDecoder(r.Body).Decode(&delPinFromBoard)
+	if err != nil {
+		code, message := getErrCodeMessage(ErrBadBody)
+		responseError(w, code, message)
+		return
+	}
+	defer r.Body.Close()
+
+	err = h.boardCase.DeletePinFromBoard(r.Context(), int(boardID), delPinFromBoard.PinID)
+	if err != nil {
+		logger.Info("delete pin from board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	err = responseOk(http.StatusOK, w, "deleted pin from board successfully", nil)
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(ErrInternalError.Error()))
+	}
+}
+
+/*
+logger := h.getRequestLogger(r)
+
+	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
+	if err != nil {
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(ErrBadUrlParam)
+		responseError(w, code, message)
+		return
+	}
+
+	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
+	if err != nil {
+		logger.Info("update certain board", log.F{"message", err.Error()})
+		code, message := getErrCodeMessage(err)
+		responseError(w, code, message)
+		return
+	}
+
+	err = responseOk(http.StatusOK, w, "deleted board successfully", nil)
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(ErrInternalError.Error()))
+	}
+*/

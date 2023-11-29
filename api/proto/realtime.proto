@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime";
+
+package realtime;
+
+service RealTime {
+    rpc Publish(PublishMessage) returns (google.protobuf.Empty) {}
+    rpc Subscribe(Channel) returns (stream Message) {}
+}
+
+message Channel {
+    string topic = 1;
+    string name = 2;
+}
+
+enum EventType {
+    EV_CREATE = 0;
+    EV_DELETE = 1;
+    EV_UPDATE = 2;
+}
+
+message EventObject {
+    int64 id = 1;
+    EventType type = 2;
+}
+
+message Message {
+    oneof body {
+        EventObject object = 1;
+        string content = 2;
+    }
+}
+
+message PublishMessage {
+    Channel channel = 1;
+    Message message = 2;
+}

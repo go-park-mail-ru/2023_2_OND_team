@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -104,4 +105,11 @@ func (log *Logger) multiLevelSugarLog(logFn zapSugarLogFn, template string, args
 		fieldsSugarLogger = append(fieldsSugarLogger, field.FieldName, field.Value)
 	}
 	logFn(log.Logger.Sugar().With(fieldsSugarLogger...), template, args...)
+}
+
+func GetLoggerFromCtx(ctx context.Context) *Logger {
+	if log, ok := ctx.Value(KeyLogger).(*Logger); ok {
+		return log
+	}
+	return &Logger{}
 }

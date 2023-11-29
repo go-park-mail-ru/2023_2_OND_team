@@ -8,7 +8,7 @@ import (
 
 type ConfigFiles struct {
 	ServerConfigFile string
-	RedisConfigFile  string
+	AddrAuthServer   string
 }
 
 type redisConfig struct {

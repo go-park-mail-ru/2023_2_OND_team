@@ -9,6 +9,7 @@ const (
 	GetContributorBoardsIDs               = "SELECT board_id FROM contributor WHERE user_id = $1;"
 	DeleteBoardByIdQuery                  = "UPDATE board SET deleted_at = $1 WHERE id = $2 AND deleted_at IS NULL;"
 	DeleteCurrentBoardTags                = "DELETE FROM board_tag WHERE board_id = $1;"
+	DeletePinFromBoard                    = "DELETE FROM membership m WHERE m.board_id = $1 AND m.pin_id = $2 AND (SELECT deleted_at IS NULL FROM pin p WHERE p.id = $2);"
 	SelectAuthorOrContributorRole         = `SELECT board.author, role.name FROM board LEFT JOIN contributor
 											 ON contributor.board_id = board.id AND contributor.user_id = $1 LEFT JOIN role
 											 ON contributor.role_id = role.id

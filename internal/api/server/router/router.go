@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/cors"
@@ -9,12 +10,16 @@ import (
 
 	_ "github.com/go-park-mail-ru/2023_2_OND_team/docs"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
+	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
 	mw "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/monitoring"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/security"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
+	authCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
+
+const requestTimeout = 10 * time.Second
 
 type Router struct {
 	Mux *chi.Mux
@@ -24,24 +29,26 @@ func New() Router {
 	return Router{chi.NewMux()}
 }
 
-func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.SessionManager, log *logger.Logger) {
+func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deliveryWS.HandlerWebSocket, ac authCase.Usecase, metrics monitoring.Metrics, log *logger.Logger) {
 	cfgCSRF := security.DefaultCSRFConfig()
 	cfgCSRF.PathToGet = "/api/v1/csrf"
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"https://pinspire.online", "https://pinspire.online:1443",
-			"https://pinspire.online:1444", "https://pinspire.online:1445", "https://pinspire.online:1446"},
+			"https://pinspire.online:1444", "https://pinspire.online:1445", "https://pinspire.online:1446", "https://pinspire.online:8081"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"content-type", cfgCSRF.Header},
 		ExposedHeaders:   []string{cfgCSRF.HeaderSet},
 	})
 
-	r.Mux.Use(mw.RequestID(log), mw.Logger(log), c.Handler,
-		security.CSRF(cfgCSRF), mw.SetResponseHeaders(map[string]string{
+	r.Mux.Use(mw.SetRequestTimeout(requestTimeout), mw.RequestID(log), mw.Logger(log),
+		monitoring.Monitoring("/metrics", metrics), c.Handler,
+		security.CSRF(cfgCSRF),
+		mw.SetResponseHeaders(map[string]string{
 			"Content-Type": "application/json",
 		}),
-		auth.NewAuthMiddleware(sm).ContextWithUserID)
+		auth.NewAuthMiddleware(ac).ContextWithUserID)
 
 	r.Mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs/*", httpSwagger.WrapHandler)
@@ -60,6 +67,27 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			r.Get("/info", handler.GetProfileInfo)
 			r.Put("/edit", handler.ProfileEditInfo)
 			r.Put("/avatar", handler.ProfileEditAvatar)
+			r.Get("/header", handler.GetProfileHeaderInfo)
+		})
+
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/info/{userID:\\d+}", handler.GetUserInfo)
+		})
+
+		r.Route("/subscription", func(r chi.Router) {
+			r.Route("/user", func(r chi.Router) {
+				r.With(auth.RequireAuth).Group(func(r chi.Router) {
+					r.Post("/create", handler.Subscribe)
+					r.Delete("/delete", handler.Unsubscribe)
+				})
+				r.Get("/get", handler.GetSubscriptionInfoForUser)
+			})
+		})
+
+		r.Route("/search", func(r chi.Router) {
+			r.Get("/users", handler.SearchUsers)
+			r.Get("/boards", handler.SearchBoards)
+			r.Get("/pins", handler.SearchPins)
 		})
 
 		r.Route("/pin", func(r chi.Router) {
@@ -83,6 +111,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 			})
 			r.With(auth.RequireAuth).Group(func(r chi.Router) {
 				r.Post("/add/pins/{boardID:\\d+}", handler.AddPinsToBoard)
+				r.Delete("/delete/pin/{boardID:\\d+}", handler.DeletePinFromBoard)
 				r.Post("/create", handler.CreateNewBoard)
 				r.Put("/update/{boardID:\\d+}", handler.UpdateBoardInfo)
 				r.Delete("/delete/{boardID:\\d+}", handler.DeleteBoard)
@@ -92,5 +121,17 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, sm session.Sess
 		r.Route("/feed", func(r chi.Router) {
 			r.Get("/pin", handler.FeedPins)
 		})
+
+		r.With(auth.RequireAuth).Route("/chat", func(r chi.Router) {
+			r.Get("/personal", handler.FeedChats)
+			r.Get("/get/{userID:\\d+}", handler.GetMessagesFromChat)
+			r.Post("/send/{userID:\\d+}", handler.SendMessageToUser)
+			r.Put("/update/{messageID:\\d+}", handler.UpdateMessage)
+			r.Delete("/delete/{messageID:\\d+}", handler.DeleteMessage)
+		})
+	})
+
+	r.Mux.With(auth.RequireAuth).Route("/websocket/connect", func(r chi.Router) {
+		r.Get("/chat", wsHandler.WebSocketConnect)
 	})
 }

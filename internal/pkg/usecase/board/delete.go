@@ -31,3 +31,31 @@ func (bCase *boardUsecase) DeleteCertainBoard(ctx context.Context, boardID int) 
 
 	return nil
 }
+
+func (bCase *boardUsecase) DeletePinFromBoard(ctx context.Context, boardID, pinID int) error {
+	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
+	if err != nil {
+		switch err {
+		case repository.ErrNoData:
+			return ErrNoSuchBoard
+		default:
+			return fmt.Errorf("delete certain board: %w", err)
+		}
+	}
+
+	currUserID, loggedIn := ctx.Value(auth.KeyCurrentUserID).(int)
+	if !(loggedIn && currUserID == boardAuthorID) {
+		return ErrNoAccess
+	}
+
+	err = bCase.boardRepo.DeletePinFromBoard(ctx, boardID, pinID)
+	if err != nil {
+		switch err {
+		case repository.ErrNoDataAffected:
+			return ErrNoPinOnBoard
+		}
+		return fmt.Errorf("delete certain board: %w", err)
+	}
+
+	return nil
+}

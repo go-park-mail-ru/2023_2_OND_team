@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -76,17 +77,7 @@ func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userCase.Authentication(r.Context(), params)
-	if err != nil {
-		logger.Warn(err.Error())
-		err = responseError(w, "bad_credentials", "incorrect user credentials")
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		return
-	}
-
-	session, err := h.sm.CreateNewSessionForUser(r.Context(), user.ID)
+	session, err := h.authCase.Login(r.Context(), params.Username, params.Password)
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "session", "failed to create a session for the user")
@@ -151,7 +142,7 @@ func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.userCase.Register(r.Context(), user)
+	err = h.authCase.Register(r.Context(), user)
 	if err != nil {
 		logger.Warn(err.Error())
 		err = responseError(w, "uniq_fields", "there is already an account with this username or email")
@@ -178,6 +169,7 @@ func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
 //	@Router			/api/v1/auth/logout [delete]
 func (h *HandlerHTTP) Logout(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	cookie, err := r.Cookie("session_key")
 	if err != nil {
@@ -193,7 +185,11 @@ func (h *HandlerHTTP) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie.Path = "/"
 	http.SetCookie(w, cookie)
 
-	err = h.sm.DeleteUserSession(r.Context(), cookie.Value)
+	err = h.authCase.Logout(r.Context(), &session.Session{
+		Key:    cookie.Value,
+		UserID: userID,
+		Expire: cookie.Expires,
+	})
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "session", "the user logged out, but his session did not end")

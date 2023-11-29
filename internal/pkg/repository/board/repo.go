@@ -20,6 +20,7 @@ type Repository interface {
 	DeleteBoardByID(ctx context.Context, boardID int) error
 	RoleUserHaveOnThisBoard(ctx context.Context, boardID int, userID int) (UserRole, error)
 	AddPinsOnBoard(ctx context.Context, boardID int, pinIds []int) error
+	DeletePinFromBoard(ctx context.Context, boardID, pinID int) error
 	GetProtectionStatusBoard(ctx context.Context, boardID int) (ProtectionBoard, error)
 }
 
