@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
@@ -17,7 +18,6 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/metrics"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
-	mesRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	searchRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/search/postgres"
 	subRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/subscription/postgres"
@@ -57,8 +57,15 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer pool.Close()
 
+	connMessMS, err := grpc.Dial("localhost:8095", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer connMessMS.Close()
+
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
-	messageCase := message.New(mesRepo.NewMessageRepo(pool))
+	messageCase := message.New(messenger.NewMessengerClient(connMessMS))
 
 	conn, err := grpc.Dial(cfg.AddrAuthServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

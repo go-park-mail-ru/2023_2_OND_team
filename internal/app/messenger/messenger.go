@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -15,9 +16,9 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/app"
 	messMS "github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/messenger/delivery/grpc"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/messenger/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	mesRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/message"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -40,11 +41,13 @@ func Run(ctx context.Context, log *logger.Logger) {
 
 	server := grpc.NewServer(grpc.UnaryInterceptor(
 		func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-			f := metadata.ValueFromIncomingContext(ctx, string(auth.KeyCurrentUserID))
-			if len(f) != 1 {
+			log.Info("call", logger.F{"handler", info.FullMethod})
+			md := metadata.ValueFromIncomingContext(ctx, messMS.AuthenticatedMetadataKey)
+			fmt.Println(md)
+			if len(md) != 1 {
 				return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 			}
-			userID, err := strconv.ParseInt(f[0], 10, 64)
+			userID, err := strconv.ParseInt(md[0], 10, 64)
 			if err != nil {
 				return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 			}

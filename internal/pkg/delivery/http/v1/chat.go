@@ -35,6 +35,7 @@ func (h *HandlerHTTP) FeedChats(w http.ResponseWriter, r *http.Request) {
 
 func (h *HandlerHTTP) SendMessageToUser(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
+	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	fromUserID := r.Context().Value(auth.KeyCurrentUserID).(int)
 	toUserID, err := fetchURLParamInt(r, "userID")
@@ -61,7 +62,7 @@ func (h *HandlerHTTP) SendMessageToUser(w http.ResponseWriter, r *http.Request) 
 	mes.From = fromUserID
 	mes.To = toUserID
 
-	idNewMessage, err := h.messageCase.SendMessage(r.Context(), mes)
+	idNewMessage, err := h.messageCase.SendMessage(r.Context(), userID, mes)
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "send_message", "failed to send message")
@@ -163,7 +164,7 @@ func (h *HandlerHTTP) GetMessagesFromChat(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	feed, newLastID, err := h.messageCase.GetMessagesFromChat(r.Context(), message.Chat{userID, userID2}, count, lastID)
+	feed, newLastID, err := h.messageCase.GetMessagesFromChat(r.Context(), userID, message.Chat{userID, userID2}, count, lastID)
 	if err != nil {
 		logger.Warn(err.Error())
 	}
