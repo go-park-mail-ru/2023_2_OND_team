@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/go-park-mail-ru/2023_2_OND_team/api/auth";
+option go_package = "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth";
 
 package auth;
 
