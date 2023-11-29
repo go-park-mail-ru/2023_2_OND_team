@@ -50,7 +50,7 @@ message WichWhomChat {
 
 message ChatWithUser {
     int64 lastMessageID = 1;
-    ChatWithUser chat = 2;
+    WichWhomChat chat = 2;
 }
 
 message FeedMessage {
@@ -60,4 +60,5 @@ message FeedMessage {
 
 message FeedChat {
     repeated ChatWithUser chats = 1;
+    int64 lastID = 2;
 }
