@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 
 	mess "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/messenger/usecase/message"
@@ -15,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const AuthenticatedMetadataKey = "userID"
+const AuthenticatedMetadataKey = "user_id"
 
 type MessengerServer struct {
 	mess.UnimplementedMessengerServer
@@ -32,7 +31,6 @@ func New(log *logger.Logger, msgCase message.Usecase) MessengerServer {
 }
 
 func (m MessengerServer) UserChatsWithOtherUsers(ctx context.Context, r *mess.FeedChatRequest) (*mess.FeedChat, error) {
-	fmt.Println("call")
 	userID := ctx.Value(auth.KeyCurrentUserID).(int)
 
 	feed, lastID, err := m.messageCase.GetUserChatsWithOtherUsers(ctx, userID, int(r.GetCount()), int(r.GetLastID()))

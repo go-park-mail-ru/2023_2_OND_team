@@ -116,6 +116,5 @@ func (m *messageCase) GetUserChatsWithOtherUsers(ctx context.Context, userID, co
 }
 
 func setAuthenticatedMetadataCtx(ctx context.Context, userID int) context.Context {
-	fmt.Println(messMS.AuthenticatedMetadataKey, userID)
 	return metadata.AppendToOutgoingContext(ctx, messMS.AuthenticatedMetadataKey, strconv.FormatInt(int64(userID), 10))
 }

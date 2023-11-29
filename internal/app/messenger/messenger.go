@@ -2,7 +2,6 @@ package messenger
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -43,7 +42,6 @@ func Run(ctx context.Context, log *logger.Logger) {
 		func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 			log.Info("call", logger.F{"handler", info.FullMethod})
 			md := metadata.ValueFromIncomingContext(ctx, messMS.AuthenticatedMetadataKey)
-			fmt.Println(md)
 			if len(md) != 1 {
 				return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 			}

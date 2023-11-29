@@ -18,6 +18,7 @@ func (h *HandlerHTTP) FeedChats(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err.Error())
 		}
+		return
 	}
 
 	chats, newLastID, err := h.messageCase.GetUserChatsWithOtherUsers(r.Context(), userID, count, lastID)
