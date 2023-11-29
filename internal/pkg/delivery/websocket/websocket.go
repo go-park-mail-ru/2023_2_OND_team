@@ -40,7 +40,6 @@ func New(log *log.Logger, mesCase usecase.Usecase, opts ...Option) *HandlerWebSo
 	if err != nil {
 		log.Error(fmt.Errorf("grpc dial: %w", err).Error())
 	}
-	defer gRPCConn.Close()
 
 	client := rt.NewRealTimeClient(gRPCConn)
 	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase, client: client}

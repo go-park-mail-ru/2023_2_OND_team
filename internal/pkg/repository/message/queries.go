@@ -3,8 +3,8 @@ package message
 const (
 	SelectMessageByID = "SELECT user_from, user_to, content FROM message WHERE id = $1 AND deleted_at IS NULL;"
 	SelectUserChats   = `SELECT max(message.id) AS mmid, profile.id, username, avatar 
-						 FROM message INNER JOIN profile ON user_to = profile.id
-						 WHERE (user_from = $1 OR user_to = $1) AND (message.id < $2 OR $2 = 0)
+						 FROM message INNER JOIN profile ON (user_to = $1 AND user_from = profile.id) OR (user_to = profile.id AND user_from = $1)
+						 WHERE (message.id < $2 OR $2 = 0)
 						 GROUP BY profile.id
 						 ORDER BY mmid DESC
 						 LIMIT $3;`
