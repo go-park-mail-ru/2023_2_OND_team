@@ -4,15 +4,17 @@ import (
 	"context"
 
 	mess "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/messenger/usecase/message"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+const AuthenticatedMetadataKey = "user_id"
 
 type MessengerServer struct {
 	mess.UnimplementedMessengerServer
