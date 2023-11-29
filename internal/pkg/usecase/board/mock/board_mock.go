@@ -79,6 +79,20 @@ func (mr *MockUsecaseMockRecorder) DeleteCertainBoard(ctx, boardID interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCertainBoard", reflect.TypeOf((*MockUsecase)(nil).DeleteCertainBoard), ctx, boardID)
 }
 
+// DeletePinFromBoard mocks base method.
+func (m *MockUsecase) DeletePinFromBoard(ctx context.Context, boardID, pinID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePinFromBoard", ctx, boardID, pinID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePinFromBoard indicates an expected call of DeletePinFromBoard.
+func (mr *MockUsecaseMockRecorder) DeletePinFromBoard(ctx, boardID, pinID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePinFromBoard", reflect.TypeOf((*MockUsecase)(nil).DeletePinFromBoard), ctx, boardID, pinID)
+}
+
 // FixPinsOnBoard mocks base method.
 func (m *MockUsecase) FixPinsOnBoard(ctx context.Context, boardID int, pinIds []int, userID int) error {
 	m.ctrl.T.Helper()
@@ -125,12 +139,13 @@ func (mr *MockUsecaseMockRecorder) GetBoardsByUsername(ctx, username interface{}
 }
 
 // GetCertainBoard mocks base method.
-func (m *MockUsecase) GetCertainBoard(ctx context.Context, boardID int) (board.BoardWithContent, error) {
+func (m *MockUsecase) GetCertainBoard(ctx context.Context, boardID int) (board.BoardWithContent, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCertainBoard", ctx, boardID)
 	ret0, _ := ret[0].(board.BoardWithContent)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetCertainBoard indicates an expected call of GetCertainBoard.

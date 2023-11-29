@@ -339,6 +339,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 		GetBoardByID             GetBoardByID
 		hasAccess                bool
 		expBoard                 entity.BoardWithContent
+		expUsername              string
 		wantErr                  bool
 		expErr                   error
 	}{
@@ -363,7 +364,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 					PinsNumber: 1,
 					Pins:       []string{"/pic1"},
 					TagTitles:  []string{"good", "bad"},
-				}, nil).Times(1)
+				}, "user", nil).Times(1)
 			},
 			hasAccess: true,
 			expBoard: entity.BoardWithContent{
@@ -377,6 +378,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				Pins:       []string{"/pic1"},
 				TagTitles:  []string{"good", "bad"},
 			},
+			expUsername: "user",
 		},
 		{
 			name:    "private board, valid board id, request from contributor",
@@ -399,7 +401,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 					PinsNumber: 1,
 					Pins:       []string{"/pic1"},
 					TagTitles:  []string{"good", "bad"},
-				}, nil).Times(1)
+				}, "user", nil).Times(1)
 			},
 			hasAccess: true,
 			expBoard: entity.BoardWithContent{
@@ -413,6 +415,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				Pins:       []string{"/pic1"},
 				TagTitles:  []string{"good", "bad"},
 			},
+			expUsername: "user",
 		},
 		{
 			name:    "private board, valid board id, request from not author, not contributor",
@@ -425,7 +428,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{{ID: 123}}, nil).Times(1)
 			},
 			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
-				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(entity.BoardWithContent{}, repository.ErrNoData).Times(1)
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(entity.BoardWithContent{}, "", repository.ErrNoData).Times(1)
 			},
 			hasAccess: false,
 			expBoard:  entity.BoardWithContent{},
@@ -443,7 +446,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				mockRepo.EXPECT().GetContributorsByBoardID(ctx, boardID).Return([]uEntity.User{{ID: 123}}, nil).Times(1)
 			},
 			GetBoardByID: func(mockRepo *mock_board.MockRepository, ctx context.Context, boardID int, hasAccess bool) {
-				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(entity.BoardWithContent{}, repository.ErrNoData).Times(1)
+				mockRepo.EXPECT().GetBoardByID(ctx, boardID, hasAccess).Return(entity.BoardWithContent{}, "", repository.ErrNoData).Times(1)
 			},
 			hasAccess: false,
 			expBoard:  entity.BoardWithContent{},
@@ -471,7 +474,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 					PinsNumber: 1,
 					Pins:       []string{"/pic1"},
 					TagTitles:  []string{"good", "bad"},
-				}, nil).Times(1)
+				}, "user", nil).Times(1)
 			},
 			hasAccess: false,
 			expBoard: entity.BoardWithContent{
@@ -485,6 +488,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 				Pins:       []string{"/pic1"},
 				TagTitles:  []string{"good", "bad"},
 			},
+			expUsername: "user",
 		},
 		{
 			name:    "invalid board id",
@@ -514,7 +518,7 @@ func TestBoardUsecase_GetCertainBoard(t *testing.T) {
 			test.GetBoardByID(mockBoardRepo, test.inCtx, test.boardID, test.hasAccess)
 
 			boardUsecase := New(log, mockBoardRepo, nil, sanitizer)
-			board, err := boardUsecase.GetCertainBoard(test.inCtx, test.boardID)
+			board, _, err := boardUsecase.GetCertainBoard(test.inCtx, test.boardID)
 
 			if test.wantErr {
 				require.EqualError(t, err, test.expErr.Error())

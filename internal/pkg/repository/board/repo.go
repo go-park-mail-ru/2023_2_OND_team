@@ -11,7 +11,7 @@ import (
 type Repository interface {
 	CreateBoard(ctx context.Context, board entity.Board, tagTitles []string) (int, error)
 	GetBoardsByUserID(ctx context.Context, userID int, isAuthor bool, accessableBoardsIDs []int) ([]entity.BoardWithContent, error)
-	GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board entity.BoardWithContent, err error)
+	GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board entity.BoardWithContent, username string, err error)
 	GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error)
 	GetContributorsByBoardID(ctx context.Context, boardID int) ([]uEntity.User, error)
 	GetContributorBoardsIDs(ctx context.Context, contributorID int) ([]int, error)

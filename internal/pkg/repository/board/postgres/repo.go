@@ -114,11 +114,12 @@ func (boardRepo *boardRepoPG) GetBoardsByUserID(ctx context.Context, userID int,
 	return boards, nil
 }
 
-func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board entity.BoardWithContent, err error) {
+func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board entity.BoardWithContent, username string, err error) {
 	getBoardByIdQuery := repo.sqlBuilder.
 		Select(
 			"board.id",
 			"board.author",
+			"profile.username",
 			"board.title",
 			"COALESCE(board.description, '')",
 			"board.created_at",
@@ -126,6 +127,7 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 			"COALESCE((ARRAY_AGG(DISTINCT pin.picture) FILTER (WHERE pin.deleted_at IS NULL AND pin.picture IS NOT NULL)), ARRAY[]::TEXT[]) AS pins",
 			"COALESCE(ARRAY_AGG(DISTINCT tag.title) FILTER (WHERE tag.title IS NOT NULL), ARRAY[]::TEXT[]) AS tag_titles").
 		From("board").
+		LeftJoin("profile ON board.author = profile.id").
 		LeftJoin("board_tag ON board.id = board_tag.board_id").
 		LeftJoin("tag ON board_tag.tag_id = tag.id").
 		LeftJoin("membership ON board.id = membership.board_id").
@@ -139,6 +141,7 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 	getBoardByIdQuery = getBoardByIdQuery.GroupBy(
 		"board.id",
 		"board.author",
+		"profile.username",
 		"board.title",
 		"board.description",
 		"board.created_at").
@@ -146,22 +149,21 @@ func (repo *boardRepoPG) GetBoardByID(ctx context.Context, boardID int, hasAcces
 
 	sqlRow, args, err := getBoardByIdQuery.ToSql()
 	if err != nil {
-		return entity.BoardWithContent{}, fmt.Errorf("building get board by id query: %w", err)
+		return entity.BoardWithContent{}, "", fmt.Errorf("building get board by id query: %w", err)
 	}
 
 	row := repo.db.QueryRow(ctx, sqlRow, args...)
 	board = entity.BoardWithContent{}
-	err = row.Scan(&board.BoardInfo.ID, &board.BoardInfo.AuthorID, &board.BoardInfo.Title, &board.BoardInfo.Description, &board.BoardInfo.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
+	err = row.Scan(&board.BoardInfo.ID, &board.BoardInfo.AuthorID, &username, &board.BoardInfo.Title, &board.BoardInfo.Description, &board.BoardInfo.CreatedAt, &board.PinsNumber, &board.Pins, &board.TagTitles)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			return entity.BoardWithContent{}, repository.ErrNoData
+			return entity.BoardWithContent{}, "", repository.ErrNoData
 		default:
-			return entity.BoardWithContent{}, fmt.Errorf("scan result of get board by id query: %w", err)
+			return entity.BoardWithContent{}, "", fmt.Errorf("scan result of get board by id query: %w", err)
 		}
 	}
-
-	return board, nil
+	return board, username, nil
 }
 
 func (repo *boardRepoPG) GetBoardInfoForUpdate(ctx context.Context, boardID int, hasAccess bool) (entity.Board, []string, error) {

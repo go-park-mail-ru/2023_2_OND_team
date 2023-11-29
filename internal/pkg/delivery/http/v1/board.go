@@ -26,12 +26,25 @@ type BoardData struct {
 // board view for delivery layer
 type CertainBoard struct {
 	ID          int      `json:"board_id" example:"22"`
+	AuthorID    int      `json:"author_id" example:"22"`
 	Title       string   `json:"title" example:"new board"`
 	Description string   `json:"description" example:"long desc"`
 	CreatedAt   string   `json:"created_at" example:"07-11-2023"`
 	PinsNumber  int      `json:"pins_number" example:"12"`
 	Pins        []string `json:"pins" example:"['/pic1', '/pic2']"`
 	Tags        []string `json:"tags" example:"['love', 'green']"`
+}
+
+type CertainBoardWithUsername struct {
+	ID             int      `json:"board_id" example:"22"`
+	AuthorID       int      `json:"author_id" example:"22"`
+	AuthorUsername string   `json:"author_username" example:"Bob"`
+	Title          string   `json:"title" example:"new board"`
+	Description    string   `json:"description" example:"long desc"`
+	CreatedAt      string   `json:"created_at" example:"07-11-2023"`
+	PinsNumber     int      `json:"pins_number" example:"12"`
+	Pins           []string `json:"pins" example:"['/pic1', '/pic2']"`
+	Tags           []string `json:"tags" example:"['love', 'green']"`
 }
 
 type DeletePinFromBoard struct {
@@ -41,12 +54,27 @@ type DeletePinFromBoard struct {
 func ToCertainBoardFromService(board entity.BoardWithContent) CertainBoard {
 	return CertainBoard{
 		ID:          board.BoardInfo.ID,
+		AuthorID:    board.BoardInfo.AuthorID,
 		Title:       board.BoardInfo.Title,
 		Description: board.BoardInfo.Description,
 		CreatedAt:   board.BoardInfo.CreatedAt.Format(TimeFormat),
 		PinsNumber:  board.PinsNumber,
 		Pins:        board.Pins,
 		Tags:        board.TagTitles,
+	}
+}
+
+func ToCertainBoardUsernameFromService(board entity.BoardWithContent, username string) CertainBoardWithUsername {
+	return CertainBoardWithUsername{
+		ID:             board.BoardInfo.ID,
+		AuthorID:       board.BoardInfo.AuthorID,
+		AuthorUsername: username,
+		Title:          board.BoardInfo.Title,
+		Description:    board.BoardInfo.Description,
+		CreatedAt:      board.BoardInfo.CreatedAt.Format(TimeFormat),
+		PinsNumber:     board.PinsNumber,
+		Pins:           board.Pins,
+		Tags:           board.TagTitles,
 	}
 }
 
@@ -167,7 +195,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, err := h.boardCase.GetCertainBoard(r.Context(), int(boardID))
+	board, username, err := h.boardCase.GetCertainBoard(r.Context(), int(boardID))
 	if err != nil {
 		logger.Info("get certain board", log.F{"message", err.Error()})
 		code, message := getErrCodeMessage(err)
@@ -175,7 +203,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(http.StatusOK, w, "got certain board successfully", ToCertainBoardFromService(board))
+	err = responseOk(http.StatusOK, w, "got certain board successfully", ToCertainBoardUsernameFromService(board, username))
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -196,7 +224,7 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 
 	board, tagTitles, err := h.boardCase.GetBoardInfoForUpdate(r.Context(), int(boardID))
 	if err != nil {
-		logger.Info("get certain board", log.F{"message", err.Error()})
+		logger.Info("get certain board info for update", log.F{"message", err.Error()})
 		code, message := getErrCodeMessage(err)
 		responseError(w, code, message)
 		return
@@ -397,30 +425,3 @@ func (h *HandlerHTTP) DeletePinFromBoard(w http.ResponseWriter, r *http.Request)
 		w.Write([]byte(ErrInternalError.Error()))
 	}
 }
-
-/*
-logger := h.getRequestLogger(r)
-
-	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
-	if err != nil {
-		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadUrlParam)
-		responseError(w, code, message)
-		return
-	}
-
-	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
-	if err != nil {
-		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
-		responseError(w, code, message)
-		return
-	}
-
-	err = responseOk(http.StatusOK, w, "deleted board successfully", nil)
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
-	}
-*/

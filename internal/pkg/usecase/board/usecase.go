@@ -15,7 +15,7 @@ import (
 type Usecase interface {
 	CreateNewBoard(ctx context.Context, newBoard entity.Board, tagTitles []string) (int, error)
 	GetBoardsByUsername(ctx context.Context, username string) ([]entity.BoardWithContent, error)
-	GetCertainBoard(ctx context.Context, boardID int) (entity.BoardWithContent, error)
+	GetCertainBoard(ctx context.Context, boardID int) (entity.BoardWithContent, string, error)
 	GetBoardInfoForUpdate(ctx context.Context, boardID int) (entity.Board, []string, error)
 	UpdateBoardInfo(ctx context.Context, updatedBoard entity.Board, tagTitles []string) error
 	DeleteCertainBoard(ctx context.Context, boardID int) error

@@ -94,6 +94,21 @@ func (mr *MockRepositoryMockRecorder) GetMessages(ctx, chat, count, lastID inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessages", reflect.TypeOf((*MockRepository)(nil).GetMessages), ctx, chat, count, lastID)
 }
 
+// GetUserChats mocks base method.
+func (m *MockRepository) GetUserChats(ctx context.Context, userID, count, lastID int) (message.FeedUserChats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserChats", ctx, userID, count, lastID)
+	ret0, _ := ret[0].(message.FeedUserChats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserChats indicates an expected call of GetUserChats.
+func (mr *MockRepositoryMockRecorder) GetUserChats(ctx, userID, count, lastID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserChats", reflect.TypeOf((*MockRepository)(nil).GetUserChats), ctx, userID, count, lastID)
+}
+
 // UpdateContentMessage mocks base method.
 func (m *MockRepository) UpdateContentMessage(ctx context.Context, messageID int, newContent string) error {
 	m.ctrl.T.Helper()
