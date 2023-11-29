@@ -86,7 +86,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 				mesCopy := &message.Message{}
 				*mesCopy = request.Message.Message
 				mesCopy.From = userID
-				id, err := h.messageCase.SendMessage(ctx, mesCopy)
+				id, err := h.messageCase.SendMessage(ctx, userID, mesCopy)
 				if err != nil {
 					h.log.Warn(err.Error())
 					continue
@@ -164,7 +164,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "error", "unsupported", "unsupported eventType", nil))
 			}
 		case "Subscribe":
-			err = h.subscribe(ctx, h.client, request, conn)
+			err = h.subscribe(ctx, h.client, request, conn, userID)
 			if err != nil {
 				h.log.Warn(err.Error())
 				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "error", "subscribe_fail", "failed to subscribe to the channel", nil))
@@ -177,7 +177,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 	}
 }
 
-func (h *HandlerWebSocket) subscribe(ctx context.Context, client rt.RealTimeClient, req *Request, conn *ws.Conn) error {
+func (h *HandlerWebSocket) subscribe(ctx context.Context, client rt.RealTimeClient, req *Request, conn *ws.Conn, userID int) error {
 	sc, err := client.Subscribe(ctx, &rt.Channel{
 		Name:  req.Channel.Name,
 		Topic: req.Channel.Topic,
@@ -197,7 +197,7 @@ func (h *HandlerWebSocket) subscribe(ctx context.Context, client rt.RealTimeClie
 				if mes.Object.Type == rt.EventType_EV_DELETE {
 					msg = &message.Message{ID: int(mes.Object.Id)}
 				} else {
-					msg, err = h.messageCase.GetMessage(ctx, int(mes.Object.Id))
+					msg, err = h.messageCase.GetMessage(ctx, userID, int(mes.Object.Id))
 					if err != nil {
 						h.log.Error(err.Error())
 						return

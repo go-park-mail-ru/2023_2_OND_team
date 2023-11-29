@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/go-park-mail-ru/2023_2_OND_team/api/realtime";
+option go_package = "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime";
 
 package realtime;
 

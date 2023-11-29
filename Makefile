@@ -1,5 +1,5 @@
 .PHONY: build run test test_with_coverage cleantest retest doc generate cover_all currcover
-.PHONY: build_auth  build_realtime
+.PHONY: build_auth  build_realtime build_messenger
 
 ENTRYPOINT=cmd/app/main.go
 DOC_DIR=./docs
@@ -15,6 +15,9 @@ build_auth:
 
 build_realtime:
 	go build -o bin/realtime cmd/realtime/*.go
+
+build_messenger:
+	go build -o bin/messenger cmd/messenger/*.go
 
 run: build
 	./bin/app

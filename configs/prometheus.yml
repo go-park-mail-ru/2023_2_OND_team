@@ -9,7 +9,15 @@ scrape_configs:
 
   - job_name: 'auth'
     static_configs:
-      - targets: ['host.docker.internal:8085']
+      - targets: ['host.docker.internal:8086']
+
+  - job_name: 'messenger'
+    static_configs:
+      - targets: ['host.docker.internal:8096']
+
+  - job_name: 'realtime'
+    static_configs:
+      - targets: ['host.docker.internal:8091']
   
   - job_name: 'node_exporter'
     static_configs:
