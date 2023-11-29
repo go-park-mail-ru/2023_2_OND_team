@@ -12,7 +12,6 @@ scrape_configs:
       - targets: ['host.docker.internal:8085']
   
   - job_name: 'node_exporter'
-    scheme: https
     static_configs:
       - targets: ['pinspire.online:9100']
   
