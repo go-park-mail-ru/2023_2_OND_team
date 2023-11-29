@@ -71,7 +71,7 @@ func Run(ctx context.Context, log *logger.Logger, cfg Config) {
 	u := user.New(log, nil, userRepo.NewUserRepoPG(pool))
 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		interceptor.Monitoring(metrics, "localhost:8086"),
+		interceptor.Monitoring(metrics, "0.0.0.0:8086"),
 		interceptor.Logger(log),
 	))
 	authProto.RegisterAuthServer(s, authMS.New(log, sm, u))

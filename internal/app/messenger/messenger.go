@@ -42,7 +42,7 @@ func Run(ctx context.Context, log *logger.Logger) {
 	messageCase := message.New(mesRepo.NewMessageRepo(pool))
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		interceptor.Monitoring(metrics, "localhost:8096"),
+		interceptor.Monitoring(metrics, "0.0.0.0:8096"),
 		interceptor.Logger(log),
 		interceptor.Auth(),
 	))

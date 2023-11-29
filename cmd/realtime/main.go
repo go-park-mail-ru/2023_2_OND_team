@@ -44,7 +44,7 @@ func RealTimeRun(log *logger.Logger, addr string) error {
 	}
 
 	serv := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		interceptor.Monitoring(metrics, "localhost:8091"),
+		interceptor.Monitoring(metrics, "0.0.0.0:8091"),
 		interceptor.Logger(log),
 	))
 	rt.RegisterRealTimeServer(serv, realtime.NewServer(node))
