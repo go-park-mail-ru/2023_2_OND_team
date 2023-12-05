@@ -91,7 +91,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 					h.log.Warn(err.Error())
 					continue
 				}
-				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]int{"id": id}))
+				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]any{"id": id, "eventType": "create"}))
 				_, err = h.client.Publish(ctx, &rt.PublishMessage{
 					Channel: &rt.Channel{
 						Name:  request.Channel.Name,
@@ -117,7 +117,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 					h.log.Warn(err.Error())
 					continue
 				}
-				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", nil))
+				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]string{"eventType": "update"}))
 				_, err = h.client.Publish(ctx, &rt.PublishMessage{
 					Channel: &rt.Channel{
 						Name:  request.Channel.Name,
@@ -142,7 +142,7 @@ func (h *HandlerWebSocket) serveWebSocketConn(ctx context.Context, conn *ws.Conn
 					h.log.Warn(err.Error())
 					continue
 				}
-				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", nil))
+				wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]string{"eventType": "delete"}))
 				_, err = h.client.Publish(ctx, &rt.PublishMessage{
 					Channel: &rt.Channel{
 						Name:  request.Channel.Name,
