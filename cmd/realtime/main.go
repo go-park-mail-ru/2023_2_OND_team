@@ -13,7 +13,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-const _address = "localhost:8090"
+const _address = "0.0.0.0:8090"
 
 func main() {
 	log, err := logger.New()

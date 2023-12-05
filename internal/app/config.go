@@ -11,18 +11,18 @@ type ConfigFiles struct {
 	AddrAuthServer   string
 }
 
-type redisConfig struct {
+type RedisConfig struct {
 	Password string
 	Addr     string
 }
 
-func NewConfig(filename string) (redisConfig, error) {
+func NewConfig(filename string) (RedisConfig, error) {
 	cfg, err := config.ParseConfig(filename)
 	if err != nil {
-		return redisConfig{}, fmt.Errorf("new redis config: %w", err)
+		return RedisConfig{}, fmt.Errorf("new redis config: %w", err)
 	}
 
-	return redisConfig{
+	return RedisConfig{
 		Password: cfg.Get("requirepass"),
 		Addr:     cfg.Get("host") + ":" + cfg.Get("port"),
 	}, nil
