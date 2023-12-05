@@ -1,0 +1,20 @@
+FROM golang:1.19.13-alpine AS build
+
+RUN apk --no-cache add make
+
+WORKDIR /pinspire_auth
+
+COPY go.mod go.sum /pinspire_auth/
+RUN go mod download
+
+COPY . .
+
+RUN make build_auth
+
+FROM alpine:latest
+
+WORKDIR /
+
+COPY --from=build /pinspire_auth/bin/auth .
+
+ENTRYPOINT [ "./auth" ]

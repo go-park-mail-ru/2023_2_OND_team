@@ -1,5 +1,6 @@
 version: '3.8'
 
+
 services:
   postgres:
     image: postgres:latest
@@ -10,6 +11,8 @@ services:
       - ../db/migrations:/docker-entrypoint-initdb.d
     ports:
       - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
 
   redis:
     image: redis:latest
@@ -19,6 +22,82 @@ services:
     command: redis-server /usr/local/etc/redis/redis.conf
     ports:
         - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  main_service:
+    build: 
+      context: ./..
+      dockerfile: deployments/Dockerfile.main
+    container_name: pinspireMainService
+    env_file:
+     - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - AUTH_SERVICE_HOST=auth_service
+      - MESSENGER_SERVICE_HOST=messenger_service
+      - REALTIME_SERVICE_HOST=realtime_service
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+      auth_service:
+        condition: 'service_started'
+      messenger_service:
+        condition: 'service_started'
+      realtime_service:
+        condition: 'service_started'
+    ports:
+    - 8100:8080
+    
+  auth_service:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile.auth
+    container_name: pinspireAuthService
+    env_file:
+     - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+      redis:
+        condition: 'service_healthy'
+    ports:
+    - 8086:8086
+    # - 8101:8085
+
+  messenger_service:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile.messenger
+    container_name: pinspireMessengerService
+    env_file:
+     - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+    ports:
+      - 8096:8096
+    # - 8102:8095
+    
+  realtime_service:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile.realtime
+    container_name: pinspireRealtimeService
+    env_file:
+     - ../.env
+    environment:
+      - KAFKA_BROKER_ADDRESS=kafka
+    depends_on:
+      - kafka
+    ports:
+    - 8091:8091
+    # - 8103:8090
 
   zookeeper:
     image: bitnami/zookeeper:latest
@@ -41,7 +120,7 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
     depends_on:
       - zookeeper
   
@@ -56,6 +135,8 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: pinspireGrafana
+    env_file:
+      - ../.env
     ports:
       - 3000:3000
     volumes:
@@ -75,6 +156,18 @@ services:
       - /:/rootfs:ro
     ports:
      - "9100:9100"
+    
+  nginx:
+    image: nginx:latest
+    container_name: pinspireNginx
+    volumes:
+    - '/etc/nginx/sites-available/pinspire.conf:/etc/nginx/conf.d/pinspire.conf:ro'
+    network_mode: 'host'
+    depends_on:
+      main_service:
+        condition: 'service_started'
+      realtime_service:
+        condition: 'service_started'
 
 
 volumes:

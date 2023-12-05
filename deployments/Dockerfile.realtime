@@ -1,0 +1,20 @@
+FROM golang:1.19.13-alpine AS build
+
+RUN apk --no-cache add make
+
+WORKDIR /pinspire_realtime
+
+COPY go.mod go.sum /pinspire_realtime/
+RUN go mod download
+
+COPY . .
+
+RUN make build_realtime
+
+FROM alpine:latest
+
+WORKDIR /
+
+COPY --from=build /pinspire_realtime/bin/realtime .
+
+ENTRYPOINT [ "./realtime" ]

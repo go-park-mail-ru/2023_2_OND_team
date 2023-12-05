@@ -1,0 +1,21 @@
+FROM golang:1.19.13-alpine AS build
+
+RUN apk --no-cache add make
+
+WORKDIR /pinspire_main
+
+COPY go.mod go.sum /pinspire_main/
+RUN go mod download
+
+COPY . .
+
+RUN make build
+
+FROM alpine:latest
+
+WORKDIR /
+
+COPY --from=build /pinspire_main/bin/app .
+COPY --from=build /pinspire_main/configs configs
+
+ENTRYPOINT [ "./app" ]
