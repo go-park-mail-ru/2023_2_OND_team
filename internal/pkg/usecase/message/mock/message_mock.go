@@ -50,24 +50,24 @@ func (mr *MockUsecaseMockRecorder) DeleteMessage(ctx, userID, mesID interface{})
 }
 
 // GetMessage mocks base method.
-func (m *MockUsecase) GetMessage(ctx context.Context, messageID int) (*message.Message, error) {
+func (m *MockUsecase) GetMessage(ctx context.Context, userID, messageID int) (*message.Message, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMessage", ctx, messageID)
+	ret := m.ctrl.Call(m, "GetMessage", ctx, userID, messageID)
 	ret0, _ := ret[0].(*message.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetMessage indicates an expected call of GetMessage.
-func (mr *MockUsecaseMockRecorder) GetMessage(ctx, messageID interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) GetMessage(ctx, userID, messageID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessage", reflect.TypeOf((*MockUsecase)(nil).GetMessage), ctx, messageID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessage", reflect.TypeOf((*MockUsecase)(nil).GetMessage), ctx, userID, messageID)
 }
 
 // GetMessagesFromChat mocks base method.
-func (m *MockUsecase) GetMessagesFromChat(ctx context.Context, chat message.Chat, count, lastID int) ([]message.Message, int, error) {
+func (m *MockUsecase) GetMessagesFromChat(ctx context.Context, userID int, chat message.Chat, count, lastID int) ([]message.Message, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMessagesFromChat", ctx, chat, count, lastID)
+	ret := m.ctrl.Call(m, "GetMessagesFromChat", ctx, userID, chat, count, lastID)
 	ret0, _ := ret[0].([]message.Message)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -75,9 +75,9 @@ func (m *MockUsecase) GetMessagesFromChat(ctx context.Context, chat message.Chat
 }
 
 // GetMessagesFromChat indicates an expected call of GetMessagesFromChat.
-func (mr *MockUsecaseMockRecorder) GetMessagesFromChat(ctx, chat, count, lastID interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) GetMessagesFromChat(ctx, userID, chat, count, lastID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessagesFromChat", reflect.TypeOf((*MockUsecase)(nil).GetMessagesFromChat), ctx, chat, count, lastID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessagesFromChat", reflect.TypeOf((*MockUsecase)(nil).GetMessagesFromChat), ctx, userID, chat, count, lastID)
 }
 
 // GetUserChatsWithOtherUsers mocks base method.
@@ -97,18 +97,18 @@ func (mr *MockUsecaseMockRecorder) GetUserChatsWithOtherUsers(ctx, userID, count
 }
 
 // SendMessage mocks base method.
-func (m *MockUsecase) SendMessage(ctx context.Context, mes *message.Message) (int, error) {
+func (m *MockUsecase) SendMessage(ctx context.Context, userID int, mes *message.Message) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendMessage", ctx, mes)
+	ret := m.ctrl.Call(m, "SendMessage", ctx, userID, mes)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SendMessage indicates an expected call of SendMessage.
-func (mr *MockUsecaseMockRecorder) SendMessage(ctx, mes interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) SendMessage(ctx, userID, mes interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessage", reflect.TypeOf((*MockUsecase)(nil).SendMessage), ctx, mes)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessage", reflect.TypeOf((*MockUsecase)(nil).SendMessage), ctx, userID, mes)
 }
 
 // UpdateContentMessage mocks base method.

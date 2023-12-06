@@ -49,6 +49,21 @@ func (mr *MockUsecaseMockRecorder) DeleteMessage(ctx, userID, mesID interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessage", reflect.TypeOf((*MockUsecase)(nil).DeleteMessage), ctx, userID, mesID)
 }
 
+// GetMessage mocks base method.
+func (m *MockUsecase) GetMessage(ctx context.Context, messageID int) (*message.Message, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMessage", ctx, messageID)
+	ret0, _ := ret[0].(*message.Message)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMessage indicates an expected call of GetMessage.
+func (mr *MockUsecaseMockRecorder) GetMessage(ctx, messageID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessage", reflect.TypeOf((*MockUsecase)(nil).GetMessage), ctx, messageID)
+}
+
 // GetMessagesFromChat mocks base method.
 func (m *MockUsecase) GetMessagesFromChat(ctx context.Context, chat message.Chat, count, lastID int) ([]message.Message, int, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +78,22 @@ func (m *MockUsecase) GetMessagesFromChat(ctx context.Context, chat message.Chat
 func (mr *MockUsecaseMockRecorder) GetMessagesFromChat(ctx, chat, count, lastID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessagesFromChat", reflect.TypeOf((*MockUsecase)(nil).GetMessagesFromChat), ctx, chat, count, lastID)
+}
+
+// GetUserChatsWithOtherUsers mocks base method.
+func (m *MockUsecase) GetUserChatsWithOtherUsers(ctx context.Context, userID, count, lastID int) (message.FeedUserChats, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserChatsWithOtherUsers", ctx, userID, count, lastID)
+	ret0, _ := ret[0].(message.FeedUserChats)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetUserChatsWithOtherUsers indicates an expected call of GetUserChatsWithOtherUsers.
+func (mr *MockUsecaseMockRecorder) GetUserChatsWithOtherUsers(ctx, userID, count, lastID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserChatsWithOtherUsers", reflect.TypeOf((*MockUsecase)(nil).GetUserChatsWithOtherUsers), ctx, userID, count, lastID)
 }
 
 // SendMessage mocks base method.
