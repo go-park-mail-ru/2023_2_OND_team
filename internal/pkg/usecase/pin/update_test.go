@@ -35,7 +35,7 @@ func TestEditPinByID(t *testing.T) {
 	}
 
 	repo.EXPECT().
-		EditPin(ctx, pinID, repository.S{
+		EditPin(ctx, pinID, userID, repository.S{
 			"title":       "",
 			"description": "",
 			"public":      false,

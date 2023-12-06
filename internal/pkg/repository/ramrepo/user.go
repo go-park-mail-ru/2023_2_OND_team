@@ -63,3 +63,15 @@ func (r *ramUserRepo) GetUserIdByUsername(ctx context.Context, username string) 
 func (r *ramUserRepo) GetLastUserID(ctx context.Context) (int, error) {
 	return 0, ErrMethodUnimplemented
 }
+
+func (r *ramUserRepo) GetUserData(ctx context.Context, userID, currUserID int) (user_ *entity.User, isSubscribed bool, subsCount int, err error) {
+	return nil, false, 0, ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) GetProfileData(ctx context.Context, userID int) (user_ *entity.User, subsCount int, err error) {
+	return nil, 0, ErrMethodUnimplemented
+}
+
+func (r *ramUserRepo) CheckUserExistence(ctx context.Context, userID int) error {
+	return ErrMethodUnimplemented
+}

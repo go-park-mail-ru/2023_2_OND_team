@@ -11,16 +11,16 @@ func TestFetchValidParams(t *testing.T) {
 	rawUrl := "https://domain.test:8080/api/v1/pin"
 
 	tests := []struct {
-		name                            string
-		queryRow                        string
-		wantCount, wantMinID, wantMaxID int
+		name              string
+		queryRow          string
+		wantCount, lastID int
 	}{
-		{"both parameters were passed correctly", "?count=6&minID=12&maxID=9", 6, 12, 9},
-		{"both parameters were passed correctly in a different order", "?maxID=88&count=3&minID=22", 3, 22, 88},
-		{"repeating parameters", "?count=14&maxID=9&count=3&maxID=55&minID=1", 14, 1, 9},
-		{"repeating parameters", "?count=14&minID=1&count=3&mmmmmID=55&ID=65&maxID=1", 14, 1, 1},
-		{"empty parameters minID, maxID", "?count=7", 7, 0, 0},
-		{"the parameter maxID is registered but not specified", "?lastID=&count=17", 17, 0, 0},
+		{"both parameters were passed correctly", "?count=6&lastID=12", 6, 12},
+		{"both parameters were passed correctly in a different order", "?lastID=22&count=3", 3, 22},
+		{"repeating parameters", "?count=14&maxID=9&count=3&lastID=1", 14, 1},
+		{"repeating parameters", "?count=14&lastID=1&count=3&mmmmmID=55&ID=65", 14, 1},
+		{"empty parameters minID, maxID", "?count=7", 7, 0},
+		{"the parameter maxID is registered but not specified", "?lastID=&count=17", 17, 0},
 	}
 
 	for _, test := range tests {
@@ -29,11 +29,10 @@ func TestFetchValidParams(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error when parsing into the url.URL structure: %v", err)
 			}
-			actualCount, actualMinID, actualMaxID, err := FetchValidParamForLoadTape(URL)
+			actualCount, actualLastID, err := FetchValidParamForLoadFeed(URL)
 			require.NoError(t, err, test.name)
 			require.Equal(t, test.wantCount, actualCount, test.name)
-			require.Equal(t, test.wantMinID, actualMinID, test.name)
-			require.Equal(t, test.wantMaxID, actualMaxID, test.name)
+			require.Equal(t, test.lastID, actualLastID, test.name)
 		})
 	}
 }
@@ -48,10 +47,10 @@ func TestErrorFetchValidParams(t *testing.T) {
 	}{
 		{"empty query row", "", ErrCountParameterMissing},
 		{"count equal zero", "?count=0", ErrBadParams},
-		{"negative count", "?count=-5&minID=12", ErrBadParams},
-		{"negative ID", "?count=5&maxID=-6", ErrBadParams},
+		{"negative count", "?count=-5&lastID=12", ErrBadParams},
+		{"negative ID", "?count=5&lastID=-6", ErrBadParams},
 		{"requested count is more than a thousand", "?count=1001", ErrBadParams},
-		{"count param empty", "?count=&minID=6&maxID=9", ErrCountParameterMissing},
+		{"count param empty", "?count=&lastID=23", ErrCountParameterMissing},
 	}
 
 	for _, test := range tests {
@@ -60,7 +59,7 @@ func TestErrorFetchValidParams(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error when parsing into the url.URL structure: %v", err)
 			}
-			actualCount, actualLastID, _, err := FetchValidParamForLoadTape(URL)
+			actualCount, actualLastID, err := FetchValidParamForLoadFeed(URL)
 			require.ErrorIs(t, err, test.wantErr)
 			require.Equal(t, 0, actualCount)
 			require.Equal(t, 0, actualLastID)

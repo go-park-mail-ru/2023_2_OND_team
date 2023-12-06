@@ -31,7 +31,9 @@ func TestGetProfileInfo(t *testing.T) {
 	}
 
 	usecase := mock.NewMockUsecase(ctrl)
-	hander := New(log, nil, usecase, nil, nil)
+	hander := New(log, UsecaseHub{
+		UserCase: usecase,
+	})
 	rec := httptest.NewRecorder()
 	request := &http.Request{}
 	ctxExp := context.WithValue(ctx, auth.KeyCurrentUserID, 122)
