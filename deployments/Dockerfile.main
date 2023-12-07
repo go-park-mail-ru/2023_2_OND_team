@@ -2,9 +2,9 @@ FROM golang:1.19.13-alpine AS build
 
 RUN apk --no-cache add make
 
-WORKDIR /pinspire_main
+WORKDIR /pinspire
 
-COPY go.mod go.sum /pinspire_main/
+COPY go.mod go.sum /pinspire/
 RUN go mod download
 
 COPY . .
@@ -15,7 +15,7 @@ FROM alpine:latest
 
 WORKDIR /
 
-COPY --from=build /pinspire_main/bin/app .
-COPY --from=build /pinspire_main/configs configs
+COPY --from=build /pinspire/bin/app .
+COPY --from=build /pinspire/configs configs
 
 ENTRYPOINT [ "./app" ]

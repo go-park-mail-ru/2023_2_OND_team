@@ -1,6 +1,5 @@
 version: '3.8'
 
-
 services:
   postgres:
     image: postgres:latest
@@ -9,6 +8,7 @@ services:
       - ../.env
     volumes:
       - ../db/migrations:/docker-entrypoint-initdb.d
+      - 'postgres_storage:/var/lib/postgresql/data'
     ports:
       - 5432:5432
     healthcheck:
@@ -19,6 +19,7 @@ services:
     container_name: pinspireRedis
     volumes:
       - ../redis.conf:/usr/local/etc/redis/redis.conf
+      - 'redis_storage:/data'
     command: redis-server /usr/local/etc/redis/redis.conf
     ports:
         - 6379:6379
@@ -65,7 +66,7 @@ services:
       redis:
         condition: 'service_healthy'
     ports:
-    - 8086:8086
+    - 8186:8086
     # - 8101:8085
 
   messenger_service:
@@ -81,7 +82,7 @@ services:
       postgres:
         condition: 'service_healthy'
     ports:
-      - 8096:8096
+      - 8196:8096
     # - 8102:8095
     
   realtime_service:
@@ -96,7 +97,7 @@ services:
     depends_on:
       - kafka
     ports:
-    - 8091:8091
+    - 8191:8091
     # - 8103:8090
 
   zookeeper:
@@ -171,8 +172,11 @@ services:
 
 
 volumes:
+  postgres_storage: {}
+  redis_storage: {}
   zookeeper_data:
     driver: local
   kafka_data:
     driver: local
   grafana_storage: {}
+

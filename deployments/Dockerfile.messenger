@@ -2,9 +2,9 @@ FROM golang:1.19.13-alpine AS build
 
 RUN apk --no-cache add make
 
-WORKDIR /pinspire_messenger
+WORKDIR /pinspire
 
-COPY go.mod go.sum /pinspire_messenger/
+COPY go.mod go.sum /pinspire/
 RUN go mod download
 
 COPY . .
@@ -15,6 +15,6 @@ FROM alpine:latest
 
 WORKDIR /
 
-COPY --from=build /pinspire_messenger/bin/messenger .
+COPY --from=build /pinspire/bin/messenger .
 
 ENTRYPOINT [ "./messenger" ]
