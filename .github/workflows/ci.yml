@@ -1,0 +1,27 @@
+name: Start pinspire CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4
+      - name: Test application
+        run: go test ./...
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4
+      - name: Lint application
+        run: make lint
+  build:  
+    runs-o: ubuntu-latest
+    steps:
+      - name: Get repository code
+        uses: actions/checkout@v4    
+      - name: Build application
+        run: make build_all
