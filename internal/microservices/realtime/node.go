@@ -19,7 +19,6 @@ type Node struct {
 
 func NewNode() (*Node, error) {
 	node := &Node{}
-
 	broker, err := NewKafkaBroker(node, KafkaConfig{
 		// Addres:            []string{"localhost:9092"},
 		Addres:            []string{os.Getenv("KAFKA_BROKER_ADDRESS") + ":" + os.Getenv("KAFKA_BROKER_PORT")},

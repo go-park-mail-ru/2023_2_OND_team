@@ -46,6 +46,9 @@ services:
       - AUTH_SERVICE_HOST=auth_service
       - MESSENGER_SERVICE_HOST=messenger_service
       - REALTIME_SERVICE_HOST=realtime_service
+    volumes:
+      - '/home/ond_team/cert/fullchain.pem:/home/ond_team/cert/fullchain.pem:ro'
+      - '/home/ond_team/cert/privkey.pem:/home/ond_team/cert/privkey.pem:ro'
     depends_on:
       postgres:
         condition: 'service_healthy'
@@ -56,7 +59,7 @@ services:
       realtime_service:
         condition: 'service_started'
     ports:
-    - 8100:8080
+    - 8079:8080
     
   auth_service:
     build:
@@ -130,7 +133,7 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
     healthcheck:
       test: |
        curl localhost:9092 
@@ -175,19 +178,6 @@ services:
     ports:
      - "9100:9100"
     
-  nginx:
-    image: nginx:latest
-    container_name: pinspireNginx
-    volumes:
-    - '/etc/nginx/sites-available/pinspire.conf:/etc/nginx/conf.d/pinspire.conf:ro'
-    network_mode: 'host'
-    depends_on:
-      main_service:
-        condition: 'service_started'
-      realtime_service:
-        condition: 'service_started'
-
-
 volumes:
   postgres_storage: {}
   redis_storage: {}

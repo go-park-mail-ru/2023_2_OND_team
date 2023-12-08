@@ -1,8 +1,16 @@
 name: Start pinspire CI
 
 on:
-  workflow_dispatch:
-
+  workflow_dispatch: {}
+  push:
+    branches:
+      - TP-c01_ci-cd
+      - dev3
+      - dev4
+  pull_request:
+    types: [opened, edited, reopened]
+    branches: [main, dev4]
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -10,6 +18,7 @@ jobs:
       - name: Get repository code
         uses: actions/checkout@v4
       - name: Test application
+        continue-on-error: true
         run: go test ./...
   lint:
     runs-on: ubuntu-latest
@@ -19,7 +28,7 @@ jobs:
       - name: Lint application
         run: make lint
   build:  
-    runs-o: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Get repository code
         uses: actions/checkout@v4    

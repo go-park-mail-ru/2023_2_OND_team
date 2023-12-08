@@ -10,7 +10,3 @@
       copy:
         src: ../redis.conf
         dest: /home/ond_team/go/src/github.com/go-park-mail-ru/ci-cd/redis.conf
-    - name: "Provide nginx config"
-      copy:
-        src: /etc/nginx/sites-available/pinspire.conf
-        dest: /etc/nginx/sites-available/pinspire.conf

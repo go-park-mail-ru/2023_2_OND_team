@@ -1,7 +1,14 @@
 name: Start Pinspire deployment
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - TP-c01_ci-cd
+      - dev4
+  pull_request:
+    types: [opened, edited, reopened]
+    branches: [main, dev4]
 
 jobs:
   build_images:
@@ -39,7 +46,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             cd ${{ secrets.PINSPIRE_BACKEND_PATH }}
-            sudo git switch dev3
+            sudo git switch TP-c01_ci-cd
             sudo git pull
       - name: deploy application
         uses: appleboy/ssh-action@master
@@ -51,5 +58,5 @@ jobs:
             cd ${{ secrets.PINSPIRE_BACKEND_PATH }}/deployments 
             sudo docker compose down main_service auth_service realtime_service messenger_service
             sudo docker rmi pinspireapp/main:latest pinspireapp/auth:latest pinspireapp/realtime:latest pinspireapp/messenger:latest
-            docker compose -f docker-compose.yml -f compose.prod.yml up -d
+            sudo docker compose -f docker-compose.yml -f compose.prod.yml up -d
       

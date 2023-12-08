@@ -38,7 +38,7 @@ func SetOriginPatterns(patterns []string) Option {
 
 func New(log *log.Logger, mesCase usecase.Usecase, opts ...Option) *HandlerWebSocket {
 	// gRPCConn, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	gRPCConn, err := grpc.Dial(os.Getenv("REALTIME_SERVICE_HOST"+":"+os.Getenv("REALTIME_SERVICE_PORT")), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	gRPCConn, err := grpc.Dial((os.Getenv("REALTIME_SERVICE_HOST") + ":" + os.Getenv("REALTIME_SERVICE_PORT")), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(fmt.Errorf("grpc dial: %w", err).Error())
 	}
