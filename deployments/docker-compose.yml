@@ -12,8 +12,12 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
-
+      test: ["CMD", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+      
   redis:
     image: redis:latest
     container_name: pinspireRedis
@@ -25,6 +29,10 @@ services:
         - 6379:6379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   main_service:
     build: 
@@ -95,7 +103,8 @@ services:
     environment:
       - KAFKA_BROKER_ADDRESS=kafka
     depends_on:
-      - kafka
+      kafka:
+        condition: 'service_healthy'
     ports:
     - 8191:8091
     # - 8103:8090
@@ -122,6 +131,14 @@ services:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+    healthcheck:
+      test: |
+       curl localhost:9092 
+       [ $(echo $?) = '52' ] && exit 0 || exit -1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     depends_on:
       - zookeeper
   
@@ -179,4 +196,3 @@ volumes:
   kafka_data:
     driver: local
   grafana_storage: {}
-

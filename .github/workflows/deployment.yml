@@ -51,5 +51,5 @@ jobs:
             cd ${{ secrets.PINSPIRE_BACKEND_PATH }}/deployments 
             sudo docker compose down main_service auth_service realtime_service messenger_service
             sudo docker rmi pinspireapp/main:latest pinspireapp/auth:latest pinspireapp/realtime:latest pinspireapp/messenger:latest
-            docker compose --env-file=../.env -f docker-compose.yml -f compose.prod.yml up -d
+            docker compose -f docker-compose.yml -f compose.prod.yml up -d
       
