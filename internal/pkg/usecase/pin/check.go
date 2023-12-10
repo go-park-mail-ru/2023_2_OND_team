@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 )
 
 var (
@@ -17,8 +18,6 @@ var (
 )
 
 const MaxSizeBatchPin = 100
-
-const UserUnknown = -1
 
 func (p *pinCase) IsAvailablePinForFixOnBoard(ctx context.Context, pinID, userID int) error {
 	pin, err := p.repo.GetPinByID(ctx, pinID, false)
@@ -55,7 +54,7 @@ func (p *pinCase) isAvailablePinForViewingUser(ctx context.Context, pin *entity.
 	if pin.Public || pin.Author.ID == userID {
 		return nil
 	}
-	if userID == UserUnknown {
+	if userID == user.UserUnknown {
 		return ErrPinNotAccess
 	}
 
@@ -71,9 +70,13 @@ func (p *pinCase) isAvailablePinForViewingUser(ctx context.Context, pin *entity.
 }
 
 func (p *pinCase) isAvailablePinForSetLike(ctx context.Context, pinID, userID int) error {
+	return p.IsAvailablePinForViewingUser(ctx, userID, pinID)
+}
+
+func (p *pinCase) IsAvailablePinForViewingUser(ctx context.Context, userID, pinID int) error {
 	pin, err := p.repo.GetPinByID(ctx, pinID, false)
 	if err != nil {
-		return fmt.Errorf("get a pin to check for the availability of a like: %w", err)
+		return fmt.Errorf("get a pin to check for the availability: %w", err)
 	}
 
 	return p.isAvailablePinForViewingUser(ctx, pin, userID)

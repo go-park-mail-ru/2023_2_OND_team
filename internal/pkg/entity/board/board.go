@@ -6,6 +6,8 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate easyjson board.go
+//easyjson:json
 type Board struct {
 	ID          int        `json:"id,omitempty" example:"15"`
 	AuthorID    int        `json:"author_id,omitempty"`

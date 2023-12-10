@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -97,9 +98,17 @@ func (p *pinCase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinCo
 		return pin.FeedPin{}, ErrForbiddenAction
 	}
 
-	if !hasBoard && (userID == UserUnknown || !hasUser || userID != user) && cfg.Protection != pin.FeedProtectionPublic {
+	if !hasBoard && (userID == userEntity.UserUnknown || !hasUser || userID != user) && cfg.Protection != pin.FeedProtectionPublic {
 		return pin.FeedPin{}, ErrForbiddenAction
 	}
 
 	return p.repo.GetFeedPins(ctx, cfg)
+}
+
+func (u *pinCase) GetAuthorIdOfThePin(ctx context.Context, pinID int) (int, error) {
+	user, err := u.repo.GetAuthorPin(ctx, pinID)
+	if err != nil {
+		return 0, fmt.Errorf("get author id of the pin: %w", err)
+	}
+	return user.ID, nil
 }

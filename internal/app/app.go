@@ -17,6 +17,7 @@ import (
 	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/metrics"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
+	commentRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/comment"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	searchRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/search/postgres"
@@ -24,6 +25,7 @@ import (
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/comment"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
@@ -66,6 +68,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
 	messageCase := message.New(messenger.NewMessengerClient(connMessMS))
+	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 
 	conn, err := grpc.Dial(cfg.AddrAuthServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -78,11 +81,12 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
 		AuhtCase:         ac,
 		UserCase:         user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
-		PinCase:          pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
+		PinCase:          pinCase,
 		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SubscriptionCase: subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SearchCase:       search.New(log, searchRepo.NewSearchRepoPG(pool), bluemonday.UGCPolicy()),
 		MessageCase:      messageCase,
+		CommentCase:      comment.New(commentRepo.NewCommentRepoPG(pool), pinCase),
 	})
 
 	wsHandler := deliveryWS.New(log, messageCase,

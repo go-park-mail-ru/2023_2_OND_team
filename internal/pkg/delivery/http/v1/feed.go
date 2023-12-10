@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
-	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -17,7 +17,7 @@ func (h *HandlerHTTP) FeedPins(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 	userID, isAuth := r.Context().Value(auth.KeyCurrentUserID).(int)
 	if !isAuth {
-		userID = usecase.UserUnknown
+		userID = user.UserUnknown
 	}
 
 	logger.Info("request on getting feed of pins", log.F{"rawQuery", r.URL.RawQuery})
