@@ -67,8 +67,15 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer connMessMS.Close()
 
+	connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer connRealtime.Close()
+
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
-	messageCase := message.New(messenger.NewMessengerClient(connMessMS))
+	messageCase := message.New(messenger.NewMessengerClient(connMessMS), rt.NewRealTimeClient(connRealtime), log, true)
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 
 	conn, err := grpc.Dial(cfg.AddrAuthServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -90,14 +97,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 		CommentCase:      comment.New(commentRepo.NewCommentRepoPG(pool), pinCase),
 	})
 
-	connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-	defer connRealtime.Close()
-
-	wsHandler := deliveryWS.New(log, messageCase, rt.NewRealTimeClient(connRealtime),
+	wsHandler := deliveryWS.New(log, messageCase,
 		deliveryWS.SetOriginPatterns([]string{"pinspire.online", "pinspire.online:*"}))
 
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)

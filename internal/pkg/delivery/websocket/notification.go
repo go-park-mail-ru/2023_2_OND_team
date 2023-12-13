@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	ws "nhooyr.io/websocket"
+
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
-	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 func (h *HandlerWebSocket) Notification(w http.ResponseWriter, r *http.Request) {
@@ -22,5 +23,17 @@ func (h *HandlerWebSocket) Notification(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(context.Background(), _ctxOnServeConnect)
 	defer cancel()
 
-	h.log.Info("", logger.F{"user", userID}, logger.F{"context", ctx})
+	err = h.subscribeOnNotification(ctx, conn, userID)
+	if err != nil && ws.CloseStatus(err) == -1 {
+		h.log.Error(err.Error())
+		conn.Close(ws.StatusInternalError, "subscribe_fail")
+	}
+}
+
+// func (h *HandlerWebSocket) handleNotification(ctx context.Context, conn *ws.Conn, userID int) {
+
+// }
+
+func (h *HandlerWebSocket) subscribeOnNotification(ctx context.Context, conn *ws.Conn, userID int) error {
+	return nil
 }

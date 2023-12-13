@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	ws "nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 )
 
@@ -28,7 +25,7 @@ func (h *HandlerWebSocket) Chat(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), _ctxOnServeConnect)
 	defer cancel()
 
-	err = h.subscribe(ctx, conn, userID)
+	err = h.subscribeOnChat(ctx, conn, userID)
 	if err != nil {
 		h.log.Error(err.Error())
 		conn.Close(ws.StatusInternalError, "subscribe_fail")
@@ -36,8 +33,9 @@ func (h *HandlerWebSocket) Chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.serveChat(ctx, conn, userID)
-	if err != nil {
+	if err != nil && ws.CloseStatus(err) == -1 {
 		h.log.Error(err.Error())
+		conn.Close(ws.StatusInternalError, "serve_chat")
 	}
 }
 
@@ -51,137 +49,62 @@ func (h *HandlerWebSocket) serveChat(ctx context.Context, conn *ws.Conn, userID 
 			return fmt.Errorf("read message: %w", err)
 		}
 
-		switch request.Message.Type {
-		case "create":
-			mesCopy := &message.Message{}
-			*mesCopy = request.Message.Message
-			mesCopy.From = userID
-			id, err := h.messageCase.SendMessage(ctx, userID, mesCopy)
-			if err != nil {
-				h.log.Warn(err.Error())
-				continue
-			}
-			wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]any{"id": id, "eventType": "create"}))
-			_, err = h.client.Publish(ctx, &rt.PublishMessage{
-				Channel: &rt.Channel{
-					Name:  request.Channel.Name,
-					Topic: _topicChat,
-				},
-				Message: &rt.Message{
-					Body: &rt.Message_Object{
-						Object: &rt.EventObject{
-							Type: rt.EventType_EV_CREATE,
-							Id:   int64(id),
-						},
-					},
-				},
-			})
-			if err != nil {
-				h.log.Error(err.Error())
-			}
-		case "update":
-			mesCopy := &message.Message{}
-			*mesCopy = request.Message.Message
-			err = h.messageCase.UpdateContentMessage(ctx, userID, mesCopy)
-			if err != nil {
-				h.log.Warn(err.Error())
-				continue
-			}
-			wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]string{"eventType": "update"}))
-			_, err = h.client.Publish(ctx, &rt.PublishMessage{
-				Channel: &rt.Channel{
-					Name:  request.Channel.Name,
-					Topic: _topicChat,
-				},
-				Message: &rt.Message{
-					Body: &rt.Message_Object{
-						Object: &rt.EventObject{
-							Type: rt.EventType_EV_UPDATE,
-							Id:   int64(request.Message.Message.ID),
-						},
-					},
-				},
-			})
-			if err != nil {
-				h.log.Error(err.Error())
-			}
-
-		case "delete":
-			err = h.messageCase.DeleteMessage(ctx, userID, request.Message.Message.ID)
-			if err != nil {
-				h.log.Warn(err.Error())
-				continue
-			}
-			wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "ok", "", "publish success", map[string]string{"eventType": "delete"}))
-			_, err = h.client.Publish(ctx, &rt.PublishMessage{
-				Channel: &rt.Channel{
-					Name:  request.Channel.Name,
-					Topic: _topicChat,
-				},
-				Message: &rt.Message{
-					Body: &rt.Message_Object{
-						Object: &rt.EventObject{
-							Type: rt.EventType_EV_DELETE,
-							Id:   int64(request.Message.Message.ID),
-						},
-					},
-				},
-			})
-			if err != nil {
-				h.log.Error(err.Error())
-			}
-		default:
-			wsjson.Write(ctx, conn, newResponseOnRequest(request.ID, "error", "unsupported", "unsupported eventType", nil))
-		}
+		h.handlePublishRequestMessage(ctx, conn, userID, request)
 	}
 }
 
-func (h *HandlerWebSocket) subscribe(ctx context.Context, conn *ws.Conn, userID int) error {
-	channel := Channel{Name: strconv.Itoa(userID)}
+func (h *HandlerWebSocket) handlePublishRequestMessage(ctx context.Context, conn *ws.Conn, userID int, r *PublsihRequest) {
+	switch r.Message.Type {
+	case "create":
+		r.Message.Message.From = userID
+		id, err := h.messageCase.SendMessage(ctx, userID, &r.Message.Message)
+		if err != nil {
+			h.log.Warn(err.Error())
+			return
+		}
+		wsjson.Write(ctx, conn, newResponseOnRequest(r.ID, "ok", "", "publish success", map[string]any{"id": id, "eventType": "create"}))
 
-	sc, err := h.client.Subscribe(ctx, &rt.Channel{
-		Name:  channel.Name,
-		Topic: _topicChat,
-	})
+	case "update":
+		err := h.messageCase.UpdateContentMessage(ctx, userID, &r.Message.Message)
+		if err != nil {
+			h.log.Warn(err.Error())
+			return
+		}
+		wsjson.Write(ctx, conn, newResponseOnRequest(r.ID, "ok", "", "publish success", map[string]string{"eventType": "update"}))
+
+	case "delete":
+		err := h.messageCase.DeleteMessage(ctx, userID, &r.Message.Message)
+		if err != nil {
+			h.log.Warn(err.Error())
+			return
+		}
+		wsjson.Write(ctx, conn, newResponseOnRequest(r.ID, "ok", "", "publish success", map[string]string{"eventType": "delete"}))
+
+	default:
+		wsjson.Write(ctx, conn, newResponseOnRequest(r.ID, "error", "unsupported", "unsupported eventType", nil))
+	}
+}
+
+func (h *HandlerWebSocket) subscribeOnChat(ctx context.Context, conn *ws.Conn, userID int) error {
+	chanEvMsg, err := h.messageCase.SubscribeUserToAllChats(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("subscribe: %w", err)
+		return fmt.Errorf("subscribe user on chat: %w", err)
 	}
 
 	go func() {
-		for {
-			obj, err := sc.Recv()
-			if err != nil {
+		for eventMessage := range chanEvMsg {
+			if eventMessage.Err != nil {
+				h.log.Error(err.Error())
 				return
 			}
-			mes, ok := obj.Body.(*rt.Message_Object)
-			if ok {
-				var msg *message.Message
-				if mes.Object.Type == rt.EventType_EV_DELETE {
-					msg = &message.Message{ID: int(mes.Object.Id)}
-				} else {
-					msg, err = h.messageCase.GetMessage(ctx, userID, int(mes.Object.Id))
-					if err != nil {
-						h.log.Error(err.Error())
-						return
-					}
-				}
-				objType := ""
-				switch mes.Object.Type {
-				case rt.EventType_EV_CREATE:
-					objType = "create"
-				case rt.EventType_EV_UPDATE:
-					objType = "update"
-				case rt.EventType_EV_DELETE:
-					objType = "delete"
-				}
-				err = wsjson.Write(ctx, conn, newMessageFromChannel(channel, "ok", "", Object{
-					Type:    objType,
-					Message: *msg,
-				}))
-				if err != nil {
-					h.log.Error(err.Error())
-					return
-				}
+
+			err = wsjson.Write(ctx, conn, newMessageFromChannel("ok", "", Object{
+				Type:    eventMessage.Type,
+				Message: *eventMessage.Message,
+			}))
+			if err != nil {
+				h.log.Error(err.Error())
+				return
 			}
 		}
 	}()

@@ -7,7 +7,6 @@ import (
 
 	ws "nhooyr.io/websocket"
 
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
@@ -16,7 +15,6 @@ type HandlerWebSocket struct {
 	originPatterns []string
 	log            *log.Logger
 	messageCase    usecase.Usecase
-	client         rt.RealTimeClient
 }
 
 type Option func(h *HandlerWebSocket)
@@ -29,8 +27,8 @@ func SetOriginPatterns(patterns []string) Option {
 	}
 }
 
-func New(log *log.Logger, mesCase usecase.Usecase, client rt.RealTimeClient, opts ...Option) *HandlerWebSocket {
-	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase, client: client}
+func New(log *log.Logger, mesCase usecase.Usecase, opts ...Option) *HandlerWebSocket {
+	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase}
 	for _, opt := range opts {
 		opt(handlerWS)
 	}

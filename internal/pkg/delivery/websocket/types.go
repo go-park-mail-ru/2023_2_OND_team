@@ -24,7 +24,6 @@ type PublsihRequest struct {
 
 type MessageFromChannel struct {
 	Type    string          `json:"type"`
-	Channel Channel         `json:"channel"`
 	Message ResponseMessage `json:"message"`
 }
 
@@ -55,10 +54,9 @@ func newResponseOnRequest(id int, status, code, message string, body any) *Respo
 	}
 }
 
-func newMessageFromChannel(channel Channel, status, code string, v any) *MessageFromChannel {
+func newMessageFromChannel(status, code string, v any) *MessageFromChannel {
 	mes := &MessageFromChannel{
-		Type:    "event",
-		Channel: channel,
+		Type: "event",
 		Message: ResponseMessage{
 			Status: status,
 			Code:   code,
