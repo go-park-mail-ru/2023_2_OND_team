@@ -2,9 +2,13 @@ package websocket
 
 import "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 
+const (
+	_topicChat         = "chat"
+	_topicNotification = "notification"
+)
+
 type Channel struct {
-	Name  string `json:"name"`
-	Topic string `json:"topic"`
+	Name string `json:"name"`
 }
 
 type Object struct {
@@ -12,9 +16,8 @@ type Object struct {
 	Message message.Message `json:"message"`
 }
 
-type Request struct {
+type PublsihRequest struct {
 	ID      int `json:"requestID"`
-	Action  string
 	Channel Channel
 	Message Object
 }
