@@ -11,6 +11,7 @@ import (
 
 	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
+	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
@@ -89,7 +90,14 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 		CommentCase:      comment.New(commentRepo.NewCommentRepoPG(pool), pinCase),
 	})
 
-	wsHandler := deliveryWS.New(log, messageCase,
+	connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer connRealtime.Close()
+
+	wsHandler := deliveryWS.New(log, messageCase, rt.NewRealTimeClient(connRealtime),
 		deliveryWS.SetOriginPatterns([]string{"pinspire.online", "pinspire.online:*"}))
 
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)
