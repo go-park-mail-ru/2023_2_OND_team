@@ -1,4 +1,4 @@
-package v1
+package errors
 
 import errPkg "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/errors"
 

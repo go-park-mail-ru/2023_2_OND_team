@@ -18,7 +18,158 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(in *jlexer.Lexer, out *Board) {
+func easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(in *jlexer.Lexer, out *BoardWithContent) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "BoardInfo":
+			(out.BoardInfo).UnmarshalEasyJSON(in)
+		case "PinsNumber":
+			out.PinsNumber = int(in.Int())
+		case "Pins":
+			if in.IsNull() {
+				in.Skip()
+				out.Pins = nil
+			} else {
+				in.Delim('[')
+				if out.Pins == nil {
+					if !in.IsDelim(']') {
+						out.Pins = make([]string, 0, 4)
+					} else {
+						out.Pins = []string{}
+					}
+				} else {
+					out.Pins = (out.Pins)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 string
+					v1 = string(in.String())
+					out.Pins = append(out.Pins, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "TagTitles":
+			if in.IsNull() {
+				in.Skip()
+				out.TagTitles = nil
+			} else {
+				in.Delim('[')
+				if out.TagTitles == nil {
+					if !in.IsDelim(']') {
+						out.TagTitles = make([]string, 0, 4)
+					} else {
+						out.TagTitles = []string{}
+					}
+				} else {
+					out.TagTitles = (out.TagTitles)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v2 string
+					v2 = string(in.String())
+					out.TagTitles = append(out.TagTitles, v2)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(out *jwriter.Writer, in BoardWithContent) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"BoardInfo\":"
+		out.RawString(prefix[1:])
+		(in.BoardInfo).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"PinsNumber\":"
+		out.RawString(prefix)
+		out.Int(int(in.PinsNumber))
+	}
+	{
+		const prefix string = ",\"Pins\":"
+		out.RawString(prefix)
+		if in.Pins == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v3, v4 := range in.Pins {
+				if v3 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v4))
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"TagTitles\":"
+		out.RawString(prefix)
+		if in.TagTitles == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.TagTitles {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v6))
+			}
+			out.RawByte(']')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v BoardWithContent) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v BoardWithContent) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *BoardWithContent) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *BoardWithContent) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(l, v)
+}
+func easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard1(in *jlexer.Lexer, out *Board) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -69,7 +220,7 @@ func easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoa
 		in.Consumed()
 	}
 }
-func easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(out *jwriter.Writer, in Board) {
+func easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard1(out *jwriter.Writer, in Board) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -120,23 +271,23 @@ func easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoa
 // MarshalJSON supports json.Marshaler interface
 func (v Board) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(&w, v)
+	easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Board) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(w, v)
+	easyjson202377feEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Board) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(&r, v)
+	easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Board) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard(l, v)
+	easyjson202377feDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityBoard1(l, v)
 }
