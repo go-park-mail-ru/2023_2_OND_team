@@ -9,7 +9,7 @@ type Object struct {
 	Message message.Message `json:"message"`
 }
 
-type PublsihRequest struct {
+type PublishRequest struct {
 	ID      int    `json:"requestID"`
 	Message Object `json:"message"`
 }

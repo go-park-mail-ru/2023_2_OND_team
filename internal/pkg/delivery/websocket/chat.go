@@ -41,7 +41,7 @@ func (h *HandlerWebSocket) Chat(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerWebSocket) serveChat(ctx context.Context, rw CtxReadWriter, userID int) error {
-	request := &PublsihRequest{}
+	request := &PublishRequest{}
 	var err error
 	for {
 		err = rw.Read(ctx, request)
@@ -54,7 +54,7 @@ func (h *HandlerWebSocket) serveChat(ctx context.Context, rw CtxReadWriter, user
 	}
 }
 
-func (h *HandlerWebSocket) handlePublishRequestMessage(ctx context.Context, w CtxWriter, userID int, req *PublsihRequest) {
+func (h *HandlerWebSocket) handlePublishRequestMessage(ctx context.Context, w CtxWriter, userID int, req *PublishRequest) {
 	fmt.Println(req)
 	switch req.Message.Type {
 	case "create":
