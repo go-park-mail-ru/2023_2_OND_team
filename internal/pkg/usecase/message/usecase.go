@@ -10,10 +10,9 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	mess "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
-	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	messMS "github.com/go-park-mail-ru/2023_2_OND_team/internal/microservices/messenger/delivery/grpc"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/chat"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -46,18 +45,23 @@ func makeErrEventMessage(err error) EventMessage {
 
 type messageCase struct {
 	client           mess.MessengerClient
-	rtClient         rt.RealTimeClient
+	realtimeChatCase chat.Usecase
 	log              *logger.Logger
 	realtimeIsEnable bool
 }
 
-func New(cl mess.MessengerClient, rtClient rt.RealTimeClient, log *logger.Logger, rtEnable bool) *messageCase {
-	return &messageCase{
-		client:           cl,
-		rtClient:         rtClient,
-		log:              log,
-		realtimeIsEnable: rtEnable,
+func New(log *logger.Logger, cl mess.MessengerClient, rtChatCase chat.Usecase) *messageCase {
+	m := &messageCase{
+		client: cl,
+		log:    log,
 	}
+
+	if rtChatCase != nil {
+		m.realtimeChatCase = rtChatCase
+		m.realtimeIsEnable = true
+	}
+
+	return m
 }
 
 func (m *messageCase) SendMessage(ctx context.Context, userID int, mes *entity.Message) (int, error) {
@@ -70,7 +74,9 @@ func (m *messageCase) SendMessage(ctx context.Context, userID int, mes *entity.M
 		return 0, fmt.Errorf("send message by grpc client")
 	}
 
-	m.publishToRealTimeServer(ctx, strconv.Itoa(mes.To), int(msgID.GetId()), rt.EventType_EV_CREATE)
+	if m.realtimeIsEnable {
+		go m.realtimeChatCase.PublishNewMessage(ctx, mes.To, int(msgID.GetId()))
+	}
 
 	return int(msgID.GetId()), nil
 }
@@ -104,7 +110,9 @@ func (m *messageCase) UpdateContentMessage(ctx context.Context, userID int, mes 
 		return fmt.Errorf("update messege by grpc client")
 	}
 
-	m.publishToRealTimeServer(ctx, strconv.Itoa(mes.To), mes.ID, rt.EventType_EV_UPDATE)
+	if m.realtimeIsEnable {
+		go m.realtimeChatCase.PublishUpdateMessage(ctx, mes.To, mes.ID)
+	}
 
 	return nil
 }
@@ -114,7 +122,9 @@ func (m *messageCase) DeleteMessage(ctx context.Context, userID int, mes *entity
 		return fmt.Errorf("delete messege by grpc client")
 	}
 
-	m.publishToRealTimeServer(ctx, strconv.Itoa(mes.To), mes.ID, rt.EventType_EV_DELETE)
+	if m.realtimeIsEnable {
+		go m.realtimeChatCase.PublishDeleteMessage(ctx, mes.To, mes.ID)
+	}
 
 	return nil
 }
@@ -150,42 +160,12 @@ func (m *messageCase) GetUserChatsWithOtherUsers(ctx context.Context, userID, co
 	return convertFeedChat(feed), int(feed.GetLastID()), errRes
 }
 
-func (m *messageCase) publishToRealTimeServer(ctx context.Context, channelName string, idMsg int, t rt.EventType) {
-	if !m.realtimeIsEnable {
-		return
-	}
-
-	go func() {
-		_, err := m.rtClient.Publish(ctx, &rt.PublishMessage{
-			Channel: &rt.Channel{
-				Name:  channelName,
-				Topic: _topicChat,
-			},
-			Message: &rt.Message{
-				Body: &rt.Message_Object{
-					Object: &rt.EventObject{
-						Type: t,
-						Id:   int64(idMsg),
-					},
-				},
-			},
-		})
-		if err != nil {
-			m.log.Error(err.Error())
-		}
-	}()
-}
-
 func (m *messageCase) SubscribeUserToAllChats(ctx context.Context, userID int) (<-chan EventMessage, error) {
 	if !m.realtimeIsEnable {
 		return nil, ErrRealTimeDisable
 	}
 
-	subClient, err := m.rtClient.Subscribe(ctx, &rt.Channels{
-		Chans: []*rt.Channel{
-			{Name: strconv.Itoa(userID), Topic: _topicChat},
-		},
-	})
+	subClient, err := m.realtimeChatCase.SubscribeUserToAllChats(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("subscribe: %w", err)
 	}
@@ -195,38 +175,29 @@ func (m *messageCase) SubscribeUserToAllChats(ctx context.Context, userID int) (
 	return chanEvMsg, nil
 }
 
-func (m *messageCase) receiveFromSubClient(ctx context.Context, userID int, subClient rt.RealTime_SubscribeClient, chanEvMsg chan<- EventMessage) {
+func (m *messageCase) receiveFromSubClient(ctx context.Context, userID int, subClient <-chan chat.EventMessageObjectID, chanEvMsg chan<- EventMessage) {
 	defer close(chanEvMsg)
-	evMsg := EventMessage{}
-	for {
-		obj, err := subClient.Recv()
-		if err != nil {
-			chanEvMsg <- makeErrEventMessage(fmt.Errorf("receive from subcribtion client: %w", err))
+
+	var (
+		evMsg EventMessage
+		err   error
+	)
+	for msgObjID := range subClient {
+		if msgObjID.Err != nil {
+			chanEvMsg <- makeErrEventMessage(fmt.Errorf("receive from subcribtion client: %w", msgObjID.Err))
 			return
 		}
 
-		mes, ok := obj.Body.(*rt.Message_Object)
-		if !ok {
-			chanEvMsg <- makeErrEventMessage(ErrUnknowObj)
-			return
+		evMsg = EventMessage{
+			Type: msgObjID.Type,
 		}
-
-		if mes.Object.Type == rt.EventType_EV_DELETE {
-			evMsg.Message = &message.Message{ID: int(mes.Object.Id)}
+		if evMsg.Type == "delete" {
+			evMsg.Message = &entity.Message{ID: msgObjID.MessageID}
 		} else {
-			evMsg.Message, err = m.GetMessage(ctx, userID, int(mes.Object.Id))
+			evMsg.Message, err = m.GetMessage(ctx, userID, msgObjID.MessageID)
 			if err != nil {
 				m.log.Error(err.Error())
 			}
-		}
-
-		switch mes.Object.Type {
-		case rt.EventType_EV_CREATE:
-			evMsg.Type = "create"
-		case rt.EventType_EV_UPDATE:
-			evMsg.Type = "update"
-		case rt.EventType_EV_DELETE:
-			evMsg.Type = "delete"
 		}
 
 		chanEvMsg <- evMsg

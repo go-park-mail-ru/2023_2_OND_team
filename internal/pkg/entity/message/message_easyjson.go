@@ -36,7 +36,7 @@ func easyjson4086215fDecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityMes
 			continue
 		}
 		switch key {
-		case "ID":
+		case "id":
 			out.ID = int(in.Int())
 		case "from":
 			out.From = int(in.Int())
@@ -60,14 +60,20 @@ func easyjson4086215fEncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityMes
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
-		const prefix string = ",\"ID\":"
+	if in.ID != 0 {
+		const prefix string = ",\"id\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.Int(int(in.ID))
 	}
 	{
 		const prefix string = ",\"from\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Int(int(in.From))
 	}
 	{

@@ -2,14 +2,7 @@ package websocket
 
 import "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 
-const (
-	_topicChat         = "chat"
-	_topicNotification = "notification"
-)
-
-type Channel struct {
-	Name string `json:"name"`
-}
+//go:generate easyjson --all
 
 type Object struct {
 	Type    string          `json:"eventType,omitempty"`
@@ -17,9 +10,8 @@ type Object struct {
 }
 
 type PublsihRequest struct {
-	ID      int `json:"requestID"`
-	Channel Channel
-	Message Object
+	ID      int    `json:"requestID"`
+	Message Object `json:"message"`
 }
 
 type MessageFromChannel struct {

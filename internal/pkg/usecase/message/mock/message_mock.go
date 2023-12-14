@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	message "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
+	message0 "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,17 +37,17 @@ func (m *MockUsecase) EXPECT() *MockUsecaseMockRecorder {
 }
 
 // DeleteMessage mocks base method.
-func (m *MockUsecase) DeleteMessage(ctx context.Context, userID, mesID int) error {
+func (m *MockUsecase) DeleteMessage(ctx context.Context, userID int, mes *message.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteMessage", ctx, userID, mesID)
+	ret := m.ctrl.Call(m, "DeleteMessage", ctx, userID, mes)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteMessage indicates an expected call of DeleteMessage.
-func (mr *MockUsecaseMockRecorder) DeleteMessage(ctx, userID, mesID interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) DeleteMessage(ctx, userID, mes interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessage", reflect.TypeOf((*MockUsecase)(nil).DeleteMessage), ctx, userID, mesID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessage", reflect.TypeOf((*MockUsecase)(nil).DeleteMessage), ctx, userID, mes)
 }
 
 // GetMessage mocks base method.
@@ -109,6 +110,21 @@ func (m *MockUsecase) SendMessage(ctx context.Context, userID int, mes *message.
 func (mr *MockUsecaseMockRecorder) SendMessage(ctx, userID, mes interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessage", reflect.TypeOf((*MockUsecase)(nil).SendMessage), ctx, userID, mes)
+}
+
+// SubscribeUserToAllChats mocks base method.
+func (m *MockUsecase) SubscribeUserToAllChats(ctx context.Context, userID int) (<-chan message0.EventMessage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SubscribeUserToAllChats", ctx, userID)
+	ret0, _ := ret[0].(<-chan message0.EventMessage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SubscribeUserToAllChats indicates an expected call of SubscribeUserToAllChats.
+func (mr *MockUsecaseMockRecorder) SubscribeUserToAllChats(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeUserToAllChats", reflect.TypeOf((*MockUsecase)(nil).SubscribeUserToAllChats), ctx, userID)
 }
 
 // UpdateContentMessage mocks base method.

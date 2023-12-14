@@ -30,6 +30,8 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/chat"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/search"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -74,8 +76,10 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer connRealtime.Close()
 
+	rtClient := rt.NewRealTimeClient(connRealtime)
+
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
-	messageCase := message.New(messenger.NewMessengerClient(connMessMS), rt.NewRealTimeClient(connRealtime), log, true)
+	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 
 	conn, err := grpc.Dial(cfg.AddrAuthServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
