@@ -181,9 +181,10 @@ func (m *messageCase) SubscribeUserToAllChats(ctx context.Context, userID int) (
 		return nil, ErrRealTimeDisable
 	}
 
-	subClient, err := m.rtClient.Subscribe(ctx, &rt.Channel{
-		Name:  strconv.Itoa(userID),
-		Topic: _topicChat,
+	subClient, err := m.rtClient.Subscribe(ctx, &rt.Channels{
+		Chans: []*rt.Channel{
+			{Name: strconv.Itoa(userID), Topic: _topicChat},
+		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("subscribe: %w", err)
