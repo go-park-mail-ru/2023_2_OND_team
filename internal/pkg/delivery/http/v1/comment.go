@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/comment"
@@ -26,7 +25,6 @@ func (h *HandlerHTTP) WriteComment(w http.ResponseWriter, r *http.Request) {
 	comment := &comment.Comment{}
 
 	err = easyjson.UnmarshalFromReader(r.Body, comment)
-	fmt.Println(comment.Content)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Warn(err.Error())

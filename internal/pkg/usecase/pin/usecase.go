@@ -105,10 +105,19 @@ func (p *pinCase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinCo
 	return p.repo.GetFeedPins(ctx, cfg)
 }
 
-func (u *pinCase) GetAuthorIdOfThePin(ctx context.Context, pinID int) (int, error) {
-	user, err := u.repo.GetAuthorPin(ctx, pinID)
+func (p *pinCase) GetAuthorIdOfThePin(ctx context.Context, pinID int) (int, error) {
+	user, err := p.repo.GetAuthorPin(ctx, pinID)
 	if err != nil {
 		return 0, fmt.Errorf("get author id of the pin: %w", err)
 	}
 	return user.ID, nil
+}
+
+func (p *pinCase) GetPinWithAuthor(ctx context.Context, pinID int) (*pin.Pin, error) {
+	pin, err := p.repo.GetPinByID(ctx, pinID, true)
+	if err != nil {
+		return nil, fmt.Errorf("get a pin with author: %w", err)
+	}
+
+	return pin, nil
 }

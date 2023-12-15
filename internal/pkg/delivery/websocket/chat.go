@@ -96,7 +96,7 @@ func (h *HandlerWebSocket) subscribeOnChat(ctx context.Context, w CtxWriter, use
 	go func() {
 		for eventMessage := range chanEvMsg {
 			if eventMessage.Err != nil {
-				h.log.Error(err.Error())
+				h.log.Error(eventMessage.Err.Error())
 				return
 			}
 

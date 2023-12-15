@@ -7,6 +7,7 @@ import (
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/comment"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	commentRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/comment"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/notification"
 )
 
 //go:generate mockgen -destination=./mock/comment_mock.go -package=mock -source=usecase.go Usecase
@@ -14,6 +15,7 @@ type Usecase interface {
 	PutCommentOnPin(ctx context.Context, userID int, comment *entity.Comment) (int, error)
 	GetFeedCommentOnPin(ctx context.Context, userID, pinID, count, lastID int) ([]entity.Comment, int, error)
 	DeleteComment(ctx context.Context, userID, commentID int) error
+	GetCommentWithAuthor(ctx context.Context, commentID int) (*entity.Comment, error)
 }
 
 type availablePinChecker interface {
@@ -24,11 +26,23 @@ type availablePinChecker interface {
 type commentCase struct {
 	availablePinChecker
 
-	repo commentRepo.Repository
+	notifyCase notification.Usecase
+	repo       commentRepo.Repository
+
+	notifyIsEnable bool
 }
 
-func New(repo commentRepo.Repository, checker availablePinChecker) *commentCase {
-	return &commentCase{checker, repo}
+func New(repo commentRepo.Repository, checker availablePinChecker, notifyCase notification.Usecase) *commentCase {
+	comCase := &commentCase{
+		availablePinChecker: checker,
+		repo:                repo,
+		notifyCase:          notifyCase,
+	}
+
+	if notifyCase != nil {
+		comCase.notifyIsEnable = true
+	}
+	return comCase
 }
 
 func (c *commentCase) PutCommentOnPin(ctx context.Context, userID int, comment *entity.Comment) (int, error) {
@@ -43,6 +57,13 @@ func (c *commentCase) PutCommentOnPin(ctx context.Context, userID int, comment *
 	if err != nil {
 		return 0, fmt.Errorf("put comment on available pin: %w", err)
 	}
+
+	ctx = context.Background()
+
+	if c.notifyIsEnable {
+		go c.notifyCase.NotifyCommentLeftOnPin(ctx, id)
+	}
+
 	return id, nil
 }
 
@@ -75,4 +96,13 @@ func (c *commentCase) DeleteComment(ctx context.Context, userID, commentID int) 
 		return fmt.Errorf("delete comment: %w", err)
 	}
 	return nil
+}
+
+func (c *commentCase) GetCommentWithAuthor(ctx context.Context, commentID int) (*entity.Comment, error) {
+	comment, err := c.repo.GetCommentByID(ctx, commentID)
+	if err != nil {
+		return nil, fmt.Errorf("get comment with author: %w", err)
+	}
+
+	return comment, nil
 }

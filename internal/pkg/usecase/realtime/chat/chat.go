@@ -86,7 +86,7 @@ func (r *realtimeCase) receiveFromSubClient(ctx context.Context, subClient <-cha
 
 		msg, ok := pack.Body.(*rt.Message_Object)
 		if !ok {
-			chanEvMsg <- makeErrEventMessageObjectID(realtime.ErrUnknowTypeObject)
+			chanEvMsg <- makeErrEventMessageObjectID(realtime.ErrUnknownTypeObject)
 			return
 		}
 

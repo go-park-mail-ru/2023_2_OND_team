@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	ws "nhooyr.io/websocket"
@@ -23,17 +24,31 @@ func (h *HandlerWebSocket) Notification(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(context.Background(), _ctxOnServeConnect)
 	defer cancel()
 
-	err = h.subscribeOnNotification(ctx, conn, userID)
+	socket := newSocketJSON(conn)
+
+	err = h.subscribeOnNotificationAndServe(ctx, socket, userID)
 	if err != nil && ws.CloseStatus(err) == -1 {
 		h.log.Error(err.Error())
 		conn.Close(ws.StatusInternalError, "subscribe_fail")
 	}
 }
 
-// func (h *HandlerWebSocket) handleNotification(ctx context.Context, conn *ws.Conn, userID int) {
+func (h *HandlerWebSocket) subscribeOnNotificationAndServe(ctx context.Context, w CtxWriter, userID int) error {
+	chanNotify, err := h.notifySub.SubscribeOnAllNotifications(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("subscribe on Notification")
+	}
 
-// }
+	for notify := range chanNotify {
+		if notify.Err() != nil {
+			return notify.Err()
+		}
 
-func (h *HandlerWebSocket) subscribeOnNotification(ctx context.Context, conn *ws.Conn, userID int) error {
+		err = w.Write(ctx, notify)
+		if err != nil {
+			h.log.Error(err.Error())
+		}
+	}
+
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 )
 
-var ErrUnknowTypeObject = errors.New("unknow type")
+var ErrUnknownTypeObject = errors.New("unknown type")
 
 const (
 	_topicChat         = "chat"
@@ -37,6 +37,13 @@ func NewRealTimeChatClient(client rt.RealTimeClient) realtimeClient {
 	}
 }
 
+func NewRealTimeNotificationClient(client rt.RealTimeClient) realtimeClient {
+	return realtimeClient{
+		client: client,
+		topic:  _topicNotification,
+	}
+}
+
 func (r realtimeClient) Publish(ctx context.Context, chanName string, object any) error {
 	pubMsg := &rt.PublishMessage{
 		Channel: &rt.Channel{
@@ -52,7 +59,7 @@ func (r realtimeClient) Publish(ctx context.Context, chanName string, object any
 	case *rt.Message_Content:
 		pubMsg.Message.Body = body
 	default:
-		return ErrUnknowTypeObject
+		return ErrUnknownTypeObject
 	}
 
 	_, err := r.client.Publish(ctx, pubMsg)

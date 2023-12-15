@@ -45,7 +45,8 @@ func (c *commentRepoPG) AddComment(ctx context.Context, comment *entity.Comment)
 func (c *commentRepoPG) GetCommentByID(ctx context.Context, id int) (*entity.Comment, error) {
 	comment := &entity.Comment{ID: id, Author: &user.User{}}
 
-	err := c.db.QueryRow(ctx, SelectCommentByID, id).Scan(&comment.Author.ID, &comment.PinID, &comment.Content)
+	err := c.db.QueryRow(ctx, SelectCommentByID, id).
+		Scan(&comment.Author.ID, &comment.Author.Username, &comment.Author.Avatar, &comment.PinID, &comment.Content)
 	if err != nil {
 		return nil, fmt.Errorf("get comment by id from storage: %w", err)
 	}

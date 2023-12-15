@@ -1,20 +1,27 @@
 package websocket
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	ws "nhooyr.io/websocket"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/notification"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
+
+type notifySubscriber interface {
+	SubscribeOnAllNotifications(ctx context.Context, userID int) (<-chan *notification.NotifyMessage, error)
+}
 
 type HandlerWebSocket struct {
 	originPatterns []string
 	log            *log.Logger
 	messageCase    usecase.Usecase
+	notifySub      notifySubscriber
 }
 
 type Option func(h *HandlerWebSocket)
@@ -27,8 +34,8 @@ func SetOriginPatterns(patterns []string) Option {
 	}
 }
 
-func New(log *log.Logger, mesCase usecase.Usecase, opts ...Option) *HandlerWebSocket {
-	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase}
+func New(log *log.Logger, mesCase usecase.Usecase, notify notifySubscriber, opts ...Option) *HandlerWebSocket {
+	handlerWS := &HandlerWebSocket{log: log, messageCase: mesCase, notifySub: notify}
 	for _, opt := range opts {
 		opt(handlerWS)
 	}

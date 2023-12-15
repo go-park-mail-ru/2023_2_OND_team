@@ -5,7 +5,11 @@ const (
 
 	UpdateCommentOnDeleted = "UPDATE comment SET deleted_at = now() WHERE id = $1;"
 
-	SelectCommentByID     = "SELECT author, pin_id, content FROM comment WHERE id = $1 AND deleted_at IS NULL;"
+	SelectCommentByID = `SELECT p.id, p.username, p.avatar, c.pin_id, c.content
+						 FROM comment AS c INNER JOIN profile AS p
+						 ON c.author = p.id
+						 WHERE c.id = $1 AND c.deleted_at IS NULL;`
+
 	SelectCommentsByPinID = `SELECT c.id, p.id, p.username, p.avatar, c.content
 							 FROM comment AS c INNER JOIN profile AS p
 							 ON c.author = p.id
