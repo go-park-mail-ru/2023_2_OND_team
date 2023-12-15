@@ -3,6 +3,7 @@ package comment
 import (
 	"context"
 	"fmt"
+	"time"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/comment"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
@@ -22,6 +23,8 @@ type availablePinChecker interface {
 	IsAvailablePinForViewingUser(ctx context.Context, userID, pinID int) error
 	GetAuthorIdOfThePin(ctx context.Context, pinID int) (int, error)
 }
+
+const _timeoutNotification = 5 * time.Minute
 
 type commentCase struct {
 	availablePinChecker
@@ -58,9 +61,8 @@ func (c *commentCase) PutCommentOnPin(ctx context.Context, userID int, comment *
 		return 0, fmt.Errorf("put comment on available pin: %w", err)
 	}
 
-	ctx = context.Background()
-
 	if c.notifyIsEnable {
+		ctx, _ = context.WithTimeout(context.Background(), _timeoutNotification)
 		go c.notifyCase.NotifyCommentLeftOnPin(ctx, id)
 	}
 
