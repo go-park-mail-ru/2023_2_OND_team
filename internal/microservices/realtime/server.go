@@ -42,7 +42,7 @@ func (s Server) Publish(ctx context.Context, pm *rt.PublishMessage) (*empty.Empt
 	return &empty.Empty{}, nil
 }
 
-func (s Server) Subscribe(c *rt.Channel, ss rt.RealTime_SubscribeServer) error {
+func (s Server) Subscribe(chans *rt.Channels, ss rt.RealTime_SubscribeServer) error {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return status.Error(codes.Internal, "generate uuid v4")
@@ -52,7 +52,9 @@ func (s Server) Subscribe(c *rt.Channel, ss rt.RealTime_SubscribeServer) error {
 		transport: ss,
 	}
 
-	s.node.AddSubscriber(c, client)
+	for _, ch := range chans.GetChans() {
+		s.node.AddSubscriber(ch, client)
+	}
 
 	<-ss.Context().Done()
 	return nil

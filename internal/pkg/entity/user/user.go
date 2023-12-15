@@ -5,6 +5,8 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+const UserUnknown = -1
+
 type User struct {
 	ID       int         `json:"id,omitempty" example:"123"`
 	Username string      `json:"username" example:"Green"`

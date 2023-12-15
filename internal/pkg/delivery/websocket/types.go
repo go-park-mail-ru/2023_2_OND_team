@@ -2,26 +2,20 @@ package websocket
 
 import "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/message"
 
-type Channel struct {
-	Name  string `json:"name"`
-	Topic string `json:"topic"`
-}
+//go:generate easyjson --all
 
 type Object struct {
 	Type    string          `json:"eventType,omitempty"`
 	Message message.Message `json:"message"`
 }
 
-type Request struct {
-	ID      int `json:"requestID"`
-	Action  string
-	Channel Channel
-	Message Object
+type PublishRequest struct {
+	ID      int    `json:"requestID"`
+	Message Object `json:"message"`
 }
 
 type MessageFromChannel struct {
 	Type    string          `json:"type"`
-	Channel Channel         `json:"channel"`
 	Message ResponseMessage `json:"message"`
 }
 
@@ -52,10 +46,9 @@ func newResponseOnRequest(id int, status, code, message string, body any) *Respo
 	}
 }
 
-func newMessageFromChannel(channel Channel, status, code string, v any) *MessageFromChannel {
+func newMessageFromChannel(status, code string, v any) *MessageFromChannel {
 	mes := &MessageFromChannel{
-		Type:    "event",
-		Channel: channel,
+		Type: "event",
 		Message: ResponseMessage{
 			Status: status,
 			Code:   code,

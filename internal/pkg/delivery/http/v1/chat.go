@@ -90,7 +90,7 @@ func (h *HandlerHTTP) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.messageCase.DeleteMessage(r.Context(), userID, messageID)
+	err = h.messageCase.DeleteMessage(r.Context(), userID, &message.Message{ID: messageID})
 	if err != nil {
 		logger.Warn(err.Error())
 		err = responseError(w, "delete_message", "fail deleting a message")
