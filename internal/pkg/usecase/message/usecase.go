@@ -34,8 +34,6 @@ type Usecase interface {
 	SubscribeUserToAllChats(ctx context.Context, userID int) (<-chan EventMessage, error)
 }
 
-const _topicChat = "chat"
-
 type EventMessage struct {
 	Type    string
 	Message *entity.Message
