@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const AuthenticatedMetadataKey = "user_id"
@@ -104,10 +105,16 @@ func (m MessengerServer) GetMessage(ctx context.Context, msgID *mess.MsgID) (*me
 		return nil, status.Error(codes.Internal, "get message")
 	}
 
-	return &mess.Message{
+	resMsg := &mess.Message{
 		Id:       msgID,
 		UserFrom: int64(msg.From),
 		UserTo:   int64(msg.To),
 		Content:  msg.Content.String,
-	}, nil
+	}
+
+	if msg.DeletedAt.Valid {
+		resMsg.DeletedAt = timestamppb.New(msg.DeletedAt.Time)
+	}
+
+	return resMsg, nil
 }

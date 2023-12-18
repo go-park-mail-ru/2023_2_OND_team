@@ -1,7 +1,7 @@
 package message
 
 const (
-	SelectMessageByID = "SELECT user_from, user_to, content FROM message WHERE id = $1 AND deleted_at IS NULL;"
+	SelectMessageByID = "SELECT user_from, user_to, content, deleted_at FROM message WHERE id = $1;"
 	SelectUserChats   = `SELECT max(message.id) AS mmid, profile.id, username, avatar 
 						 FROM message INNER JOIN profile ON (user_to = $1 AND user_from = profile.id) OR (user_to = profile.id AND user_from = $1)
 						 WHERE (message.id < $2 OR $2 = 0)

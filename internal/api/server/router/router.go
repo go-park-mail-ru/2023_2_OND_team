@@ -138,6 +138,12 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 			r.Put("/update/{messageID:\\d+}", handler.UpdateMessage)
 			r.Delete("/delete/{messageID:\\d+}", handler.DeleteMessage)
 		})
+
+		r.With(auth.RequireAuth).Route("/shared/board", func(r chi.Router) {
+			r.Get("/{boardID:\\d+}/{linkID:\\d+}", handler.CheckLink)
+			r.Post("/create/{boardID:\\d+}", handler.CreateSharedLink)
+			r.Post("/{boardID:\\d+}/{linkID:\\d+}", handler.SharedBoard)
+		})
 	})
 
 	r.Mux.With(auth.RequireAuth).Route("/websocket/connect", func(r chi.Router) {

@@ -16,9 +16,12 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-var ErrNoAccess = errors.New("there is no access to perform this action")
-var ErrRealTimeDisable = errors.New("realtime disable")
-var ErrUnknowObj = errors.New("unknow object")
+var (
+	ErrNoAccess        = errors.New("there is no access to perform this action")
+	ErrRealTimeDisable = errors.New("realtime disable")
+	ErrUnknowObj       = errors.New("unknow object")
+	ErrMessageDeleted  = errors.New("message deleted")
+)
 
 //go:generate mockgen -destination=./mock/message_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
@@ -130,11 +133,24 @@ func (m *messageCase) DeleteMessage(ctx context.Context, userID int, mes *entity
 }
 
 func (m *messageCase) GetMessage(ctx context.Context, userID int, messageID int) (*entity.Message, error) {
+	mes, err := m.getMessage(ctx, userID, messageID)
+	if err != nil {
+		return nil, err
+	}
+
+	if mes.DeletedAt.Valid {
+		return nil, ErrMessageDeleted
+	}
+	return mes, nil
+}
+
+func (m *messageCase) getMessage(ctx context.Context, userID int, messageID int) (*entity.Message, error) {
 	mes, err := m.client.GetMessage(setAuthenticatedMetadataCtx(ctx, userID), &mess.MsgID{Id: int64(messageID)})
 	if err != nil {
 		return nil, fmt.Errorf("get message by grpc client")
 	}
-	return &entity.Message{
+
+	msg := &entity.Message{
 		ID:   int(mes.GetId().Id),
 		From: int(mes.GetUserFrom()),
 		To:   int(mes.GetUserTo()),
@@ -142,7 +158,12 @@ func (m *messageCase) GetMessage(ctx context.Context, userID int, messageID int)
 			String: mes.Content,
 			Valid:  true,
 		},
-	}, nil
+	}
+
+	if mes.GetDeletedAt() != nil {
+		msg.DeletedAt = pgtype.Timestamptz{Time: mes.GetDeletedAt().AsTime(), Valid: true}
+	}
+	return msg, nil
 }
 
 func (m *messageCase) GetUserChatsWithOtherUsers(ctx context.Context, userID, count, lastID int) (entity.FeedUserChats, int, error) {
@@ -194,9 +215,10 @@ func (m *messageCase) receiveFromSubClient(ctx context.Context, userID int, subC
 		if evMsg.Type == "delete" {
 			evMsg.Message = &entity.Message{ID: msgObjID.MessageID}
 		} else {
-			evMsg.Message, err = m.GetMessage(ctx, userID, msgObjID.MessageID)
+			evMsg.Message, err = m.getMessage(ctx, userID, msgObjID.MessageID)
 			if err != nil {
 				m.log.Error(err.Error())
+				continue
 			}
 		}
 

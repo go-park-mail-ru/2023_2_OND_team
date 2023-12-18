@@ -12,10 +12,11 @@ type Chat [2]int
 
 //easyjson:json
 type Message struct {
-	ID      int         `json:"id,omitempty"`
-	From    int         `json:"from"`
-	To      int         `json:"to"`
-	Content pgtype.Text `json:"content"`
+	ID        int                `json:"id,omitempty"`
+	From      int                `json:"from"`
+	To        int                `json:"to"`
+	Content   pgtype.Text        `json:"content"`
+	DeletedAt pgtype.Timestamptz `json:"-"`
 }
 
 func (m Message) WhatChat() Chat {

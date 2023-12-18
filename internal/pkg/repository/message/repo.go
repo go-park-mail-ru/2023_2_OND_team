@@ -28,7 +28,7 @@ func NewMessageRepo(db pgtype.PgxPoolIface) *messageRepo {
 
 func (m *messageRepo) GetMessageByID(ctx context.Context, mesID int) (*entity.Message, error) {
 	message := &entity.Message{ID: mesID}
-	err := m.db.QueryRow(ctx, SelectMessageByID, mesID).Scan(&message.From, &message.To, &message.Content)
+	err := m.db.QueryRow(ctx, SelectMessageByID, mesID).Scan(&message.From, &message.To, &message.Content, &message.DeletedAt)
 	if err != nil {
 		return nil, fmt.Errorf("get message by id from storage: %w", err)
 	}
