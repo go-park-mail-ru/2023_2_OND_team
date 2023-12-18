@@ -210,14 +210,14 @@ func (m *messageCase) receiveFromSubClient(ctx context.Context, userID int, subC
 		evMsg = EventMessage{
 			Type: msgObjID.Type,
 		}
+		evMsg.Message, err = m.getMessage(ctx, userID, msgObjID.MessageID)
+		if err != nil {
+			m.log.Error(err.Error())
+			continue
+		}
+
 		if evMsg.Type == "delete" {
-			evMsg.Message = &entity.Message{ID: msgObjID.MessageID}
-		} else {
-			evMsg.Message, err = m.getMessage(ctx, userID, msgObjID.MessageID)
-			if err != nil {
-				m.log.Error(err.Error())
-				continue
-			}
+			evMsg.Message.Content = pgtype.Text{}
 		}
 
 		chanEvMsg <- evMsg
