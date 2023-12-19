@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  main_service:
+    image: pinspireapp/main:latest
+
+  auth_service:
+    image: pinspireapp/auth:latest
+
+  messenger_service:
+    image: pinspireapp/messenger:latest
+    
+  realtime_service:
+    image: pinspireapp/realtime:latest

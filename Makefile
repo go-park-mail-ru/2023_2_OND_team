@@ -1,11 +1,17 @@
 .PHONY: build run test test_with_coverage cleantest retest doc generate cover_all currcover
-.PHONY: build_auth  build_realtime build_messenger
+.PHONY: build_auth  build_realtime build_messenger build_all
+.PHONY: .install-linter lint lint-fast
 
 ENTRYPOINT=cmd/app/main.go
 DOC_DIR=./docs
 COV_OUT=coverage.out
 COV_HTML=coverage.html
 CURRCOVER=github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1
+
+PROJECT_DIR = $(shell pwd)
+PROJECT_BIN = $(PROJECT_DIR)/bin
+$(shell [ -f bin ] || mkdir -p $(PROJECT_BIN))
+GOLANGCI_LINT = $(PROJECT_BIN)/golangci-lint
 
 build:
 	go build -o bin/app cmd/app/*.go
@@ -18,6 +24,8 @@ build_realtime:
 
 build_messenger:
 	go build -o bin/messenger cmd/messenger/*.go
+
+build_all: build build_auth build_realtime build_messenger
 
 run: build
 	./bin/app
@@ -51,3 +59,11 @@ currcover:
 	go test -cover -v -coverprofile=cover.out ${CURRCOVER}
 	go tool cover -html=cover.out -o cover.html
 
+.install-linter:
+	[ -f $(PROJECT_BIN)/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_BIN) v1.55.2
+
+lint: .install-linter
+	$(GOLANGCI_LINT) run ./... --config=configs/.golangci.yml
+
+lint-fast: .install-linter
+	$(GOLANGCI_LINT) run ./... --fast --config=configs/.golangci.yml

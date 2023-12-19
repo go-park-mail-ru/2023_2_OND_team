@@ -25,3 +25,5 @@ testdata/
 cert/
 .env
 redis.conf
+inventory
+script*

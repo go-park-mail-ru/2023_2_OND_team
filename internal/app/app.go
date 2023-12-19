@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -65,7 +66,8 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer pool.Close()
 
-	connMessMS, err := grpc.Dial("localhost:8095", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// connMessMS, err := grpc.Dial("localhost:8095", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connMessMS, err := grpc.Dial(os.Getenv("MESSENGER_SERVICE_HOST")+":"+os.Getenv("MESSENGER_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err.Error())
 		return

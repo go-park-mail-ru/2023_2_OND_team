@@ -1,0 +1,61 @@
+name: Start Pinspire deployment
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - TP-c01_ci-cd
+      - dev4
+  pull_request:
+    types: [opened, edited, reopened]
+    branches: [main, dev4]
+
+jobs:
+  build_images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get repository code
+        uses: actions/checkout@v4
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      - name: Build docker images of services
+        run: |
+          docker build -t pinspireapp/main:latest -f deployments/Dockerfile.main . &
+          docker build -t pinspireapp/auth:latest -f deployments/Dockerfile.auth . &
+          docker build -t pinspireapp/realtime:latest -f deployments/Dockerfile.realtime . &
+          docker build -t pinspireapp/messenger:latest -f deployments/Dockerfile.messenger . &
+          for p in $(jobs -p); do wait "$p" || { echo "job $p failed" >&2; exit; }; done
+      - name: Push docker images
+        run: |
+          docker push pinspireapp/main:latest &
+          docker push pinspireapp/auth:latest &
+          docker push pinspireapp/realtime:latest &
+          docker push pinspireapp/messenger:latest &
+          for p in $(jobs -p); do wait "$p" || { echo "job $p failed" >&2; exit; }; done
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_images
+    steps:
+      - name: fetch changes
+        uses: appleboy/ssh-action@master
+        with:
+          host: pinspire.online
+          username: ${{ secrets.REMOTE_USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.PINSPIRE_BACKEND_PATH }}
+            sudo git switch TP-c01_ci-cd
+            sudo git pull
+      - name: deploy application
+        uses: appleboy/ssh-action@master
+        with:
+          host: pinspire.online
+          username: ${{ secrets.REMOTE_USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.PINSPIRE_BACKEND_PATH }}/deployments 
+            sudo docker compose down main_service auth_service realtime_service messenger_service
+            sudo docker rmi pinspireapp/main:latest pinspireapp/auth:latest pinspireapp/realtime:latest pinspireapp/messenger:latest
+            sudo docker compose -f docker-compose.yml -f compose.prod.yml up -d
+      
