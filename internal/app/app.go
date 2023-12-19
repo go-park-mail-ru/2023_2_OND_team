@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	vision "cloud.google.com/go/vision/v2/apiv1"
 	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
 	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
@@ -41,7 +42,10 @@ import (
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-var _timeoutForConnPG = 5 * time.Second
+var (
+	_timeoutForConnPG     = 5 * time.Second
+	timeoutCloudVisionAPI = 10 * time.Second
+)
 
 const uploadFiles = "upload/"
 
@@ -83,7 +87,16 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 
 	commentRepository := commentRepo.NewCommentRepoPG(pool)
 
-	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "keyVision.json")
+	visionCtx, cancel := context.WithTimeout(ctx, timeoutCloudVisionAPI)
+	defer cancel()
+	visionClient, err := vision.NewImageAnnotatorClient(visionCtx)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles), visionClient)
 	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 
