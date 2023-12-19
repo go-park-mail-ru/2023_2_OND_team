@@ -1,10 +1,13 @@
 package user
 
+//go:generate easyjson info.go
+
+//easyjson:json
 type ProfileUpdateData struct {
-	Username *string
-	Email    *string
-	Name     *string
-	Surname  *string
+	Username *string `json:"username"`
+	Email    *string `json:"email"`
+	Name     *string `json:"name"`
+	Surname  *string `json:"surname"`
 	AboutMe  *string `json:"about_me"`
-	Password *string
+	Password *string `json:"password"`
 }

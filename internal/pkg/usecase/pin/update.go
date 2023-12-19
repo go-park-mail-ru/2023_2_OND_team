@@ -7,11 +7,14 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 )
 
+//go:generate easyjson update.go
+
+//easyjson:json
 type PinUpdateData struct {
-	Title       *string
-	Description *string
-	Public      *bool
-	Tags        []string
+	Title       *string  `json:"title"`
+	Description *string  `json:"description"`
+	Public      *bool    `json:"public"`
+	Tags        []string `json:"tags"`
 }
 
 func (p *pinCase) EditPinByID(ctx context.Context, pinID, userID int, updateData *PinUpdateData) error {

@@ -1,12 +1,12 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
 
 	chi "github.com/go-chi/chi/v5"
+	"github.com/mailru/easyjson"
 
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
@@ -129,8 +129,7 @@ func (h *HandlerHTTP) EditPin(w http.ResponseWriter, r *http.Request) {
 	_, _ = userID, pinID
 
 	pinUpdate := &usecase.PinUpdateData{}
-
-	err = json.NewDecoder(r.Body).Decode(pinUpdate)
+	err = easyjson.UnmarshalFromReader(r.Body, pinUpdate)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info(err.Error())
