@@ -47,7 +47,7 @@ func easyjsonE9abebc9DecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityCom
 				if out.Author == nil {
 					out.Author = new(user.User)
 				}
-				easyjsonE9abebc9DecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityUser(in, out.Author)
+				(*out.Author).UnmarshalEasyJSON(in)
 			}
 		case "pinID":
 			out.PinID = int(in.Int())
@@ -80,7 +80,7 @@ func easyjsonE9abebc9EncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityCom
 		if in.Author == nil {
 			out.RawString("null")
 		} else {
-			easyjsonE9abebc9EncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityUser(out, *in.Author)
+			(*in.Author).MarshalEasyJSON(out)
 		}
 	}
 	{
@@ -118,107 +118,4 @@ func (v *Comment) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Comment) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonE9abebc9DecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityComment(l, v)
-}
-func easyjsonE9abebc9DecodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityUser(in *jlexer.Lexer, out *user.User) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.ID = int(in.Int())
-		case "username":
-			out.Username = string(in.String())
-		case "name":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Name).UnmarshalJSON(data))
-			}
-		case "surname":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Surname).UnmarshalJSON(data))
-			}
-		case "email":
-			out.Email = string(in.String())
-		case "avatar":
-			out.Avatar = string(in.String())
-		case "about_me":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.AboutMe).UnmarshalJSON(data))
-			}
-		case "password":
-			out.Password = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonE9abebc9EncodeGithubComGoParkMailRu20232ONDTeamInternalPkgEntityUser(out *jwriter.Writer, in user.User) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	if in.ID != 0 {
-		const prefix string = ",\"id\":"
-		first = false
-		out.RawString(prefix[1:])
-		out.Int(int(in.ID))
-	}
-	{
-		const prefix string = ",\"username\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Username))
-	}
-	if true {
-		const prefix string = ",\"name\":"
-		out.RawString(prefix)
-		out.Raw((in.Name).MarshalJSON())
-	}
-	if true {
-		const prefix string = ",\"surname\":"
-		out.RawString(prefix)
-		out.Raw((in.Surname).MarshalJSON())
-	}
-	if in.Email != "" {
-		const prefix string = ",\"email\":"
-		out.RawString(prefix)
-		out.String(string(in.Email))
-	}
-	{
-		const prefix string = ",\"avatar\":"
-		out.RawString(prefix)
-		out.String(string(in.Avatar))
-	}
-	if true {
-		const prefix string = ",\"about_me\":"
-		out.RawString(prefix)
-		out.Raw((in.AboutMe).MarshalJSON())
-	}
-	if in.Password != "" {
-		const prefix string = ",\"password\":"
-		out.RawString(prefix)
-		out.String(string(in.Password))
-	}
-	out.RawByte('}')
 }
