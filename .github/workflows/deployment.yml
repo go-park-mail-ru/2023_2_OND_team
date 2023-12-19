@@ -4,12 +4,9 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - TP-c01_ci-cd
+      - main
       - dev4
-  pull_request:
-    types: [opened, edited, reopened]
-    branches: [main, dev4]
-
+      
 jobs:
   build_images:
     runs-on: ubuntu-latest
