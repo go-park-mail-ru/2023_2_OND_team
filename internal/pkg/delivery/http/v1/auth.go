@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	"github.com/mailru/easyjson"
 )
 
 // Login godoc
@@ -56,8 +56,8 @@ func (h *HandlerHTTP) CheckLogin(w http.ResponseWriter, r *http.Request) {
 func (h *HandlerHTTP) Login(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 
-	params := usecase.UserCredentials{}
-	err := json.NewDecoder(r.Body).Decode(&params)
+	params := &usecase.UserCredentials{}
+	err := easyjson.UnmarshalFromReader(r.Body, params)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("failed to parse parameters", log.F{"error", err.Error()})
@@ -122,7 +122,7 @@ func (h *HandlerHTTP) Signup(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 
 	user := &user.User{}
-	err := json.NewDecoder(r.Body).Decode(user)
+	err := easyjson.UnmarshalFromReader(r.Body, user)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("failed to parse parameters", log.F{"error", err.Error()})

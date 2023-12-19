@@ -349,12 +349,12 @@ func (h *HandlerHTTP) DeletePinFromBoard(w http.ResponseWriter, r *http.Request)
 
 	delPinFromBoard := structs.DeletePinFromBoard{}
 	err = easyjson.UnmarshalFromReader(r.Body, &delPinFromBoard)
+	defer r.Body.Close()
 	if err != nil {
 		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadBody)
 		responseError(w, code, message)
 		return
 	}
-	defer r.Body.Close()
 
 	err = h.boardCase.DeletePinFromBoard(r.Context(), int(boardID), delPinFromBoard.PinID)
 	if err != nil {

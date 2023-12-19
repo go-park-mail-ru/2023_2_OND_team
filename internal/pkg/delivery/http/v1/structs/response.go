@@ -1,6 +1,6 @@
 package structs
 
-//go:generate easyjson subscription.go
+//go:generate easyjson response.go
 
 //easyjson:json
 type JsonResponse struct {
