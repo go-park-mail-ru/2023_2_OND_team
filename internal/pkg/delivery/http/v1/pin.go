@@ -11,6 +11,7 @@ import (
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	img "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	usecase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 )
 
@@ -73,7 +74,11 @@ func (h *HandlerHTTP) CreateNewPin(w http.ResponseWriter, r *http.Request) {
 	err = h.pinCase.CreateNewPin(r.Context(), newPin, mime.Header.Get("Content-Type"), mime.Size, picture)
 	if err != nil {
 		logger.Error(err.Error())
-		err = responseError(w, "add_pin", "failed to create pin")
+		if err == img.ErrExplicitImage {
+			err = responseError(w, "explicit_pin", err.Error())
+		} else {
+			err = responseError(w, "add_pin", "failed to create pin")
+		}
 	} else {
 		err = responseOk(http.StatusCreated, w, "pin successfully created", nil)
 	}

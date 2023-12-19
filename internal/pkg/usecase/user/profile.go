@@ -16,7 +16,7 @@ import (
 var ErrBadBody = errors.New("bad body avatar")
 
 func (u *userCase) UpdateUserAvatar(ctx context.Context, userID int, mimeTypeAvatar string, sizeAvatar int64, avatar io.Reader) error {
-	avatarProfile, err := u.UploadImage("avatars/", mimeTypeAvatar, sizeAvatar, avatar, check.BothSidesFallIntoRange(200, 1800))
+	avatarProfile, err := u.UploadImage(ctx, "avatars/", mimeTypeAvatar, sizeAvatar, avatar, check.BothSidesFallIntoRange(200, 1800))
 	if err != nil {
 		return fmt.Errorf("uploading an avatar when updating avatar profile: %w", err)
 	}
