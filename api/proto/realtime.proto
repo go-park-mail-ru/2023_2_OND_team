@@ -8,7 +8,11 @@ package realtime;
 
 service RealTime {
     rpc Publish(PublishMessage) returns (google.protobuf.Empty) {}
-    rpc Subscribe(Channel) returns (stream Message) {}
+    rpc Subscribe(Channels) returns (stream Message) {}
+}
+
+message Channels {
+    repeated Channel chans = 1;
 }
 
 message Channel {
@@ -27,10 +31,15 @@ message EventObject {
     EventType type = 2;
 }
 
+message EventMap {
+    int64 type = 1;
+    map<string, string> m = 2;
+}
+
 message Message {
     oneof body {
         EventObject object = 1;
-        string content = 2;
+        EventMap content = 2;
     }
 }
 

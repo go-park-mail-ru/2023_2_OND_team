@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
 	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -57,7 +58,7 @@ func (h *HandlerHTTP) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	userIdParam := chi.URLParam(r, "userID")
 	userID, err := strconv.ParseInt(userIdParam, 10, 64)
 	if err != nil {
-		h.responseErr(w, r, &ErrInvalidUrlParams{map[string]string{"userID": userIdParam}})
+		h.responseErr(w, r, &errHTTP.ErrInvalidUrlParams{Params: map[string]string{"userID": userIdParam}})
 		return
 	}
 

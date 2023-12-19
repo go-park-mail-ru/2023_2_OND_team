@@ -12,12 +12,16 @@ import (
 
 	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
+	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/server/router"
 	deliveryHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1"
 	deliveryWS "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/websocket"
+	notify "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/notification"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/metrics"
+	commentNotify "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/notification/comment"
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board/postgres"
+	commentRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/comment"
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	searchRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/search/postgres"
@@ -25,9 +29,13 @@ import (
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/board"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/comment"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/message"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/chat"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/notification"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/search"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -66,8 +74,29 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer connMessMS.Close()
 
+	connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer connRealtime.Close()
+
+	rtClient := rt.NewRealTimeClient(connRealtime)
+
+	commentRepository := commentRepo.NewCommentRepoPG(pool)
+
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
-	messageCase := message.New(messenger.NewMessengerClient(connMessMS))
+	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
+	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
+
+	notifyBuilder, err := notify.NewWithType(notify.NotifyComment)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	notifyCase := notification.New(realtime.NewRealTimeNotificationClient(rtClient), log,
+		notification.Register(commentNotify.NewCommentNotify(notifyBuilder, comment.New(commentRepository, pinCase, nil), pinCase)))
 
 	conn, err := grpc.Dial(cfg.AddrAuthServer, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -80,14 +109,15 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
 		AuhtCase:         ac,
 		UserCase:         user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
-		PinCase:          pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool)),
+		PinCase:          pinCase,
 		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SubscriptionCase: subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SearchCase:       search.New(log, searchRepo.NewSearchRepoPG(pool), bluemonday.UGCPolicy()),
 		MessageCase:      messageCase,
+		CommentCase:      comment.New(commentRepo.NewCommentRepoPG(pool), pinCase, notifyCase),
 	})
 
-	wsHandler := deliveryWS.New(log, messageCase,
+	wsHandler := deliveryWS.New(log, messageCase, notifyCase,
 		deliveryWS.SetOriginPatterns([]string{"pinspire.online", "pinspire.online:*"}))
 
 	cfgServ, err := server.NewConfig(cfg.ServerConfigFile)

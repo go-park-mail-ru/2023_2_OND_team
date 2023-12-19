@@ -168,7 +168,7 @@ func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := r.Context().Value(auth.KeyCurrentUserID).(int)
 	if !ok {
-		userID = usecase.UserUnknown
+		userID = user.UserUnknown
 	}
 	pin, err := h.pinCase.ViewAnPin(r.Context(), int(pinID), userID)
 	if err != nil {

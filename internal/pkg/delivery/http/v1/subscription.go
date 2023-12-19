@@ -1,12 +1,15 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
+	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
+
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
 	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
+	"github.com/mailru/easyjson"
 )
 
 var (
@@ -17,26 +20,16 @@ var (
 	maxCount          = 50
 )
 
-type SubscriptionAction struct {
-	To *int `json:"to" example:"2"`
-}
-
-func (s *SubscriptionAction) Validate() error {
-	if s.To == nil {
-		return &ErrMissingBodyParams{[]string{"to"}}
-	}
-	return nil
-}
-
 func (h *HandlerHTTP) Subscribe(w http.ResponseWriter, r *http.Request) {
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		h.responseErr(w, r, &ErrInvalidContentType{preferredType: ApplicationJson})
+		h.responseErr(w, r, &errHTTP.ErrInvalidContentType{PreferredType: ApplicationJson})
 		return
 	}
 
-	sub := SubscriptionAction{}
-	if err := json.NewDecoder(r.Body).Decode(&sub); err != nil {
-		h.responseErr(w, r, &ErrInvalidBody{})
+	sub := structs.SubscriptionAction{}
+
+	if err := easyjson.UnmarshalFromReader(r.Body, &sub); err != nil {
+		h.responseErr(w, r, &errHTTP.ErrInvalidBody{})
 		return
 	}
 	defer r.Body.Close()
@@ -56,13 +49,13 @@ func (h *HandlerHTTP) Subscribe(w http.ResponseWriter, r *http.Request) {
 
 func (h *HandlerHTTP) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		h.responseErr(w, r, &ErrInvalidContentType{preferredType: ApplicationJson})
+		h.responseErr(w, r, &errHTTP.ErrInvalidContentType{PreferredType: ApplicationJson})
 		return
 	}
 
-	sub := SubscriptionAction{}
-	if err := json.NewDecoder(r.Body).Decode(&sub); err != nil {
-		h.responseErr(w, r, &ErrInvalidBody{})
+	sub := structs.SubscriptionAction{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &sub); err != nil {
+		h.responseErr(w, r, &errHTTP.ErrInvalidBody{})
 		return
 	}
 	defer r.Body.Close()
@@ -146,7 +139,7 @@ func GetOpts(r *http.Request) (*userEntity.SubscriptionOpts, error) {
 		opts.Count = maxCount
 	}
 	if len(invalidParams) > 0 {
-		return nil, &ErrInvalidQueryParam{invalidParams}
+		return nil, &errHTTP.ErrInvalidQueryParam{invalidParams}
 	}
 	return opts, nil
 }

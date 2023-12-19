@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RealTimeClient interface {
 	Publish(ctx context.Context, in *PublishMessage, opts ...grpc.CallOption) (*empty.Empty, error)
-	Subscribe(ctx context.Context, in *Channel, opts ...grpc.CallOption) (RealTime_SubscribeClient, error)
+	Subscribe(ctx context.Context, in *Channels, opts ...grpc.CallOption) (RealTime_SubscribeClient, error)
 }
 
 type realTimeClient struct {
@@ -44,7 +44,7 @@ func (c *realTimeClient) Publish(ctx context.Context, in *PublishMessage, opts .
 	return out, nil
 }
 
-func (c *realTimeClient) Subscribe(ctx context.Context, in *Channel, opts ...grpc.CallOption) (RealTime_SubscribeClient, error) {
+func (c *realTimeClient) Subscribe(ctx context.Context, in *Channels, opts ...grpc.CallOption) (RealTime_SubscribeClient, error) {
 	stream, err := c.cc.NewStream(ctx, &RealTime_ServiceDesc.Streams[0], "/realtime.RealTime/Subscribe", opts...)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (x *realTimeSubscribeClient) Recv() (*Message, error) {
 // for forward compatibility
 type RealTimeServer interface {
 	Publish(context.Context, *PublishMessage) (*empty.Empty, error)
-	Subscribe(*Channel, RealTime_SubscribeServer) error
+	Subscribe(*Channels, RealTime_SubscribeServer) error
 	mustEmbedUnimplementedRealTimeServer()
 }
 
@@ -92,7 +92,7 @@ type UnimplementedRealTimeServer struct {
 func (UnimplementedRealTimeServer) Publish(context.Context, *PublishMessage) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
-func (UnimplementedRealTimeServer) Subscribe(*Channel, RealTime_SubscribeServer) error {
+func (UnimplementedRealTimeServer) Subscribe(*Channels, RealTime_SubscribeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedRealTimeServer) mustEmbedUnimplementedRealTimeServer() {}
@@ -127,7 +127,7 @@ func _RealTime_Publish_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _RealTime_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Channel)
+	m := new(Channels)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}

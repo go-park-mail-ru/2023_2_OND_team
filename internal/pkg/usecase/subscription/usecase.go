@@ -10,6 +10,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate mockgen -destination=./mock/subscription_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	SubscribeToUser(ctx context.Context, from, to int) error
 	UnsubscribeFromUser(ctx context.Context, from, to int) error
