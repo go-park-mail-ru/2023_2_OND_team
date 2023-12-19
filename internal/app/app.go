@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/microcosm-cc/bluemonday"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -47,8 +46,6 @@ var _timeoutForConnPG = 5 * time.Second
 const uploadFiles = "upload/"
 
 func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
-	godotenv.Load()
-
 	metrics := metrics.New("pinspire")
 	err := metrics.Registry()
 	if err != nil {
@@ -74,7 +71,8 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer connMessMS.Close()
 
-	connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connRealtime, err := grpc.Dial(os.Getenv("REALTIME_SERVICE_HOST")+":"+os.Getenv("REALTIME_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err.Error())
 		return
