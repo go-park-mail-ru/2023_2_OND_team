@@ -49,6 +49,7 @@ services:
     volumes:
       - '/home/ond_team/cert/fullchain.pem:/home/ond_team/cert/fullchain.pem:ro'
       - '/home/ond_team/cert/privkey.pem:/home/ond_team/cert/privkey.pem:ro'
+      - '/home/ond_team/go/src/github.com/go-park-mail-ru/ci-cd/upload:/upload'
     depends_on:
       postgres:
         condition: 'service_healthy'
