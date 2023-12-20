@@ -96,7 +96,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 		return
 	}
 
-	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles), visionClient)
+	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles), image.NewFilter(visionClient))
 	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 

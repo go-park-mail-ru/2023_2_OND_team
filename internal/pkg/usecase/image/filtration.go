@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	vision "cloud.google.com/go/vision/v2/apiv1"
 	pb "cloud.google.com/go/vision/v2/apiv1/visionpb"
 )
 
@@ -13,6 +14,18 @@ var (
 	explicitLabels             = []string{"goose", "duck"}
 	ErrExplicitImage           = errors.New("Image content doesn't comply with service policy")
 )
+
+type ImageFilter interface {
+	Filter(ctx context.Context, imgBytes []byte, explicitLabels []string) error
+}
+
+type googleVision struct {
+	visionClient *vision.ImageAnnotatorClient
+}
+
+func NewFilter(client *vision.ImageAnnotatorClient) *googleVision {
+	return &googleVision{client}
+}
 
 func CheckAnnotations(annotation *pb.SafeSearchAnnotation) bool {
 	if annotation.GetAdult() >= pb.Likelihood_LIKELY ||
@@ -59,7 +72,7 @@ func CheckExplicit(resp *pb.AnnotateImageResponse, explicitLabels []string) erro
 	return nil
 }
 
-func (img *imageCase) FilterImage(ctx context.Context, imgBytes []byte, explicitLabels []string) error {
+func (vision *googleVision) Filter(ctx context.Context, imgBytes []byte, explicitLabels []string) error {
 	req := &pb.BatchAnnotateImagesRequest{
 		Requests: []*pb.AnnotateImageRequest{
 			{
@@ -71,7 +84,7 @@ func (img *imageCase) FilterImage(ctx context.Context, imgBytes []byte, explicit
 			},
 		},
 	}
-	resp, err := img.visionClient.BatchAnnotateImages(ctx, req)
+	resp, err := vision.visionClient.BatchAnnotateImages(ctx, req)
 	if err != nil {
 		return err
 	}
