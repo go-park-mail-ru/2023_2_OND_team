@@ -11,11 +11,8 @@ run:
   # Timeout for analysis, e.g. 30s, 5m.
   # Default: 1m
   timeout: 3m
-  skip-files:
-    - internal/pkg/delivery/http/v1/auth.go
-    - internal/pkg/usecase/image/filtration.go
-    - internal/pkg/usecase/pin/check.go
-    - internal/pkg/usecase/user/auth.go
+  skip-dirs:
+    ..
 
 
 
