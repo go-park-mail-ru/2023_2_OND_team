@@ -2,10 +2,13 @@ package app
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -87,10 +90,17 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 
 	commentRepository := commentRepo.NewCommentRepoPG(pool)
 
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "keyVision.json")
 	visionCtx, cancel := context.WithTimeout(ctx, timeoutCloudVisionAPI)
 	defer cancel()
-	visionClient, err := vision.NewImageAnnotatorClient(visionCtx)
+
+	token, err := base64.StdEncoding.DecodeString(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+	fmt.Println(string(token))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	visionClient, err := vision.NewImageAnnotatorClient(visionCtx, option.WithCredentialsJSON(token))
 	if err != nil {
 		log.Error(err.Error())
 		return

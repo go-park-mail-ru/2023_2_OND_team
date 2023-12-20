@@ -42,7 +42,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             cd ${{ secrets.PINSPIRE_BACKEND_PATH }}
-            sudo git switch TP-c01_ci-cd
+            sudo git switch dev4
             sudo git pull
       - name: deploy application
         uses: appleboy/ssh-action@master

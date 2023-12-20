@@ -16,11 +16,3 @@
       with_items:
       - ci-cd
       - 2023_2_OND_team
-    - name: "Provide key for Google Cloud Vision API"
-      copy:
-        src: ../keyVision.json
-        dest: /home/ond_team/go/src/github.com/go-park-mail-ru/{{ item }}/keyVision.json
-      with_items:
-      - ci-cd
-      - 2023_2_OND_team
-    
