@@ -8,8 +8,7 @@ COV_OUT=coverage.out
 COV_HTML=coverage.html
 CURRCOVER=github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1
 
-PROJECT_DIR = $(shell pwd)
-PROJECT_BIN = $(PROJECT_DIR)/bin
+PROJECT_BIN = $(CURDIR)/bin
 $(shell [ -f bin ] || mkdir -p $(PROJECT_BIN))
 GOLANGCI_LINT = $(PROJECT_BIN)/golangci-lint
 

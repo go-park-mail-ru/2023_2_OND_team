@@ -5,7 +5,6 @@ on:
   push: {}
   pull_request:
     types: [opened, edited, reopened]
-    branches: [main, dev4]
   
 jobs:
   test:
