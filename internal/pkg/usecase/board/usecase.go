@@ -22,6 +22,8 @@ type Usecase interface {
 	FixPinsOnBoard(ctx context.Context, boardID int, pinIds []int, userID int) error
 	DeletePinFromBoard(ctx context.Context, boardID, pinID int) error
 	CheckAvailabilityFeedPinCfgOnBoard(ctx context.Context, cfg pin.FeedPinConfig, userID int, isAuth bool) error
+	GetBoardWithAuthor(ctx context.Context, boardID int) (*entity.Board, string, error)
+	AddContributorsToBoard(ctx context.Context, boardID int, usersId []int, role string) error
 }
 
 type boardUsecase struct {

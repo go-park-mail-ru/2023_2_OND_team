@@ -24,6 +24,7 @@ import (
 	imgRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/image"
 	pinRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	searchRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/search/postgres"
+	shareRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/share"
 	subRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/subscription/postgres"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/auth"
@@ -36,6 +37,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/chat"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/realtime/notification"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/search"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/share"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -82,6 +84,7 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	rtClient := rt.NewRealTimeClient(connRealtime)
 
 	commentRepository := commentRepo.NewCommentRepoPG(pool)
+	boardRepository := boardRepo.NewBoardRepoPG(pool)
 
 	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
 	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
@@ -108,11 +111,12 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 		AuhtCase:         ac,
 		UserCase:         user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
 		PinCase:          pinCase,
-		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
+		BoardCase:        board.New(log, boardRepository, userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SubscriptionCase: subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
 		SearchCase:       search.New(log, searchRepo.NewSearchRepoPG(pool), bluemonday.UGCPolicy()),
 		MessageCase:      messageCase,
 		CommentCase:      comment.New(commentRepo.NewCommentRepoPG(pool), pinCase, notifyCase),
+		ShareCase:        share.New(shareRepo.NewShareRepoPG(pool), boardRepository),
 	})
 
 	wsHandler := deliveryWS.New(log, messageCase, notifyCase,

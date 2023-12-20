@@ -83,6 +83,15 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (en
 	return board, username, nil
 }
 
+func (bCase *boardUsecase) GetBoardWithAuthor(ctx context.Context, boardID int) (*entity.Board, string, error) {
+	board, username, err := bCase.boardRepo.GetBoardByID(ctx, boardID, true)
+	if err != nil {
+		return nil, "", fmt.Errorf("get board with author: %w", err)
+	}
+
+	return &board.BoardInfo, username, nil
+}
+
 func isContributor(contributorsIDs []int, userID int) bool {
 	for _, contributorID := range contributorsIDs {
 		if contributorID == userID {

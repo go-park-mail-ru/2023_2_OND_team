@@ -377,3 +377,31 @@ func (b *boardRepoPG) GetProtectionStatusBoard(ctx context.Context, boardID int)
 	}
 	return repoBoard.ProtectionPrivate, nil
 }
+
+func (b *boardRepoPG) AddContributors(ctx context.Context, boardID int, usersId []int, role string) error {
+	var roleInt int
+	switch role {
+	case "read-write":
+		roleInt = 1
+	case "read-only":
+		roleInt = 2
+	default:
+		return fmt.Errorf("unknown role")
+	}
+
+	insertBuilder := b.sqlBuilder.Insert("contributor").Columns("board_id, user_id, role_id")
+
+	for _, userId := range usersId {
+		insertBuilder = insertBuilder.Values(boardID, userId, roleInt)
+	}
+
+	sqlRow, args, err := insertBuilder.ToSql()
+	if err != nil {
+		return fmt.Errorf("build sql query: %w", err)
+	}
+
+	if _, err := b.db.Exec(ctx, sqlRow, args...); err != nil {
+		return fmt.Errorf("insert users into contributors storage: %w", err)
+	}
+	return nil
+}
