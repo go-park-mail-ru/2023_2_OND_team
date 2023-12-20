@@ -75,6 +75,7 @@ func (c *commentRepoPG) GetCommensToPin(ctx context.Context, pinID, lastID, coun
 	}
 
 	for rows.Next() {
+		cmt.Author = &user.User{}
 		err = rows.Scan(&cmt.ID, &cmt.Author.ID, &cmt.Author.Username, &cmt.Author.Avatar, &cmt.Content)
 		if err != nil {
 			return cmts, fmt.Errorf("scan a comment when getting comments on a pin: %w", err)
