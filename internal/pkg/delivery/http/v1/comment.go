@@ -37,12 +37,12 @@ func (h *HandlerHTTP) WriteComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	comment.PinID = pinID
-	_, err = h.commentCase.PutCommentOnPin(r.Context(), userID, comment)
+	commentID, err := h.commentCase.PutCommentOnPin(r.Context(), userID, comment)
 	if err != nil {
 		logger.Error(err.Error())
 		err = responseError(w, "create_comment", "couldn't leave a comment under the selected pin")
 	} else {
-		err = responseOk(http.StatusCreated, w, "the comment has been added successfully", nil)
+		err = responseOk(http.StatusCreated, w, "the comment has been added successfully", map[string]int{"id": commentID})
 	}
 	if err != nil {
 		logger.Error(err.Error())
