@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 
 	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
@@ -11,10 +12,9 @@ import (
 	grpcMetrics "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/metrics/grpc"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/grpc/interceptor"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
-	"github.com/joho/godotenv"
 )
 
-const _address = "0.0.0.0:8090"
+const _address = "localhost:8090"
 
 func main() {
 	godotenv.Load()

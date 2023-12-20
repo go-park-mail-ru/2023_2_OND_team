@@ -55,15 +55,10 @@ func Run(ctx context.Context, log *logger.Logger, cfg Config) {
 	ctxRedis, cancelCtxRedis := context.WithTimeout(ctx, _timeoutForConnRedis)
 	defer cancelCtxRedis()
 
-	// redisCfg, err := app.NewConfig(cfg.RedisFileConfig)
 	redisCfg := app.RedisConfig{
 		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
 		Password: os.Getenv("REDIS_PASSWORD"),
 	}
-	// if err != nil {
-	// 	log.Error(err.Error())
-	// 	return
-	// }
 
 	redisCl, err := app.NewRedisClient(ctxRedis, redisCfg)
 	if err != nil {

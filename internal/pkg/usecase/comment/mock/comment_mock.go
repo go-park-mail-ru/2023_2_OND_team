@@ -49,6 +49,21 @@ func (mr *MockUsecaseMockRecorder) DeleteComment(ctx, userID, commentID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteComment", reflect.TypeOf((*MockUsecase)(nil).DeleteComment), ctx, userID, commentID)
 }
 
+// GetCommentWithAuthor mocks base method.
+func (m *MockUsecase) GetCommentWithAuthor(ctx context.Context, commentID int) (*comment.Comment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCommentWithAuthor", ctx, commentID)
+	ret0, _ := ret[0].(*comment.Comment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCommentWithAuthor indicates an expected call of GetCommentWithAuthor.
+func (mr *MockUsecaseMockRecorder) GetCommentWithAuthor(ctx, commentID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommentWithAuthor", reflect.TypeOf((*MockUsecase)(nil).GetCommentWithAuthor), ctx, commentID)
+}
+
 // GetFeedCommentOnPin mocks base method.
 func (m *MockUsecase) GetFeedCommentOnPin(ctx context.Context, userID, pinID, count, lastID int) ([]comment.Comment, int, error) {
 	m.ctrl.T.Helper()
