@@ -23,7 +23,6 @@ func (h *HandlerHTTP) WriteComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	comment := &comment.Comment{}
-
 	err = easyjson.UnmarshalFromReader(r.Body, comment)
 	defer r.Body.Close()
 	if err != nil {

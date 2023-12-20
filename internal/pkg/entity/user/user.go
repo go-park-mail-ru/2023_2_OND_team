@@ -5,8 +5,11 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate easyjson user.go
+
 const UserUnknown = -1
 
+//easyjson:json
 type User struct {
 	ID       int         `json:"id,omitempty" example:"123"`
 	Username string      `json:"username" example:"Green"`
@@ -18,6 +21,7 @@ type User struct {
 	Password string      `json:"password,omitempty" example:"pass123"`
 } // @name User
 
+//easyjson:json
 type SubscriptionUser struct {
 	ID                      int    `json:"id"`
 	Username                string `json:"username"`

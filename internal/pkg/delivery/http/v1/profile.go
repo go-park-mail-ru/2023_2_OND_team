@@ -1,38 +1,22 @@
 package v1
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
 	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	"github.com/mailru/easyjson"
 )
 
-type UserInfo struct {
-	ID           int    `json:"id" example:"123"`
-	Username     string `json:"username" example:"Snapshot"`
-	Avatar       string `json:"avatar" example:"/pic1"`
-	Name         string `json:"name" example:"Bob"`
-	Surname      string `json:"surname" example:"Dylan"`
-	About        string `json:"about" example:"Cool guy"`
-	IsSubscribed bool   `json:"is_subscribed" example:"true"`
-	SubsCount    int    `json:"subscribers" example:"23"`
-}
-
-type ProfileInfo struct {
-	ID        int    `json:"id" example:"1"`
-	Username  string `json:"username" example:"baobab"`
-	Avatar    string `json:"avatar" example:"/pic1"`
-	SubsCount int    `json:"subscribers" example:"12"`
-}
-
-func ToUserInfoFromService(user *userEntity.User, isSubscribed bool, subsCount int) UserInfo {
-	return UserInfo{
+func ToUserInfoFromService(user *userEntity.User, isSubscribed bool, subsCount int) structs.UserInfo {
+	return structs.UserInfo{
 		ID:           user.ID,
 		Username:     user.Username,
 		Avatar:       user.Avatar,
@@ -44,8 +28,8 @@ func ToUserInfoFromService(user *userEntity.User, isSubscribed bool, subsCount i
 	}
 }
 
-func ToProfileInfoFromService(user *userEntity.User, subsCount int) ProfileInfo {
-	return ProfileInfo{
+func ToProfileInfoFromService(user *userEntity.User, subsCount int) structs.ProfileInfo {
+	return structs.ProfileInfo{
 		ID:        user.ID,
 		Username:  user.Username,
 		Avatar:    user.Avatar,
@@ -57,7 +41,7 @@ func (h *HandlerHTTP) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	userIdParam := chi.URLParam(r, "userID")
 	userID, err := strconv.ParseInt(userIdParam, 10, 64)
 	if err != nil {
-		h.responseErr(w, r, &ErrInvalidUrlParams{map[string]string{"userID": userIdParam}})
+		h.responseErr(w, r, &errHTTP.ErrInvalidUrlParams{Params: map[string]string{"userID": userIdParam}})
 		return
 	}
 
@@ -82,7 +66,7 @@ func (h *HandlerHTTP) ProfileEditInfo(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
 	data := &user.ProfileUpdateData{}
-	err := json.NewDecoder(r.Body).Decode(data)
+	err := easyjson.UnmarshalFromReader(r.Body, data)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("json decode: " + err.Error())

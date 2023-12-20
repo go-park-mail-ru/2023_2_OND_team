@@ -46,8 +46,11 @@ func New(log *log.Logger, imgCase image.Usecase, repo repo.Repository) *pinCase 
 }
 
 func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, mimeTypePicture string, sizePicture int64, picture io.Reader) error {
-	picturePin, err := p.UploadImage("pins/", mimeTypePicture, sizePicture, picture, check.BothSidesFallIntoRange(100, 6000))
+	picturePin, err := p.UploadImage(ctx, "pins/", mimeTypePicture, sizePicture, picture, check.BothSidesFallIntoRange(100, 6000))
 	if err != nil {
+		if err == image.ErrExplicitImage {
+			return err
+		}
 		return fmt.Errorf("uploading an avatar when creating pin: %w", err)
 	}
 	pin.Picture = picturePin

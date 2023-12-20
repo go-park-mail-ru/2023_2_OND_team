@@ -2,57 +2,23 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
+	"github.com/mailru/easyjson"
 
+	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
 var TimeFormat = "2006-01-02"
 
-// data for board creation/update
-type BoardData struct {
-	Title       *string  `json:"title" example:"new board"`
-	Description *string  `json:"description" example:"long desc"`
-	Public      *bool    `json:"public" example:"true"`
-	Tags        []string `json:"tags" example:"['blue', 'car']"`
-}
-
-// board view for delivery layer
-type CertainBoard struct {
-	ID          int      `json:"board_id" example:"22"`
-	AuthorID    int      `json:"author_id" example:"22"`
-	Title       string   `json:"title" example:"new board"`
-	Description string   `json:"description" example:"long desc"`
-	CreatedAt   string   `json:"created_at" example:"07-11-2023"`
-	PinsNumber  int      `json:"pins_number" example:"12"`
-	Pins        []string `json:"pins" example:"['/pic1', '/pic2']"`
-	Tags        []string `json:"tags" example:"['love', 'green']"`
-}
-
-type CertainBoardWithUsername struct {
-	ID             int      `json:"board_id" example:"22"`
-	AuthorID       int      `json:"author_id" example:"22"`
-	AuthorUsername string   `json:"author_username" example:"Bob"`
-	Title          string   `json:"title" example:"new board"`
-	Description    string   `json:"description" example:"long desc"`
-	CreatedAt      string   `json:"created_at" example:"07-11-2023"`
-	PinsNumber     int      `json:"pins_number" example:"12"`
-	Pins           []string `json:"pins" example:"['/pic1', '/pic2']"`
-	Tags           []string `json:"tags" example:"['love', 'green']"`
-}
-
-type DeletePinFromBoard struct {
-	PinID int `json:"pin_id" example:"22"`
-}
-
-func ToCertainBoardFromService(board entity.BoardWithContent) CertainBoard {
-	return CertainBoard{
+func ToCertainBoardFromService(board entity.BoardWithContent) structs.CertainBoard {
+	return structs.CertainBoard{
 		ID:          board.BoardInfo.ID,
 		AuthorID:    board.BoardInfo.AuthorID,
 		Title:       board.BoardInfo.Title,
@@ -64,8 +30,8 @@ func ToCertainBoardFromService(board entity.BoardWithContent) CertainBoard {
 	}
 }
 
-func ToCertainBoardUsernameFromService(board entity.BoardWithContent, username string) CertainBoardWithUsername {
-	return CertainBoardWithUsername{
+func ToCertainBoardUsernameFromService(board entity.BoardWithContent, username string) structs.CertainBoardWithUsername {
+	return structs.CertainBoardWithUsername{
 		ID:             board.BoardInfo.ID,
 		AuthorID:       board.BoardInfo.AuthorID,
 		AuthorUsername: username,
@@ -78,40 +44,20 @@ func ToCertainBoardUsernameFromService(board entity.BoardWithContent, username s
 	}
 }
 
-func (data *BoardData) Validate() error {
-	if data.Title == nil || *data.Title == "" {
-		return ErrInvalidBoardTitle
-	}
-	if data.Description == nil {
-		data.Description = new(string)
-		*data.Description = ""
-	}
-	if data.Public == nil {
-		return ErrEmptyPubOpt
-	}
-	if !isValidBoardTitle(*data.Title) {
-		return ErrInvalidBoardTitle
-	}
-	if err := checkIsValidTagTitles(data.Tags); err != nil {
-		return fmt.Errorf("%s: %w", err.Error(), ErrInvalidTagTitles)
-	}
-	return nil
-}
-
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		code, message := getErrCodeMessage(ErrBadContentType)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadContentType)
 		responseError(w, code, message)
 		return
 	}
 
-	var newBoard BoardData
-	err := json.NewDecoder(r.Body).Decode(&newBoard)
+	var newBoard structs.BoardData
+	err := easyjson.UnmarshalFromReader(r.Body, &newBoard)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadBody)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadBody)
 		responseError(w, code, message)
 		return
 	}
@@ -119,7 +65,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	err = newBoard.Validate()
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -140,7 +86,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logger.Info("create board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -149,7 +95,7 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }
 
@@ -158,8 +104,8 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 
 	username := chi.URLParam(r, "username")
 	if !isValidUsername(username) {
-		logger.Info("update board", log.F{"message", ErrInvalidUsername.Error()})
-		code, message := getErrCodeMessage(ErrInvalidUsername)
+		logger.Info("update board", log.F{"message", errHTTP.ErrInvalidUsername.Error()})
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrInvalidUsername)
 		responseError(w, code, message)
 		return
 	}
@@ -167,12 +113,12 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 	boards, err := h.boardCase.GetBoardsByUsername(r.Context(), username)
 	if err != nil {
 		logger.Info("get user boards", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
 
-	userBoards := make([]CertainBoard, 0, len(boards))
+	userBoards := make([]structs.CertainBoard, 0, len(boards))
 	for _, board := range boards {
 		userBoards = append(userBoards, ToCertainBoardFromService(board))
 	}
@@ -180,7 +126,7 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }
 
@@ -190,7 +136,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("get certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadUrlParam)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadUrlParam)
 		responseError(w, code, message)
 		return
 	}
@@ -198,7 +144,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 	board, username, err := h.boardCase.GetCertainBoard(r.Context(), int(boardID))
 	if err != nil {
 		logger.Info("get certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -207,7 +153,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }
 
@@ -217,7 +163,7 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("get certain board info for update", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadUrlParam)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadUrlParam)
 		responseError(w, code, message)
 		return
 	}
@@ -225,7 +171,7 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 	board, tagTitles, err := h.boardCase.GetBoardInfoForUpdate(r.Context(), int(boardID))
 	if err != nil {
 		logger.Info("get certain board info for update", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -234,14 +180,14 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }
 
 func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		code, message := getErrCodeMessage(ErrBadContentType)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadContentType)
 		responseError(w, code, message)
 		return
 	}
@@ -249,17 +195,17 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadUrlParam)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadUrlParam)
 		responseError(w, code, message)
 		return
 	}
 
-	var updatedData BoardData
-	err = json.NewDecoder(r.Body).Decode(&updatedData)
+	var updatedData structs.BoardData
+	err = easyjson.UnmarshalFromReader(r.Body, &updatedData)
 	defer r.Body.Close()
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadBody)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadBody)
 		responseError(w, code, message)
 		return
 	}
@@ -267,7 +213,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	err = updatedData.Validate()
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -286,7 +232,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	err = h.boardCase.UpdateBoardInfo(r.Context(), updatedBoard, tagTitles)
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -295,7 +241,7 @@ func (h *HandlerHTTP) UpdateBoardInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }
 
@@ -305,7 +251,7 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadUrlParam)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadUrlParam)
 		responseError(w, code, message)
 		return
 	}
@@ -313,7 +259,7 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 	err = h.boardCase.DeleteCertainBoard(r.Context(), int(boardID))
 	if err != nil {
 		logger.Info("update certain board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -322,7 +268,7 @@ func (h *HandlerHTTP) DeleteBoard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }
 
@@ -390,30 +336,30 @@ func (h *HandlerHTTP) DeletePinFromBoard(w http.ResponseWriter, r *http.Request)
 	boardID, err := strconv.ParseInt(chi.URLParam(r, "boardID"), 10, 64)
 	if err != nil {
 		logger.Info("delete pin from board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(ErrBadUrlParam)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadUrlParam)
 		responseError(w, code, message)
 		return
 	}
 
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
-		code, message := getErrCodeMessage(ErrBadContentType)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadContentType)
 		responseError(w, code, message)
 		return
 	}
 
-	delPinFromBoard := DeletePinFromBoard{}
-	err = json.NewDecoder(r.Body).Decode(&delPinFromBoard)
+	delPinFromBoard := structs.DeletePinFromBoard{}
+	err = easyjson.UnmarshalFromReader(r.Body, &delPinFromBoard)
+	defer r.Body.Close()
 	if err != nil {
-		code, message := getErrCodeMessage(ErrBadBody)
+		code, message := errHTTP.GetErrCodeMessage(errHTTP.ErrBadBody)
 		responseError(w, code, message)
 		return
 	}
-	defer r.Body.Close()
 
 	err = h.boardCase.DeletePinFromBoard(r.Context(), int(boardID), delPinFromBoard.PinID)
 	if err != nil {
 		logger.Info("delete pin from board", log.F{"message", err.Error()})
-		code, message := getErrCodeMessage(err)
+		code, message := errHTTP.GetErrCodeMessage(err)
 		responseError(w, code, message)
 		return
 	}
@@ -422,6 +368,6 @@ func (h *HandlerHTTP) DeletePinFromBoard(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrInternalError.Error()))
+		w.Write([]byte(errHTTP.ErrInternalError.Error()))
 	}
 }

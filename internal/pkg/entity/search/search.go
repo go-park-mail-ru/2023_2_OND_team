@@ -8,6 +8,8 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate easyjson search.go
+
 type Template string
 
 func (t *Template) Validate() bool {
@@ -26,12 +28,14 @@ func (t *Template) GetSubStrings(sep string) []string {
 	return strings.Split(string(*t), sep)
 }
 
+//easyjson:json
 type BoardForSearch struct {
 	BoardHeader board.Board
 	PinsNumber  int      `json:"pins_number"`
 	PreviewPins []string `json:"pins"`
 }
 
+//easyjson:json
 type PinForSearch struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
@@ -39,6 +43,7 @@ type PinForSearch struct {
 	Likes   int    `json:"likes"`
 }
 
+//easyjson:json
 type UserForSearch struct {
 	ID                      int    `json:"id"`
 	Username                string `json:"username"`

@@ -2,13 +2,17 @@ package app
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
+	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/microcosm-cc/bluemonday"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	vision "cloud.google.com/go/vision/v2/apiv1"
 	authProto "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/api/messenger"
 	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
@@ -41,13 +45,14 @@ import (
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
-var _timeoutForConnPG = 5 * time.Second
+var (
+	_timeoutForConnPG     = 5 * time.Second
+	timeoutCloudVisionAPI = 10 * time.Second
+)
 
 const uploadFiles = "upload/"
 
 func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
-	godotenv.Load()
-
 	metrics := metrics.New("pinspire")
 	err := metrics.Registry()
 	if err != nil {
@@ -65,14 +70,16 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer pool.Close()
 
-	connMessMS, err := grpc.Dial("localhost:8095", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// connMessMS, err := grpc.Dial("localhost:8095", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connMessMS, err := grpc.Dial(os.Getenv("MESSENGER_SERVICE_HOST")+":"+os.Getenv("MESSENGER_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
 	defer connMessMS.Close()
 
-	connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connRealtime, err := grpc.Dial(os.Getenv("REALTIME_SERVICE_HOST")+":"+os.Getenv("REALTIME_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err.Error())
 		return
@@ -83,7 +90,23 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 
 	commentRepository := commentRepo.NewCommentRepoPG(pool)
 
-	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles))
+	visionCtx, cancel := context.WithTimeout(ctx, timeoutCloudVisionAPI)
+	defer cancel()
+
+	token, err := base64.StdEncoding.DecodeString(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+	fmt.Println(string(token))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	visionClient, err := vision.NewImageAnnotatorClient(visionCtx, option.WithCredentialsJSON(token))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles), image.NewFilter(visionClient))
 	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 

@@ -1,0 +1,18 @@
+- name: "Provide configuration files"
+  become: yes
+  hosts: pinspire
+  tasks:
+    - name: "Provide .env file"
+      copy:
+        src: ../.env
+        dest: /home/ond_team/go/src/github.com/go-park-mail-ru/{{ item }}/.env
+      with_items:
+        - ci-cd
+        - 2023_2_OND_team
+    - name: "Provide redis config"
+      copy:
+        src: ../redis.conf
+        dest: /home/ond_team/go/src/github.com/go-park-mail-ru/{{ item }}/redis.conf
+      with_items:
+      - ci-cd
+      - 2023_2_OND_team

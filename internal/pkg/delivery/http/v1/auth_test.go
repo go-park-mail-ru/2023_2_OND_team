@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/session"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
@@ -45,7 +46,7 @@ func TestCheckLogin(t *testing.T) {
 	badCases := []struct {
 		name    string
 		cookie  *http.Cookie
-		expResp JsonErrResponse
+		expResp structs.JsonErrResponse
 	}{
 		{
 			"sending empty cookie",
@@ -53,7 +54,7 @@ func TestCheckLogin(t *testing.T) {
 				Name:  "",
 				Value: "",
 			},
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "no user was found for this session",
 				Code:    "no_auth",
@@ -65,7 +66,7 @@ func TestCheckLogin(t *testing.T) {
 				Name:  "session_key",
 				Value: "doesn't exist",
 			},
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "no user was found for this session",
 				Code:    "no_auth",
@@ -77,7 +78,7 @@ func TestCheckLogin(t *testing.T) {
 				Name:  "session_key",
 				Value: "f4280a941b664d02",
 			},
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "no user was found for this session",
 				Code:    "no_auth",
@@ -93,7 +94,7 @@ func TestCheckLogin(t *testing.T) {
 
 			service.CheckLogin(w, req)
 
-			var actualResp JsonErrResponse
+			var actualResp structs.JsonErrResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 		})
@@ -116,12 +117,12 @@ func testLogin(t *testing.T) {
 	goodCases := []struct {
 		name    string
 		rawBody string
-		expResp JsonResponse
+		expResp structs.JsonResponse
 	}{
 		{
 			"providing correct and valid user credentials",
 			`{"username":"dogsLover", "password":"big_string"}`,
-			JsonResponse{
+			structs.JsonResponse{
 				Status:  "ok",
 				Message: "a new session has been created for the user",
 				Body:    nil,
@@ -136,7 +137,7 @@ func testLogin(t *testing.T) {
 
 			service.Login(w, req)
 
-			var actualResp JsonResponse
+			var actualResp structs.JsonResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 			require.True(t, checkAuthCookie(w.Result().Cookies()))
@@ -146,12 +147,12 @@ func testLogin(t *testing.T) {
 	badCases := []struct {
 		name    string
 		rawBody string
-		expResp JsonErrResponse
+		expResp structs.JsonErrResponse
 	}{
 		{
 			"providing invalid credentials - broken body",
 			"{'username': 'dogsLover', 'password': 'big_string'",
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "the correct username and password are expected to be received in JSON format",
 				Code:    "parse_body",
@@ -160,7 +161,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing invalid credentials - no username",
 			`{"password":"big_string"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "invalid user credentials",
 				Code:    "invalid_credentials",
@@ -169,7 +170,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing invalid credentials - no password",
 			`{"username":"dogsLover"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "invalid user credentials",
 				Code:    "invalid_credentials",
@@ -178,7 +179,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing invalid credentials - short username",
 			`{"username":"do", "password":"big_string"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "invalid user credentials",
 				Code:    "invalid_credentials",
@@ -187,7 +188,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing invalid credentials - long username",
 			`{"username":"dojsbrjfbdrjhbhjldrbgbdrhjgbdjrbgjdhbgjhdbrghbdhj,gbdhjrbgjhdbvkvghkevfghjdvrfhvdhrvbjdfgdrgdr","password":"big_string"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "invalid user credentials",
 				Code:    "invalid_credentials",
@@ -196,7 +197,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing invalid credentials - short password",
 			`{"username":"dogsLover","password":"bi"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "invalid user credentials",
 				Code:    "invalid_credentials",
@@ -205,7 +206,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing invalid credentials - long password",
 			`{"username":"dogsLover","password":"biyugsgrusgubskhvfhkdgvfgvdvrjgbsjhgjkshzkljfskfwjkhkfjisuidgoquakflsjuzeofiow3i"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "invalid user credentials",
 				Code:    "invalid_credentials",
@@ -214,7 +215,7 @@ func testLogin(t *testing.T) {
 		{
 			"providing incorrect credentials - no user with such credentials",
 			`{"username":"dogsLover", "password":"doesn't_exist"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "incorrect user credentials",
 				Code:    "bad_credentials",
@@ -229,7 +230,7 @@ func testLogin(t *testing.T) {
 
 			service.Login(w, req)
 
-			var actualResp JsonErrResponse
+			var actualResp structs.JsonErrResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 			require.False(t, checkAuthCookie(w.Result().Cookies()))
@@ -252,12 +253,12 @@ func testSignUp(t *testing.T) {
 	goodCases := []struct {
 		name    string
 		rawBody string
-		expResp JsonResponse
+		expResp structs.JsonResponse
 	}{
 		{
 			"providing correct and valid data for signup",
 			`{"username":"newbie", "password":"getHigh123", "email":"world@uandex.ru"}`,
-			JsonResponse{
+			structs.JsonResponse{
 				Status:  "ok",
 				Message: "the user has been successfully registered",
 				Body:    nil,
@@ -272,7 +273,7 @@ func testSignUp(t *testing.T) {
 
 			service.Signup(w, req)
 
-			var actualResp JsonResponse
+			var actualResp structs.JsonResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 		})
@@ -281,12 +282,12 @@ func testSignUp(t *testing.T) {
 	badCases := []struct {
 		name    string
 		rawBody string
-		expResp JsonErrResponse
+		expResp structs.JsonErrResponse
 	}{
 		{
 			"user with such data already exists",
 			`{"username":"dogsLover", "password":"big_string", "email":"dogslove@gmail.com"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "there is already an account with this username or email",
 				Code:    "uniq_fields",
@@ -295,7 +296,7 @@ func testSignUp(t *testing.T) {
 		{
 			"invalid data - broken body",
 			`{"username":"dogsLover", "password":"big_string", "email":"dogslove@gmail.com"`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "the correct username, email and password are expected to be received in JSON format",
 				Code:    "parse_body",
@@ -304,7 +305,7 @@ func testSignUp(t *testing.T) {
 		{
 			"invalid data - no username",
 			`{"password":"big_string", "email":"dogslove@gmail.com"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "username",
 				Code:    "invalid_params",
@@ -313,7 +314,7 @@ func testSignUp(t *testing.T) {
 		{
 			"invalid data - no username, password",
 			`{"email":"dogslove@gmail.com"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "password,username",
 				Code:    "invalid_params",
@@ -322,7 +323,7 @@ func testSignUp(t *testing.T) {
 		{
 			"invalid data - short username",
 			`{"username":"sh", "password":"big_string", "email":"dogslove@gmail.com"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "username",
 				Code:    "invalid_params",
@@ -331,7 +332,7 @@ func testSignUp(t *testing.T) {
 		{
 			"invalid data - incorrect email",
 			`{"username":"sh", "password":"big_string", "email":"dog"}`,
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "email,username",
 				Code:    "invalid_params",
@@ -346,7 +347,7 @@ func testSignUp(t *testing.T) {
 
 			service.Signup(w, req)
 
-			var actualResp JsonErrResponse
+			var actualResp structs.JsonErrResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 		})
@@ -368,7 +369,7 @@ func testLogout(t *testing.T) {
 	goodCases := []struct {
 		name    string
 		cookie  *http.Cookie
-		expResp JsonResponse
+		expResp structs.JsonResponse
 	}{
 		{
 			"user is logged in - providing valid cookie",
@@ -376,7 +377,7 @@ func testLogout(t *testing.T) {
 				Name:  "session_key",
 				Value: "461afabf38b3147c",
 			},
-			JsonResponse{
+			structs.JsonResponse{
 				Status:  "ok",
 				Message: "the user has successfully logged out",
 				Body:    nil,
@@ -392,7 +393,7 @@ func testLogout(t *testing.T) {
 
 			service.Logout(w, req)
 
-			var actualResp JsonResponse
+			var actualResp structs.JsonResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 		})
@@ -401,7 +402,7 @@ func testLogout(t *testing.T) {
 	badCases := []struct {
 		name    string
 		cookie  *http.Cookie
-		expResp JsonErrResponse
+		expResp structs.JsonErrResponse
 	}{
 		{
 			"user isn't logged in - providing invalid cookie",
@@ -409,7 +410,7 @@ func testLogout(t *testing.T) {
 				Name:  "not_auth_cookie",
 				Value: "blablalba",
 			},
-			JsonErrResponse{
+			structs.JsonErrResponse{
 				Status:  "error",
 				Message: "to log out, you must first log in",
 				Code:    "no_auth",
@@ -425,7 +426,7 @@ func testLogout(t *testing.T) {
 
 			service.Logout(w, req)
 
-			var actualResp JsonErrResponse
+			var actualResp structs.JsonErrResponse
 			json.NewDecoder(w.Result().Body).Decode(&actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
 		})

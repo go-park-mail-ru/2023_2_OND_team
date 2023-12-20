@@ -8,17 +8,110 @@ services:
       - ../.env
     volumes:
       - ../db/migrations:/docker-entrypoint-initdb.d
+      - 'postgres_storage:/var/lib/postgresql/data'
     ports:
       - 5432:5432
-
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+      
   redis:
     image: redis:latest
     container_name: pinspireRedis
     volumes:
       - ../redis.conf:/usr/local/etc/redis/redis.conf
+      - 'redis_storage:/data'
     command: redis-server /usr/local/etc/redis/redis.conf
     ports:
         - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  main_service:
+    build: 
+      context: ./..
+      dockerfile: deployments/Dockerfile.main
+    container_name: pinspireMainService
+    env_file:
+     - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - AUTH_SERVICE_HOST=auth_service
+      - MESSENGER_SERVICE_HOST=messenger_service
+      - REALTIME_SERVICE_HOST=realtime_service
+    volumes:
+      - '/home/ond_team/cert/fullchain.pem:/home/ond_team/cert/fullchain.pem:ro'
+      - '/home/ond_team/cert/privkey.pem:/home/ond_team/cert/privkey.pem:ro'
+      - '/home/ond_team/go/src/github.com/go-park-mail-ru/ci-cd/upload:/upload'
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+      auth_service:
+        condition: 'service_started'
+      messenger_service:
+        condition: 'service_started'
+      realtime_service:
+        condition: 'service_started'
+    ports:
+    - 8079:8080
+    
+  auth_service:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile.auth
+    container_name: pinspireAuthService
+    env_file:
+     - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+      redis:
+        condition: 'service_healthy'
+    ports:
+    - 8186:8086
+    # - 8101:8085
+
+  messenger_service:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile.messenger
+    container_name: pinspireMessengerService
+    env_file:
+     - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+    ports:
+      - 8196:8096
+    # - 8102:8095
+    
+  realtime_service:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile.realtime
+    container_name: pinspireRealtimeService
+    env_file:
+     - ../.env
+    environment:
+      - KAFKA_BROKER_ADDRESS=kafka
+    depends_on:
+      kafka:
+        condition: 'service_healthy'
+    ports:
+    - 8191:8091
+    # - 8103:8090
 
   zookeeper:
     image: bitnami/zookeeper:latest
@@ -42,6 +135,14 @@ services:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+    healthcheck:
+      test: |
+       curl localhost:9092 
+       [ $(echo $?) = '52' ] && exit 0 || exit -1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     depends_on:
       - zookeeper
   
@@ -56,6 +157,8 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: pinspireGrafana
+    env_file:
+      - ../.env
     ports:
       - 3000:3000
     volumes:
@@ -75,9 +178,10 @@ services:
       - /:/rootfs:ro
     ports:
      - "9100:9100"
-
-
+    
 volumes:
+  postgres_storage: {}
+  redis_storage: {}
   zookeeper_data:
     driver: local
   kafka_data:

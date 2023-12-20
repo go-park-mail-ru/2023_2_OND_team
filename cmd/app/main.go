@@ -4,9 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/app"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -27,6 +29,7 @@ var (
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
 func main() {
+	godotenv.Load()
 	flag.Parse()
 	ctxBase, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -42,5 +45,9 @@ func main() {
 	}
 	defer log.Sync()
 
+	configFiles := app.ConfigFiles{
+		ServerConfigFile: "configs/config.yml",
+		AddrAuthServer:   os.Getenv("AUTH_SERVICE_HOST") + ":" + os.Getenv("AUTH_SERVICE_PORT"), // "localhost:8085",
+	}
 	app.Run(ctxBase, log, configFiles)
 }

@@ -31,8 +31,6 @@ type Usecase interface {
 	SubscribeUserToAllChats(ctx context.Context, userID int) (<-chan EventMessage, error)
 }
 
-const _topicChat = "chat"
-
 type EventMessage struct {
 	Type    string
 	Message *entity.Message
@@ -191,13 +189,14 @@ func (m *messageCase) receiveFromSubClient(ctx context.Context, userID int, subC
 		evMsg = EventMessage{
 			Type: msgObjID.Type,
 		}
+
+		evMsg.Message, err = m.GetMessage(ctx, userID, msgObjID.MessageID)
+		if err != nil {
+			m.log.Error(err.Error())
+		}
+
 		if evMsg.Type == "delete" {
-			evMsg.Message = &entity.Message{ID: msgObjID.MessageID}
-		} else {
-			evMsg.Message, err = m.GetMessage(ctx, userID, msgObjID.MessageID)
-			if err != nil {
-				m.log.Error(err.Error())
-			}
+			evMsg.Message.Content.String = ""
 		}
 
 		chanEvMsg <- evMsg

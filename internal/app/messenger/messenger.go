@@ -48,7 +48,7 @@ func Run(ctx context.Context, log *logger.Logger) {
 	))
 	messenger.RegisterMessengerServer(server, messMS.New(log, messageCase))
 
-	l, err := net.Listen("tcp", "localhost:8095")
+	l, err := net.Listen("tcp", "0.0.0.0:8095")
 	if err != nil {
 		log.Error(err.Error())
 		return
