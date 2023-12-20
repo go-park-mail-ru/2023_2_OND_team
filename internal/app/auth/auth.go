@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net"
+	"os"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -54,10 +55,9 @@ func Run(ctx context.Context, log *logger.Logger, cfg Config) {
 	ctxRedis, cancelCtxRedis := context.WithTimeout(ctx, _timeoutForConnRedis)
 	defer cancelCtxRedis()
 
-	redisCfg, err := app.NewConfig(cfg.RedisFileConfig)
-	if err != nil {
-		log.Error(err.Error())
-		return
+	redisCfg := app.RedisConfig{
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"),
 	}
 
 	redisCl, err := app.NewRedisClient(ctxRedis, redisCfg)
@@ -71,7 +71,7 @@ func Run(ctx context.Context, log *logger.Logger, cfg Config) {
 	u := user.New(log, nil, userRepo.NewUserRepoPG(pool))
 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		interceptor.Monitoring(metrics, "localhost:8086"),
+		interceptor.Monitoring(metrics, "0.0.0.0:8086"),
 		interceptor.Logger(log),
 	))
 	authProto.RegisterAuthServer(s, authMS.New(log, sm, u))

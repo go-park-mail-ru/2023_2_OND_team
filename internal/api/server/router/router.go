@@ -101,6 +101,15 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 				r.Delete("/like/{pinID:\\d+}", handler.DeleteLikePin)
 				r.Delete("/delete/{pinID:\\d+}", handler.DeletePin)
 			})
+
+			r.Route("/comment", func(r chi.Router) {
+				r.Get("/feed/{pinID:\\d+}", handler.ViewFeedComment)
+
+				r.With(auth.RequireAuth).Group(func(r chi.Router) {
+					r.Post("/{pinID:\\d+}", handler.WriteComment)
+					r.Delete("/{commentID:\\d+}", handler.DeleteComment)
+				})
+			})
 		})
 
 		r.Route("/board", func(r chi.Router) {
@@ -132,6 +141,7 @@ func (r Router) RegisterRoute(handler *deliveryHTTP.HandlerHTTP, wsHandler *deli
 	})
 
 	r.Mux.With(auth.RequireAuth).Route("/websocket/connect", func(r chi.Router) {
-		r.Get("/chat", wsHandler.WebSocketConnect)
+		r.Get("/chat", wsHandler.Chat)
+		r.Get("/notification", wsHandler.Notification)
 	})
 }

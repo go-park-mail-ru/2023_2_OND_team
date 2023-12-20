@@ -42,20 +42,20 @@ func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username str
 	return boards, nil
 }
 
-func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (entity.BoardWithContent, error) {
+func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (entity.BoardWithContent, string, error) {
 	boardAuthorID, err := bCase.boardRepo.GetBoardAuthorByBoardID(ctx, boardID)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
-			return entity.BoardWithContent{}, ErrNoSuchBoard
+			return entity.BoardWithContent{}, "", ErrNoSuchBoard
 		default:
-			return entity.BoardWithContent{}, fmt.Errorf("get certain board: %w", err)
+			return entity.BoardWithContent{}, "", fmt.Errorf("get certain board: %w", err)
 		}
 	}
 
 	boardContributors, err := bCase.boardRepo.GetContributorsByBoardID(ctx, boardID)
 	if err != nil {
-		return entity.BoardWithContent{}, fmt.Errorf("get certain board: %w", err)
+		return entity.BoardWithContent{}, "", fmt.Errorf("get certain board: %w", err)
 	}
 
 	boardContributorsIDs := make([]int, 0, len(boardContributors))
@@ -70,18 +70,17 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (en
 		hasAccess = true
 	}
 
-	board, err := bCase.boardRepo.GetBoardByID(ctx, boardID, hasAccess)
+	board, username, err := bCase.boardRepo.GetBoardByID(ctx, boardID, hasAccess)
 	if err != nil {
 		switch err {
 		case repository.ErrNoData:
-			return entity.BoardWithContent{}, ErrNoSuchBoard
+			return entity.BoardWithContent{}, "", ErrNoSuchBoard
 		default:
-			return entity.BoardWithContent{}, fmt.Errorf("get certain board: %w", err)
+			return entity.BoardWithContent{}, "", fmt.Errorf("get certain board: %w", err)
 		}
 	}
-
 	board.Sanitize(bCase.sanitizer)
-	return board, nil
+	return board, username, nil
 }
 
 func isContributor(contributorsIDs []int, userID int) bool {

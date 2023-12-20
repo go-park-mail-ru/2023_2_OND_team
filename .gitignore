@@ -25,3 +25,6 @@ testdata/
 cert/
 .env
 redis.conf
+inventory
+keyVision.json
+script*

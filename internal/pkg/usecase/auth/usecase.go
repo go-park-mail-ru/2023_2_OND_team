@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//go:generate mockgen -destination=./mock/auth_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	Register(ctx context.Context, user *entity.User) error
 	Login(ctx context.Context, username, password string) (*session.Session, error)

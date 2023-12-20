@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
 	entity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/pin"
+	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	repo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/image"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -45,8 +46,11 @@ func New(log *log.Logger, imgCase image.Usecase, repo repo.Repository) *pinCase 
 }
 
 func (p *pinCase) CreateNewPin(ctx context.Context, pin *entity.Pin, mimeTypePicture string, sizePicture int64, picture io.Reader) error {
-	picturePin, err := p.UploadImage("pins/", mimeTypePicture, sizePicture, picture, check.BothSidesFallIntoRange(100, 6000))
+	picturePin, err := p.UploadImage(ctx, "pins/", mimeTypePicture, sizePicture, picture, check.BothSidesFallIntoRange(100, 6000))
 	if err != nil {
+		if err == image.ErrExplicitImage {
+			return err
+		}
 		return fmt.Errorf("uploading an avatar when creating pin: %w", err)
 	}
 	pin.Picture = picturePin
@@ -97,9 +101,26 @@ func (p *pinCase) ViewFeedPin(ctx context.Context, userID int, cfg pin.FeedPinCo
 		return pin.FeedPin{}, ErrForbiddenAction
 	}
 
-	if !hasBoard && (userID == UserUnknown || !hasUser || userID != user) && cfg.Protection != pin.FeedProtectionPublic {
+	if !hasBoard && (userID == userEntity.UserUnknown || !hasUser || userID != user) && cfg.Protection != pin.FeedProtectionPublic {
 		return pin.FeedPin{}, ErrForbiddenAction
 	}
 
 	return p.repo.GetFeedPins(ctx, cfg)
+}
+
+func (p *pinCase) GetAuthorIdOfThePin(ctx context.Context, pinID int) (int, error) {
+	user, err := p.repo.GetAuthorPin(ctx, pinID)
+	if err != nil {
+		return 0, fmt.Errorf("get author id of the pin: %w", err)
+	}
+	return user.ID, nil
+}
+
+func (p *pinCase) GetPinWithAuthor(ctx context.Context, pinID int) (*pin.Pin, error) {
+	pin, err := p.repo.GetPinByID(ctx, pinID, true)
+	if err != nil {
+		return nil, fmt.Errorf("get a pin with author: %w", err)
+	}
+
+	return pin, nil
 }

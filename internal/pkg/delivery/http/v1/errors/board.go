@@ -1,4 +1,4 @@
-package v1
+package errors
 
 import (
 	"errors"
@@ -16,8 +16,8 @@ var (
 )
 
 var (
-	wrappedErrors      = map[error]string{ErrInvalidTagTitles: "bad_Tagtitles"}
-	errCodeCompability = map[error]string{
+	WrappedErrors      = map[error]string{ErrInvalidTagTitles: "bad_Tagtitles"}
+	ErrCodeCompability = map[error]string{
 		ErrInvalidBoardTitle:     "bad_boardTitle",
 		ErrEmptyTitle:            "empty_boardTitle",
 		ErrEmptyPubOpt:           "bad_pubOpt",
@@ -29,7 +29,7 @@ var (
 	}
 )
 
-func getErrCodeMessage(err error) (string, string) {
+func GetErrCodeMessage(err error) (string, string) {
 	var (
 		code              string
 		general, specific bool
@@ -40,9 +40,9 @@ func getErrCodeMessage(err error) (string, string) {
 		return code, err.Error()
 	}
 
-	code, specific = errCodeCompability[err]
+	code, specific = ErrCodeCompability[err]
 	if !specific {
-		for wrappedErr, code_ := range wrappedErrors {
+		for wrappedErr, code_ := range WrappedErrors {
 			if errors.Is(err, wrappedErr) {
 				specific = true
 				code = code_

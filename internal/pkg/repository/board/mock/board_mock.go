@@ -80,6 +80,20 @@ func (mr *MockRepositoryMockRecorder) DeleteBoardByID(ctx, boardID interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBoardByID", reflect.TypeOf((*MockRepository)(nil).DeleteBoardByID), ctx, boardID)
 }
 
+// DeletePinFromBoard mocks base method.
+func (m *MockRepository) DeletePinFromBoard(ctx context.Context, boardID, pinID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePinFromBoard", ctx, boardID, pinID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePinFromBoard indicates an expected call of DeletePinFromBoard.
+func (mr *MockRepositoryMockRecorder) DeletePinFromBoard(ctx, boardID, pinID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePinFromBoard", reflect.TypeOf((*MockRepository)(nil).DeletePinFromBoard), ctx, boardID, pinID)
+}
+
 // GetBoardAuthorByBoardID mocks base method.
 func (m *MockRepository) GetBoardAuthorByBoardID(ctx context.Context, boardID int) (int, error) {
 	m.ctrl.T.Helper()
@@ -96,12 +110,13 @@ func (mr *MockRepositoryMockRecorder) GetBoardAuthorByBoardID(ctx, boardID inter
 }
 
 // GetBoardByID mocks base method.
-func (m *MockRepository) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board.BoardWithContent, error) {
+func (m *MockRepository) GetBoardByID(ctx context.Context, boardID int, hasAccess bool) (board.BoardWithContent, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBoardByID", ctx, boardID, hasAccess)
 	ret0, _ := ret[0].(board.BoardWithContent)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetBoardByID indicates an expected call of GetBoardByID.

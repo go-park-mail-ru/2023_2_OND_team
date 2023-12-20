@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user/mock"
@@ -47,11 +48,11 @@ func TestGetProfileInfo(t *testing.T) {
 	res := rec.Result()
 	defer res.Body.Close()
 
-	actualBody := JsonResponse{Body: &user.User{}}
+	actualBody := structs.JsonResponse{Body: &user.User{}}
 	err = json.NewDecoder(res.Body).Decode(&actualBody)
 	require.NoError(t, err)
 	fmt.Println(actualBody.Body)
-	wantBody := JsonResponse{
+	wantBody := structs.JsonResponse{
 		Status:  "ok",
 		Message: "user data has been successfully received",
 		Body:    &wantUser,

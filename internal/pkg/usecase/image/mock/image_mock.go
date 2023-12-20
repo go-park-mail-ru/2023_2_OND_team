@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	io "io"
 	reflect "reflect"
 
@@ -36,16 +37,16 @@ func (m *MockUsecase) EXPECT() *MockUsecaseMockRecorder {
 }
 
 // UploadImage mocks base method.
-func (m *MockUsecase) UploadImage(path, mimeType string, size int64, image io.Reader, check check.CheckSize) (string, error) {
+func (m *MockUsecase) UploadImage(ctx context.Context, path, mimeType string, size int64, image io.Reader, check check.CheckSize) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadImage", path, mimeType, size, image, check)
+	ret := m.ctrl.Call(m, "UploadImage", ctx, path, mimeType, size, image, check)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UploadImage indicates an expected call of UploadImage.
-func (mr *MockUsecaseMockRecorder) UploadImage(path, mimeType, size, image, check interface{}) *gomock.Call {
+func (mr *MockUsecaseMockRecorder) UploadImage(ctx, path, mimeType, size, image, check interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadImage", reflect.TypeOf((*MockUsecase)(nil).UploadImage), path, mimeType, size, image, check)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadImage", reflect.TypeOf((*MockUsecase)(nil).UploadImage), ctx, path, mimeType, size, image, check)
 }

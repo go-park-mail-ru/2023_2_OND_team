@@ -42,13 +42,13 @@ func Run(ctx context.Context, log *logger.Logger) {
 	messageCase := message.New(mesRepo.NewMessageRepo(pool))
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		interceptor.Monitoring(metrics, "localhost:8096"),
+		interceptor.Monitoring(metrics, "0.0.0.0:8096"),
 		interceptor.Logger(log),
 		interceptor.Auth(),
 	))
 	messenger.RegisterMessengerServer(server, messMS.New(log, messageCase))
 
-	l, err := net.Listen("tcp", "localhost:8095")
+	l, err := net.Listen("tcp", "0.0.0.0:8095")
 	if err != nil {
 		log.Error(err.Error())
 		return

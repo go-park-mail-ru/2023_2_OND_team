@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 
 	rt "github.com/go-park-mail-ru/2023_2_OND_team/internal/api/realtime"
@@ -16,6 +17,7 @@ import (
 const _address = "localhost:8090"
 
 func main() {
+	godotenv.Load()
 	log, err := logger.New()
 	if err != nil {
 		fmt.Println(err)
@@ -44,7 +46,7 @@ func RealTimeRun(log *logger.Logger, addr string) error {
 	}
 
 	serv := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		interceptor.Monitoring(metrics, "localhost:8091"),
+		interceptor.Monitoring(metrics, "0.0.0.0:8091"),
 		interceptor.Logger(log),
 	))
 	rt.RegisterRealTimeServer(serv, realtime.NewServer(node))

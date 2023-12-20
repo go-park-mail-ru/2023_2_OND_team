@@ -9,6 +9,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate mockgen -destination=./mock/search_mock.go -package=mock -source=usecase.go Usecase
 type Usecase interface {
 	GetUsers(ctx context.Context, opts *search.SearchOpts) ([]search.UserForSearch, error)
 	GetBoards(ctx context.Context, opts *search.SearchOpts) ([]search.BoardForSearch, error)

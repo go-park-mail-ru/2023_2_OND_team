@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/search"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 )
@@ -89,7 +90,7 @@ func GetSearchOpts(r *http.Request, sortOpts []string, defaultSortOpt string) (*
 	}
 
 	if len(invalidParams) > 0 {
-		return nil, &ErrInvalidQueryParam{params: invalidParams}
+		return nil, &errHTTP.ErrInvalidQueryParam{Params: invalidParams}
 	}
 
 	return opts, nil
@@ -114,7 +115,7 @@ func GetGeneralOpts(r *http.Request, invalidParams map[string]string) (*search.G
 			opts.Template = template
 		}
 	} else {
-		return nil, &ErrNoData{}
+		return nil, &errHTTP.ErrNoData{}
 	}
 
 	if sortOrder := r.URL.Query().Get("order"); sortOrder != "" {

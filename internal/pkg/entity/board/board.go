@@ -6,9 +6,12 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+//go:generate easyjson board.go
+
+//easyjson:json
 type Board struct {
 	ID          int        `json:"id,omitempty" example:"15"`
-	AuthorID    int        `json:"-"`
+	AuthorID    int        `json:"author_id,omitempty"`
 	Title       string     `json:"title" example:"Sunny places"`
 	Description string     `json:"description" example:"Sunny places desc"`
 	Public      bool       `json:"public" example:"true"`
@@ -17,6 +20,7 @@ type Board struct {
 	DeletedAt   *time.Time `json:"-"`
 }
 
+//easyjson:json
 type BoardWithContent struct {
 	BoardInfo  Board
 	PinsNumber int

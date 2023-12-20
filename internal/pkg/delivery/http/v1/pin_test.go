@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/ramrepo"
 	pinCase "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/pin"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
@@ -30,11 +31,11 @@ func TestGetPins(t *testing.T) {
 
 	badCases := []struct {
 		rawURL  string
-		expResp JsonErrResponse
+		expResp structs.JsonErrResponse
 	}{
 		{
 			rawURL: fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, 0, 3),
-			expResp: JsonErrResponse{
+			expResp: structs.JsonErrResponse{
 				Status:  "error",
 				Message: "expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)",
 				Code:    "bad_params",
@@ -42,7 +43,7 @@ func TestGetPins(t *testing.T) {
 		},
 		{
 			rawURL: fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, -2, 3),
-			expResp: JsonErrResponse{
+			expResp: structs.JsonErrResponse{
 				Status:  "error",
 				Message: "expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)",
 				Code:    "bad_params",
@@ -50,7 +51,7 @@ func TestGetPins(t *testing.T) {
 		},
 		{
 			rawURL: fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, 213123, 3),
-			expResp: JsonErrResponse{
+			expResp: structs.JsonErrResponse{
 				Status:  "error",
 				Message: "expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)",
 				Code:    "bad_params",
@@ -58,7 +59,7 @@ func TestGetPins(t *testing.T) {
 		},
 		{
 			rawURL: fmt.Sprintf("%s?count=%d&lastID=%d", rawUrl, 0, -1),
-			expResp: JsonErrResponse{
+			expResp: structs.JsonErrResponse{
 				Status:  "error",
 				Message: "expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)",
 				Code:    "bad_params",
@@ -66,7 +67,7 @@ func TestGetPins(t *testing.T) {
 		},
 		{
 			rawURL: fmt.Sprintf("%s?count=&lastID=%d", rawUrl, 3),
-			expResp: JsonErrResponse{
+			expResp: structs.JsonErrResponse{
 				Status:  "error",
 				Message: "expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)",
 				Code:    "bad_params",
@@ -74,7 +75,7 @@ func TestGetPins(t *testing.T) {
 		},
 		{
 			rawURL: fmt.Sprintf("%s?lastID=%d", rawUrl, 3),
-			expResp: JsonErrResponse{
+			expResp: structs.JsonErrResponse{
 				Status:  "error",
 				Message: "expected parameters: count(positive integer: [1; 1000]), maxID, minID(positive integers, the absence of these parameters is equal to the value 0)",
 				Code:    "bad_params",
@@ -90,7 +91,7 @@ func TestGetPins(t *testing.T) {
 
 			resp := w.Result()
 			body, _ := io.ReadAll(resp.Body)
-			var actualResp JsonErrResponse
+			var actualResp structs.JsonErrResponse
 
 			json.Unmarshal(body, &actualResp)
 			require.Equal(t, tCase.expResp, actualResp)
