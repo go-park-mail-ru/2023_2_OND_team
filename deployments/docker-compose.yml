@@ -106,6 +106,7 @@ services:
      - ../.env
     environment:
       - KAFKA_BROKER_ADDRESS=kafka
+      - KAFKA_BROKER_PORT=29092
     depends_on:
       kafka:
         condition: 'service_healthy'
@@ -122,6 +123,14 @@ services:
       - "zookeeper_data:/bitnami"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: |
+       curl localhost:2181 
+       [ $(echo $?) = '52' ] && exit 0 || exit -1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   kafka:
     image: bitnami/kafka:latest
@@ -131,10 +140,12 @@ services:
     volumes:
       - "kafka_data:/bitnami"
     environment:
-      - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:29092,EXTERNAL://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:29092,EXTERNAL://localhost:9092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
     healthcheck:
       test: |
        curl localhost:9092 
@@ -144,7 +155,8 @@ services:
       retries: 10
       start_period: 15s
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: 'service_healthy'
   
   prometheus:
     image: prom/prometheus:latest
