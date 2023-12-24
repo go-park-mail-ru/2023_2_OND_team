@@ -49,10 +49,6 @@ func (bCase *boardUsecase) GetBoardInfoForUpdate(ctx context.Context, boardID in
 		}
 	}
 
-	board.Sanitize(bCase.sanitizer)
-	for id, title := range tagTitles {
-		tagTitles[id] = bCase.sanitizer.Sanitize(title)
-	}
 	return board, tagTitles, nil
 }
 

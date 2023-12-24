@@ -17,33 +17,6 @@ import (
 
 var TimeFormat = "2006-01-02"
 
-func ToCertainBoardFromService(board entity.BoardWithContent) structs.CertainBoard {
-	return structs.CertainBoard{
-		ID:          board.BoardInfo.ID,
-		AuthorID:    board.BoardInfo.AuthorID,
-		Title:       board.BoardInfo.Title,
-		Description: board.BoardInfo.Description,
-		CreatedAt:   board.BoardInfo.CreatedAt.Format(TimeFormat),
-		PinsNumber:  board.PinsNumber,
-		Pins:        board.Pins,
-		Tags:        board.TagTitles,
-	}
-}
-
-func ToCertainBoardUsernameFromService(board entity.BoardWithContent, username string) structs.CertainBoardWithUsername {
-	return structs.CertainBoardWithUsername{
-		ID:             board.BoardInfo.ID,
-		AuthorID:       board.BoardInfo.AuthorID,
-		AuthorUsername: username,
-		Title:          board.BoardInfo.Title,
-		Description:    board.BoardInfo.Description,
-		CreatedAt:      board.BoardInfo.CreatedAt.Format(TimeFormat),
-		PinsNumber:     board.PinsNumber,
-		Pins:           board.Pins,
-		Tags:           board.TagTitles,
-	}
-}
-
 func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	logger := h.getRequestLogger(r)
 	if contentType := r.Header.Get("Content-Type"); contentType != ApplicationJson {
@@ -73,7 +46,6 @@ func (h *HandlerHTTP) CreateNewBoard(w http.ResponseWriter, r *http.Request) {
 	tagTitles := make([]string, 0)
 	if newBoard.Tags != nil {
 		tagTitles = append(tagTitles, newBoard.Tags...)
-
 	}
 	authorID := r.Context().Value(auth.KeyCurrentUserID).(int)
 
@@ -120,7 +92,7 @@ func (h *HandlerHTTP) GetUserBoards(w http.ResponseWriter, r *http.Request) {
 
 	userBoards := make([]structs.CertainBoard, 0, len(boards))
 	for _, board := range boards {
-		userBoards = append(userBoards, ToCertainBoardFromService(board))
+		userBoards = append(userBoards, h.converter.ToCertainBoardFromService(&board))
 	}
 	err = responseOk(http.StatusOK, w, "got user boards successfully", userBoards)
 	if err != nil {
@@ -149,7 +121,7 @@ func (h *HandlerHTTP) GetCertainBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = responseOk(http.StatusOK, w, "got certain board successfully", ToCertainBoardUsernameFromService(board, username))
+	err = responseOk(http.StatusOK, w, "got certain board successfully", h.converter.ToCertainBoardUsernameFromService(&board, username))
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -176,7 +148,7 @@ func (h *HandlerHTTP) GetBoardInfoForUpdate(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = responseOk(http.StatusOK, w, "got certain board successfully", map[string]interface{}{"board": board, "tags": tagTitles})
+	err = responseOk(http.StatusOK, w, "got certain board successfully", map[string]interface{}{"board": h.converter.ToBoardFromService(&board), "tags": tagTitles})
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

@@ -36,9 +36,6 @@ func (bCase *boardUsecase) GetBoardsByUsername(ctx context.Context, username str
 		return nil, fmt.Errorf("get boards by user id usecase: %w", err)
 	}
 
-	for _, board := range boards {
-		board.Sanitize(bCase.sanitizer)
-	}
 	return boards, nil
 }
 
@@ -79,7 +76,6 @@ func (bCase *boardUsecase) GetCertainBoard(ctx context.Context, boardID int) (en
 			return entity.BoardWithContent{}, "", fmt.Errorf("get certain board: %w", err)
 		}
 	}
-	board.Sanitize(bCase.sanitizer)
 	return board, username, nil
 }
 

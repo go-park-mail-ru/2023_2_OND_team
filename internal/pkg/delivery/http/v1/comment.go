@@ -111,7 +111,7 @@ func (h *HandlerHTTP) ViewFeedComment(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 	}
 
-	err = responseOk(http.StatusOK, w, "feed comment to pin", map[string]any{"comments": feed, "lastID": newLastID})
+	err = responseOk(http.StatusOK, w, "feed comment to pin", map[string]any{"comments": h.converter.ToCommentsFromService(feed), "lastID": newLastID})
 	if err != nil {
 		logger.Error(err.Error())
 	}

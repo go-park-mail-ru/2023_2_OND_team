@@ -5,6 +5,7 @@ import (
 	"unicode"
 
 	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/validation"
 )
 
 //go:generate easyjson board.go
@@ -44,6 +45,27 @@ type CertainBoardWithUsername struct {
 	PinsNumber     int      `json:"pins_number" example:"12"`
 	Pins           []string `json:"pins" example:"['/pic1', '/pic2']"`
 	Tags           []string `json:"tags" example:"['love', 'green']"`
+}
+
+func (b *CertainBoard) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if b != nil {
+		b.Title = sanitizer.Sanitize(censor.Sanitize(b.Title))
+		b.Description = sanitizer.Sanitize(censor.Sanitize(b.Description))
+		for id, title := range b.Tags {
+			b.Tags[id] = sanitizer.Sanitize(censor.Sanitize(title))
+		}
+	}
+}
+
+func (b *CertainBoardWithUsername) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if b != nil {
+		b.Title = sanitizer.Sanitize(censor.Sanitize(b.Title))
+		b.Description = sanitizer.Sanitize(censor.Sanitize(b.Description))
+		b.AuthorUsername = sanitizer.Sanitize(censor.Sanitize(b.AuthorUsername))
+		for id, title := range b.Tags {
+			b.Tags[id] = sanitizer.Sanitize(censor.Sanitize(title))
+		}
+	}
 }
 
 //easyjson:json

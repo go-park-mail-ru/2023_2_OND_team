@@ -3,7 +3,7 @@ package board
 import (
 	"time"
 
-	"github.com/microcosm-cc/bluemonday"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/validation"
 )
 
 //go:generate easyjson board.go
@@ -28,14 +28,9 @@ type BoardWithContent struct {
 	TagTitles  []string
 }
 
-func (b *Board) Sanitize(sanitizer *bluemonday.Policy) {
-	sanitizer.Sanitize(b.Title)
-	sanitizer.Sanitize(b.Description)
-}
-
-func (b *BoardWithContent) Sanitize(sanitizer *bluemonday.Policy) {
-	b.BoardInfo.Sanitize(sanitizer)
-	for id, title := range b.TagTitles {
-		b.TagTitles[id] = sanitizer.Sanitize(title)
+func (b *Board) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if b != nil {
+		b.Title = sanitizer.Sanitize(censor.Sanitize(b.Title))
+		b.Description = sanitizer.Sanitize(censor.Sanitize(b.Description))
 	}
 }

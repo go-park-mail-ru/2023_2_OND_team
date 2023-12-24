@@ -170,7 +170,7 @@ func (h *HandlerHTTP) GetMessagesFromChat(w http.ResponseWriter, r *http.Request
 		logger.Warn(err.Error())
 	}
 	err = responseOk(http.StatusOK, w, "messages received successfully", map[string]any{
-		"messages": feed,
+		"messages": h.converter.ToMessagesFromService(feed),
 		"lastID":   newLastID,
 	})
 	if err != nil {

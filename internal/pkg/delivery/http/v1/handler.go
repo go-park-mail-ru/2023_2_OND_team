@@ -14,6 +14,7 @@ import (
 
 type HandlerHTTP struct {
 	log         *logger.Logger
+	converter   converterHTTP
 	authCase    auth.Usecase
 	userCase    user.Usecase
 	pinCase     pin.Usecase
@@ -24,9 +25,10 @@ type HandlerHTTP struct {
 	commentCase comment.Usecase
 }
 
-func New(log *logger.Logger, hub UsecaseHub) *HandlerHTTP {
+func New(log *logger.Logger, converter converterHTTP, hub UsecaseHub) *HandlerHTTP {
 	return &HandlerHTTP{
 		log:         log,
+		converter:   converter,
 		authCase:    hub.AuhtCase,
 		userCase:    hub.UserCase,
 		pinCase:     hub.PinCase,

@@ -7,35 +7,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	errHTTP "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/errors"
-	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/delivery/http/v1/structs"
-	userEntity "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/middleware/auth"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 	"github.com/mailru/easyjson"
 )
-
-func ToUserInfoFromService(user *userEntity.User, isSubscribed bool, subsCount int) structs.UserInfo {
-	return structs.UserInfo{
-		ID:           user.ID,
-		Username:     user.Username,
-		Avatar:       user.Avatar,
-		Name:         user.Name.String,
-		Surname:      user.Surname.String,
-		About:        user.AboutMe.String,
-		IsSubscribed: isSubscribed,
-		SubsCount:    subsCount,
-	}
-}
-
-func ToProfileInfoFromService(user *userEntity.User, subsCount int) structs.ProfileInfo {
-	return structs.ProfileInfo{
-		ID:        user.ID,
-		Username:  user.Username,
-		Avatar:    user.Avatar,
-		SubsCount: subsCount,
-	}
-}
 
 func (h *HandlerHTTP) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	userIdParam := chi.URLParam(r, "userID")
@@ -47,7 +23,7 @@ func (h *HandlerHTTP) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	if user, isSubscribed, subsCount, err := h.userCase.GetUserInfo(r.Context(), int(userID)); err != nil {
 		h.responseErr(w, r, err)
-	} else if err := responseOk(http.StatusOK, w, "got user info successfully", ToUserInfoFromService(user, isSubscribed, subsCount)); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got user info successfully", h.converter.ToUserInfoFromService(user, isSubscribed, subsCount)); err != nil {
 		h.responseErr(w, r, err)
 	}
 }
@@ -55,7 +31,7 @@ func (h *HandlerHTTP) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 func (h *HandlerHTTP) GetProfileHeaderInfo(w http.ResponseWriter, r *http.Request) {
 	if user, subsCount, err := h.userCase.GetProfileInfo(r.Context()); err != nil {
 		h.responseErr(w, r, err)
-	} else if err := responseOk(http.StatusOK, w, "got profile info successfully", ToProfileInfoFromService(user, subsCount)); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got profile info successfully", h.converter.ToProfileInfoFromService(user, subsCount)); err != nil {
 		h.responseErr(w, r, err)
 	}
 }
@@ -148,7 +124,7 @@ func (h *HandlerHTTP) GetProfileInfo(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "get_info", "failed to get user information")
 	} else {
-		err = responseOk(http.StatusOK, w, "user data has been successfully received", user)
+		err = responseOk(http.StatusOK, w, "user data has been successfully received", h.converter.ToUserFromService(user))
 	}
 
 	if err != nil {

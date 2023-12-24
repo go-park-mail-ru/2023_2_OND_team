@@ -29,9 +29,5 @@ func (u *subscriptionUsecase) GetSubscriptionInfoForUser(ctx context.Context, su
 		return nil, err
 	}
 
-	for id := range users {
-		users[id].Sanitize(u.sanitizer)
-	}
-
 	return users, nil
 }

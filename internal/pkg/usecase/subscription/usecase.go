@@ -7,7 +7,6 @@ import (
 	subRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/subscription"
 	uRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 //go:generate mockgen -destination=./mock/subscription_mock.go -package=mock -source=usecase.go Usecase
@@ -18,12 +17,11 @@ type Usecase interface {
 }
 
 type subscriptionUsecase struct {
-	subRepo   subRepo.Repository
-	userRepo  uRepo.Repository
-	log       *logger.Logger
-	sanitizer *bluemonday.Policy
+	subRepo  subRepo.Repository
+	userRepo uRepo.Repository
+	log      *logger.Logger
 }
 
-func New(log *logger.Logger, subRepo subRepo.Repository, uRepo uRepo.Repository, sanitizer *bluemonday.Policy) Usecase {
-	return &subscriptionUsecase{subRepo: subRepo, userRepo: uRepo, log: log, sanitizer: sanitizer}
+func New(log *logger.Logger, subRepo subRepo.Repository, uRepo uRepo.Repository) Usecase {
+	return &subscriptionUsecase{subRepo: subRepo, userRepo: uRepo, log: log}
 }

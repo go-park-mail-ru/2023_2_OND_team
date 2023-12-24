@@ -5,7 +5,7 @@ import (
 	"unicode"
 
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/entity/board"
-	"github.com/microcosm-cc/bluemonday"
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/validation"
 )
 
 //go:generate easyjson search.go
@@ -52,17 +52,22 @@ type UserForSearch struct {
 	HasSubscribeFromCurUser bool   `json:"is_subscribed"`
 }
 
-func (u *UserForSearch) Sanitize(sanitizer *bluemonday.Policy) {
-	sanitizer.Sanitize(u.Username)
+func (u *UserForSearch) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if u != nil {
+		u.Username = sanitizer.Sanitize(censor.Sanitize(u.Username))
+	}
 }
 
-func (b *BoardForSearch) Sanitize(sanitizer *bluemonday.Policy) {
-	sanitizer.Sanitize(b.BoardHeader.Title)
-	sanitizer.Sanitize(b.BoardHeader.Description)
+func (b *BoardForSearch) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if b != nil {
+		b.BoardHeader.Sanitize(sanitizer, censor)
+	}
 }
 
-func (p *PinForSearch) Sanitize(sanitizer *bluemonday.Policy) {
-	sanitizer.Sanitize(p.Title)
+func (p *PinForSearch) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if p != nil {
+		p.Title = sanitizer.Sanitize(censor.Sanitize(p.Title))
+	}
 }
 
 type SearchOpts struct {

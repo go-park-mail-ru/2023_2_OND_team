@@ -179,7 +179,7 @@ func (h *HandlerHTTP) ViewPin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err.Error())
 		err = responseError(w, "edit_pin", "internal error")
 	} else {
-		err = responseOk(http.StatusOK, w, "pin was successfully received", pin)
+		err = responseOk(http.StatusOK, w, "pin was successfully received", h.converter.ToPinFromService(pin))
 	}
 	if err != nil {
 		logger.Error(err.Error())

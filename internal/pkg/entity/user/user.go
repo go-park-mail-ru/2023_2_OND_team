@@ -1,8 +1,8 @@
 package user
 
 import (
+	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/validation"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 //go:generate easyjson user.go
@@ -21,6 +21,25 @@ type User struct {
 	Password string      `json:"password,omitempty" example:"pass123"`
 } // @name User
 
+func (u *User) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if u != nil {
+		u.Username = sanitizer.Sanitize(censor.Sanitize(u.Username))
+		u.Email = sanitizer.Sanitize(censor.Sanitize(u.Email))
+		u.Name = pgtype.Text{
+			String: sanitizer.Sanitize(censor.Sanitize(u.Name.String)),
+			Valid:  u.Name.Valid,
+		}
+		u.Surname = pgtype.Text{
+			String: sanitizer.Sanitize(censor.Sanitize(u.Surname.String)),
+			Valid:  u.Surname.Valid,
+		}
+		u.AboutMe = pgtype.Text{
+			String: sanitizer.Sanitize(censor.Sanitize(u.AboutMe.String)),
+			Valid:  u.AboutMe.Valid,
+		}
+	}
+}
+
 //easyjson:json
 type SubscriptionUser struct {
 	ID                      int    `json:"id"`
@@ -29,8 +48,10 @@ type SubscriptionUser struct {
 	HasSubscribeFromCurUser bool   `json:"is_subscribed"`
 }
 
-func (u *SubscriptionUser) Sanitize(sanitizer *bluemonday.Policy) {
-	sanitizer.Sanitize(u.Username)
+func (u *SubscriptionUser) Sanitize(sanitizer validation.SanitizerXSS, censor validation.ProfanityCensor) {
+	if u != nil {
+		u.Username = sanitizer.Sanitize(censor.Sanitize(u.Username))
+	}
 }
 
 type SubscriptionOpts struct {

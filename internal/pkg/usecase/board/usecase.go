@@ -8,7 +8,6 @@ import (
 	boardRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/board"
 	userRepo "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/repository/user"
 	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 //go:generate mockgen -destination=./mock/board_mock.go -package=mock -source=usecase.go Usecase
@@ -28,9 +27,8 @@ type boardUsecase struct {
 	log       *logger.Logger
 	boardRepo boardRepo.Repository
 	userRepo  userRepo.Repository
-	sanitizer *bluemonday.Policy
 }
 
-func New(logger *logger.Logger, boardRepo boardRepo.Repository, userRepo userRepo.Repository, sanitizer *bluemonday.Policy) *boardUsecase {
-	return &boardUsecase{log: logger, boardRepo: boardRepo, userRepo: userRepo, sanitizer: sanitizer}
+func New(logger *logger.Logger, boardRepo boardRepo.Repository, userRepo userRepo.Repository) *boardUsecase {
+	return &boardUsecase{log: logger, boardRepo: boardRepo, userRepo: userRepo}
 }

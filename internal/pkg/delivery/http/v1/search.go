@@ -36,7 +36,7 @@ func (h *HandlerHTTP) SearchUsers(w http.ResponseWriter, r *http.Request) {
 
 	if users, err := h.searchCase.GetUsers(r.Context(), opts); err != nil {
 		h.responseErr(w, r, err)
-	} else if err := responseOk(http.StatusOK, w, "got users sucessfully", users); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got users sucessfully", h.converter.ToUsersForSearchFromService(users)); err != nil {
 		h.responseErr(w, r, err)
 	}
 }
@@ -50,7 +50,7 @@ func (h *HandlerHTTP) SearchBoards(w http.ResponseWriter, r *http.Request) {
 
 	if boards, err := h.searchCase.GetBoards(r.Context(), opts); err != nil {
 		h.responseErr(w, r, err)
-	} else if err := responseOk(http.StatusOK, w, "got boards sucessfully", boards); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got boards sucessfully", h.converter.ToBoardsForSearchFromService(boards)); err != nil {
 		h.responseErr(w, r, err)
 	}
 }
@@ -64,7 +64,7 @@ func (h *HandlerHTTP) SearchPins(w http.ResponseWriter, r *http.Request) {
 
 	if pins, err := h.searchCase.GetPins(r.Context(), opts); err != nil {
 		h.responseErr(w, r, err)
-	} else if err := responseOk(http.StatusOK, w, "got pins sucessfully", pins); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got pins sucessfully", h.converter.ToPinsForSearchFromService(pins)); err != nil {
 		h.responseErr(w, r, err)
 	}
 }

@@ -81,7 +81,7 @@ func (h *HandlerHTTP) GetSubscriptionInfoForUser(w http.ResponseWriter, r *http.
 
 	if users, err := h.subCase.GetSubscriptionInfoForUser(r.Context(), opts); err != nil {
 		h.responseErr(w, r, err)
-	} else if err := responseOk(http.StatusOK, w, "got subscription info successfully", users); err != nil {
+	} else if err := responseOk(http.StatusOK, w, "got subscription info successfully", h.converter.ToSubscriptionUsersFromService(users)); err != nil {
 		h.responseErr(w, r, err)
 	}
 }

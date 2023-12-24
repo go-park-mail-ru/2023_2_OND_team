@@ -3,10 +3,10 @@ package app
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"time"
 
+	goaway "github.com/TwiN/go-away"
 	"github.com/microcosm-cc/bluemonday"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -42,6 +42,7 @@ import (
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/search"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/subscription"
 	"github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/usecase/user"
+	validate "github.com/go-park-mail-ru/2023_2_OND_team/internal/pkg/validation"
 	log "github.com/go-park-mail-ru/2023_2_OND_team/pkg/logger"
 )
 
@@ -70,7 +71,6 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer pool.Close()
 
-	// connMessMS, err := grpc.Dial("localhost:8095", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	connMessMS, err := grpc.Dial(os.Getenv("MESSENGER_SERVICE_HOST")+":"+os.Getenv("MESSENGER_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err.Error())
@@ -78,7 +78,6 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	}
 	defer connMessMS.Close()
 
-	// connRealtime, err := grpc.Dial("localhost:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	connRealtime, err := grpc.Dial(os.Getenv("REALTIME_SERVICE_HOST")+":"+os.Getenv("REALTIME_SERVICE_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err.Error())
@@ -94,19 +93,23 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	defer cancel()
 
 	token, err := base64.StdEncoding.DecodeString(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-	fmt.Println(string(token))
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
-
 	visionClient, err := vision.NewImageAnnotatorClient(visionCtx, option.WithCredentialsJSON(token))
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
 
-	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles), image.NewFilter(visionClient))
+	profanityCensor := goaway.NewProfanityDetector().WithCustomDictionary(
+		append(goaway.DefaultProfanities, validate.GetLabels()...),
+		goaway.DefaultFalsePositives,
+		goaway.DefaultFalseNegatives,
+	)
+
+	imgCase := image.New(log, imgRepo.NewImageRepoFS(uploadFiles), image.NewFilter(visionClient, validate.NewCensor(profanityCensor)))
 	messageCase := message.New(log, messenger.NewMessengerClient(connMessMS), chat.New(realtime.NewRealTimeChatClient(rtClient), log))
 	pinCase := pin.New(log, imgCase, pinRepo.NewPinRepoPG(pool))
 
@@ -127,13 +130,13 @@ func Run(ctx context.Context, log *log.Logger, cfg ConfigFiles) {
 	defer conn.Close()
 	ac := auth.New(authProto.NewAuthClient(conn))
 
-	handler := deliveryHTTP.New(log, deliveryHTTP.UsecaseHub{
+	handler := deliveryHTTP.New(log, deliveryHTTP.NewConverterHTTP(validate.NewSanitizerXSS(bluemonday.UGCPolicy()), validate.NewCensor(profanityCensor)), deliveryHTTP.UsecaseHub{
 		AuhtCase:         ac,
 		UserCase:         user.New(log, imgCase, userRepo.NewUserRepoPG(pool)),
 		PinCase:          pinCase,
-		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
-		SubscriptionCase: subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool), bluemonday.UGCPolicy()),
-		SearchCase:       search.New(log, searchRepo.NewSearchRepoPG(pool), bluemonday.UGCPolicy()),
+		BoardCase:        board.New(log, boardRepo.NewBoardRepoPG(pool), userRepo.NewUserRepoPG(pool)),
+		SubscriptionCase: subscription.New(log, subRepo.NewSubscriptionRepoPG(pool), userRepo.NewUserRepoPG(pool)),
+		SearchCase:       search.New(log, searchRepo.NewSearchRepoPG(pool)),
 		MessageCase:      messageCase,
 		CommentCase:      comment.New(commentRepo.NewCommentRepoPG(pool), pinCase, notifyCase),
 	})
