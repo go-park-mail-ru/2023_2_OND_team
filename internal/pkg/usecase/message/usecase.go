@@ -86,7 +86,7 @@ func (m *messageCase) GetMessagesFromChat(ctx context.Context, userID int, chat 
 			UserID2: int64(chat[1]),
 		},
 		Count:  int64(count),
-		LastID: int64(count),
+		LastID: int64(lastID),
 	})
 	if err != nil {
 		err = fmt.Errorf("get message by : %w", err)
