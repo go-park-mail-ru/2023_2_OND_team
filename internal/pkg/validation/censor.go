@@ -6,27 +6,26 @@ import (
 	"strings"
 
 	goaway "github.com/TwiN/go-away"
-	"github.com/go-park-mail-ru/2023_2_OND_team/pkg/levenstein"
 )
 
 var additionalProfanity = []string{
-	"0YXRg9C5",
+	"0YXRgw==",
 	"0L/QuNC30LTQsA==",
 	"0YfQu9C10L0=",
-	"0LLQsNCz0LjQvdCw",
+	"0LLQsNCz0LjQvQ==",
 	"0LPQvtCy0L3Qvg==",
 	"0L/QsNGA0LDRiNCw",
 	"0YHRg9C60LA=",
-	"0L/QuNGB0YzQutCw",
-	"0YHQuNGB0YzQutC4",
-	"0LLQu9Cw0LPQsNC70LjRidC1",
+	"0L/QuNGB0YzQug==",
+	"0YHQuNGB0YzQug==",
+	"0LLQu9Cw0LPQsNC70LjRiQ==",
 	"0L/QtdC90LjRgQ==",
 	"0LHQu9GP0LTRjA==",
-	"0YjQu9GO0YXQsA==",
-	"0L/RgNC+0YHRgtC40YLRg9GC0LrQsA==",
+	"0YjQu9GO0YU=",
+	"0L/RgNC+0YHRgtC40YLRg9GC0Lo=",
 	"0L3QuNCz0LXRgA==",
 	"0L3QtdCz0YA=",
-	"0YPQt9C60L7Qs9C70LDQt9GL0Lk=",
+	"0YPQt9C60L7Qs9C70LDQt9GL",
 	"0YXQtdGA",
 	"0LXQsdCw0YLRjA==",
 	"0YPQtdCx0LDQvQ==",
@@ -37,7 +36,7 @@ var additionalProfanity = []string{
 	"0YPRgNC+0LQ=",
 	"0L/QuNC30LTQtdGG",
 	"0YXRg9GP",
-	"0LfQsNC70YPQv9Cw",
+	"0LfQsNC70YPQvw==",
 	"0L/QuNC00LDRgNCw0YE=",
 	"0LvQvtGF",
 	"0LPQsNC90LTQvtC9",
@@ -54,7 +53,19 @@ var additionalProfanity = []string{
 	"0YfQvNC+",
 	"0LTQtdCx0LjQuw==",
 	"0LrRgNC10YLQuNC9",
-	"0LXQsdCw",
+	"cGl6ZGE=",
+	"0LXQsdCw0Ls=",
+	"0LPQsNCy0L3Qvg==",
+	"0LPQvtC90LTQvtC9",
+	"0YXRg9C1",
+	"0LXQsdCw0L0=",
+	"0LXQsdC70LDQvQ==",
+	"0LXQsdGD0YfQuA==",
+	"0LXQsdC70LjQstGL",
+	"0L/QuNC00YDQuNC7",
+	"0L/QvtGA0L3Rg9GF0LA=",
+	"0LXQsdC70Y8=",
+	"0YPQtdCx0LjRidC90Ys=",
 }
 
 func GetLabels() []string {
@@ -78,18 +89,9 @@ type defaultCensor struct {
 	censor *goaway.ProfanityDetector
 }
 
-func isSimilarWithProfane(s string) bool {
-	for _, badWord := range GetLabels() {
-		if float64(levenstein.Levenshtein([]rune(s), []rune(badWord))) <= 0.3*float64(len(s)) {
-			return true
-		}
-	}
-	return false
-}
-
 func (c *defaultCensor) IsProfane(s string) bool {
 	for _, word := range strings.Fields(s) {
-		if c.censor.IsProfane(strings.ToLower(word)) || isSimilarWithProfane(strings.ToLower(word)) {
+		if c.censor.IsProfane(strings.ToLower(word)) {
 			return true
 		}
 	}
