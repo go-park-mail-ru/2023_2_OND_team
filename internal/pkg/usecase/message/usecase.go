@@ -193,9 +193,8 @@ func (m *messageCase) receiveFromSubClient(ctx context.Context, userID int, subC
 		evMsg.Message, err = m.GetMessage(ctx, userID, msgObjID.MessageID)
 		if err != nil {
 			m.log.Error(err.Error())
-		}
-
-		if evMsg.Type == "delete" {
+			evMsg.Err = err
+		} else if evMsg.Type == "delete" {
 			evMsg.Message.Content.String = ""
 		}
 
